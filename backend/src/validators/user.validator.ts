@@ -20,6 +20,11 @@ export const idParamSchema = z.object({
   id: z.string().regex(/^\d+$/, 'ID invalido').transform(Number),
 });
 
+export const deportistaIdParamSchema = z.object({
+  deportistaId: z.string().regex(/^\d+$/, 'ID de deportista invalido').transform(Number),
+});
+
 export type AssignRoleInput = z.infer<typeof assignRoleSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type IdParam = z.infer<typeof idParamSchema>;
+export type DeportistaIdParam = z.infer<typeof deportistaIdParamSchema>;

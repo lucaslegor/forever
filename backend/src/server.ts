@@ -5,6 +5,10 @@ import prisma from './config/prisma';
 const PORT = env.PORT;
 
 async function main() {
+  if (!env.DATABASE_URL || env.DATABASE_URL.trim() === '') {
+    console.error('ERROR: DATABASE_URL no está definida en .env');
+    process.exit(1);
+  }
   try {
     // Verificar conexión a la base de datos
     await prisma.$connect();

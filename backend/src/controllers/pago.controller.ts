@@ -21,11 +21,21 @@ export class PagoController {
     try {
       const { type, data } = req.body;
 
-      if (type === 'payment') {
-        const paymentId = data.id;
-        const pago = await pagoService.getByMercadoPagoId(paymentId);
-        if (pago) {
-          await pagoService.confirmarPago(pago.id, paymentId, 'approved');
+      if (type === 'payment' && data?.id) {
+        const paymentId = String(data.id);
+        let pago = await pagoService.getByMercadoPagoId(paymentId);
+
+        if (!pago) {
+          const external = await pagoService.getPagoIdFromMercadoPago(paymentId);
+          if (external?.pagoId != null && external?.status) {
+            pago = await pagoService.getById(external.pagoId);
+            if (pago) {
+              await pagoService.confirmarPago(pago.id, paymentId, external.status);
+            }
+          }
+        } else {
+          const status = (req.body as { data?: { status?: string } }).data?.status ?? 'approved';
+          await pagoService.confirmarPago(pago.id, paymentId, status);
         }
       }
 
@@ -72,8 +82,12 @@ export class PagoController {
   async confirmar(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string, 10);
-      const { mercadoPagoId, status } = req.body;
-      const result = await pagoService.confirmarPago(id, mercadoPagoId, status);
+      const { mercadoPagoId, status } = req.body as { mercadoPagoId?: string; status?: string };
+      const result = await pagoService.confirmarPago(
+        id,
+        mercadoPagoId ?? '',
+        status ?? 'approved'
+      );
       sendSuccess(res, result, 'Pago confirmado correctamente');
     } catch (error) {
       next(error);

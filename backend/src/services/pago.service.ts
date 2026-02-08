@@ -127,6 +127,74 @@ export class PagoService {
     return pago;
   }
 
+  /** Obtener pagoId (external_reference) y status desde la API de Mercado Pago (para webhook) */
+  async getPagoIdFromMercadoPago(paymentId: string): Promise<{ pagoId: number; status: string } | null> {
+    const { env } = await import('../config/env');
+    const token = env.MERCADOPAGO_ACCESS_TOKEN;
+    if (!token) return null;
+
+    try {
+      const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return null;
+      const payment = (await res.json()) as { external_reference?: string; status?: string };
+      const pagoId = payment.external_reference ? parseInt(payment.external_reference, 10) : NaN;
+      const status = payment.status === 'approved' ? 'approved' : payment.status === 'rejected' ? 'rejected' : 'pending';
+      if (Number.isNaN(pagoId)) return null;
+      return { pagoId, status };
+    } catch {
+      return null;
+    }
+  }
+
+  /** Asociar comprobante a una cuota (crea Pago si no existe) */
+  async asociarComprobante(deportistaId: number, cuotaId: number, linkComprobante: string) {
+    const cuota = await prisma.cuota.findUnique({
+      where: { id: cuotaId },
+      include: { deportista: true, pagos: true },
+    });
+
+    if (!cuota) {
+      throw new NotFoundError(ErrorMessages.CUOTA_NOT_FOUND);
+    }
+
+    if (cuota.deportistaId !== deportistaId) {
+      throw new BadRequestError('La cuota no pertenece al deportista');
+    }
+
+    if (cuota.estadoCuota === EstadoCuota.PAGADA) {
+      throw new BadRequestError(ErrorMessages.CUOTA_ALREADY_PAID);
+    }
+
+    const pagoExistente = cuota.pagos.find((p) => p.estadoPago === EstadoPago.PENDIENTE);
+    if (pagoExistente) {
+      await prisma.pago.update({
+        where: { id: pagoExistente.id },
+        data: { linkComprobante },
+      });
+      return this.getById(pagoExistente.id);
+    }
+
+    const pago = await prisma.pago.create({
+      data: {
+        fechaPago: new Date(),
+        monto: cuota.monto,
+        estadoPago: EstadoPago.PENDIENTE,
+        medioPago: 'Transferencia / Comprobante',
+        linkComprobante,
+        cuotaId,
+        deportistaId,
+      },
+      include: {
+        cuota: { include: { disciplina: true } },
+        deportista: true,
+      },
+    });
+
+    return pago;
+  }
+
   async getByDeportista(deportistaId: number, page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
 

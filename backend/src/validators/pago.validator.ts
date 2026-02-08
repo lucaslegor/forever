@@ -18,5 +18,11 @@ export const pagosQuerySchema = z.object({
   fechaHasta: z.string().optional(),
 });
 
+export const confirmarPagoSchema = z.object({
+  mercadoPagoId: z.string().min(1, 'mercadoPagoId requerido').optional(),
+  status: z.string().min(1, 'status requerido').optional(),
+});
+
 export type CreatePagoInput = z.infer<typeof createPagoSchema>;
 export type PagosQuery = z.infer<typeof pagosQuerySchema>;
+export type ConfirmarPagoInput = z.infer<typeof confirmarPagoSchema>;

@@ -6,7 +6,7 @@ import {
   ConflictError,
   ErrorMessages,
 } from '../utils/errors';
-import { EstadoCuota, Periodicidad } from '@prisma/client';
+import { EstadoCuota, EstadoPago, Periodicidad } from '@prisma/client';
 
 export class CuotaService {
   async asignar(data: AsignarCuotaDTO) {
@@ -19,11 +19,15 @@ export class CuotaService {
       throw new NotFoundError(ErrorMessages.DEPORTISTA_NOT_FOUND);
     }
 
+    const fechaEmision = new Date(data.fechaEmision);
+    const anio = fechaEmision.getFullYear();
+
     // Verificar que no exista cuota para el mismo período
     const existingCuota = await prisma.cuota.findFirst({
       where: {
         deportistaId: data.deportistaId,
         nroCuota: data.nroCuota,
+        anio,
         disciplinaId: data.disciplinaId,
       },
     });
@@ -32,14 +36,12 @@ export class CuotaService {
       throw new ConflictError(ErrorMessages.CUOTA_ALREADY_ASSIGNED);
     }
 
-    const fechaEmision = new Date(data.fechaEmision);
-
     const cuota = await prisma.cuota.create({
       data: {
         nroCuota: data.nroCuota,
-        anio: fechaEmision.getFullYear(),
+        anio,
         monto: data.monto,
-        fechaEmision: fechaEmision,
+        fechaEmision,
         fechaVencimiento: new Date(data.fechaVencimiento),
         disciplinaId: data.disciplinaId,
         deportistaId: data.deportistaId,
@@ -132,7 +134,7 @@ export class CuotaService {
       where: { deportistaId },
       include: {
         pagos: {
-          where: { estadoPago: 'APROBADO' },
+          where: { estadoPago: EstadoPago.APROBADO },
         },
       },
       orderBy: { nroCuota: 'asc' },
@@ -225,19 +227,17 @@ export class CuotaService {
     return { actualizadas: result.count };
   }
 
-  async generarCuotasMensuales(mes: number, anio: number) {
+  async generarCuotasMensuales(mes: number, anio: number, disciplinaId?: number) {
     const { env } = await import('../config/env');
     const DESCUENTO_FAMILIAR = env.DESCUENTO_FAMILIAR;
 
-    // Obtener todos los deportistas activos con su disciplina
     const deportistas = await prisma.deportista.findMany({
       where: {
         estado: { not: 'INACTIVA' },
         cuenta: { activo: true },
+        ...(disciplinaId ? { disciplinaId } : {}),
       },
-      include: {
-        disciplina: true,
-      },
+      include: { disciplina: true },
     });
 
     const resultados = {
@@ -322,6 +322,129 @@ export class CuotaService {
       mensaje: `Generación de cuotas completada para ${mes}/${anio}`,
       porcentajeDescuento: `${DESCUENTO_FAMILIAR * 100}%`,
       ...resultados,
+    };
+  }
+
+  /** Lista de cuotas del socio logueado (formato front: cuotas[], estado, comprobanteUrl) */
+  async getCuotasSocio(deportistaId: number) {
+    const cuotas = await prisma.cuota.findMany({
+      where: { deportistaId },
+      include: {
+        pagos: { orderBy: { createdAt: 'desc' } },
+        disciplina: true,
+      },
+      orderBy: [{ anio: 'desc' }, { nroCuota: 'desc' }],
+    });
+
+    const cuotasFormato = cuotas.map((c) => {
+      const pagoConComprobante = c.pagos.find((p) => p.linkComprobante);
+      return {
+        id: c.id,
+        nroCuota: c.nroCuota,
+        mes: c.nroCuota,
+        anio: c.anio,
+        fechaVencimiento: c.fechaVencimiento,
+        monto: c.monto,
+        estado: c.estadoCuota,
+        comprobanteUrl: pagoConComprobante?.linkComprobante ?? null,
+        disciplina: c.disciplina?.nombre,
+      };
+    });
+
+    return { cuotas: cuotasFormato };
+  }
+
+  /** Lista de cuotas para admin (todas, con socio y comprobante) */
+  async getCuotasAdministrativo() {
+    const cuotas = await prisma.cuota.findMany({
+      include: {
+        deportista: true,
+        disciplina: true,
+        pagos: { orderBy: { createdAt: 'desc' } },
+      },
+      orderBy: [{ anio: 'desc' }, { nroCuota: 'desc' }],
+    });
+
+    const rows = cuotas.map((c) => {
+      const pagoConComprobante = c.pagos.find((p) => p.linkComprobante);
+      return {
+        id: c.id,
+        socioNombre: `${c.deportista.nombre} ${c.deportista.apellido}`,
+        dni: c.deportista.dni,
+        monto: c.monto,
+        estado: c.estadoCuota,
+        comprobanteUrl: pagoConComprobante?.linkComprobante ?? null,
+        mes: c.nroCuota,
+        anio: c.anio,
+        fotoCarnet: null,
+        disciplina: c.disciplina?.nombre,
+      };
+    });
+
+    return { cuotas: rows };
+  }
+
+  /** Actualizar solo estado de la cuota (Aprobada -> PAGADA, Rechazada -> PENDIENTE) */
+  async updateEstadoCuota(cuotaId: number, estado: 'PAGADA' | 'PENDIENTE') {
+    const cuota = await prisma.cuota.findUnique({
+      where: { id: cuotaId },
+      include: { deportista: true },
+    });
+
+    if (!cuota) {
+      throw new NotFoundError(ErrorMessages.CUOTA_NOT_FOUND);
+    }
+
+    const estadoCuota = estado === 'PAGADA' ? EstadoCuota.PAGADA : EstadoCuota.PENDIENTE;
+
+    await prisma.cuota.update({
+      where: { id: cuotaId },
+      data: { estadoCuota },
+    });
+
+    return this.getById(cuotaId);
+  }
+
+  /** Generar cuotas (alias front: actividadId=disciplinaId, mes string, preview) */
+  async generarCuotasAdmin(opts: {
+    actividadId?: number;
+    mes: string;
+    montoBase?: number;
+    preview: boolean;
+  }) {
+    const MESES: Record<string, number> = {
+      ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+      JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12,
+    };
+    const mesNum = MESES[opts.mes?.toUpperCase()] ?? new Date().getMonth() + 1;
+    const anio = new Date().getFullYear();
+
+    if (opts.preview) {
+      const deportistas = await prisma.deportista.findMany({
+        where: {
+          estado: { not: 'INACTIVA' },
+          cuenta: { activo: true },
+          ...(opts.actividadId ? { disciplinaId: opts.actividadId } : {}),
+        },
+        include: { disciplina: true },
+      });
+
+      const previewItems = deportistas.map((d) => ({
+        deportistaId: d.id,
+        socioNombre: `${d.nombre} ${d.apellido}`,
+        monto: Number(d.disciplina.precioMensual),
+      }));
+
+      return { previewItems, processedSocios: deportistas.length };
+    }
+
+    const result = await this.generarCuotasMensuales(mesNum, anio, opts.actividadId);
+    return {
+      processedSocios: result.cuotasGeneradas + result.cuotasOmitidas,
+      created: result.cuotasGeneradas,
+      updated: 0,
+      skips: result.cuotasOmitidas,
+      ...result,
     };
   }
 }

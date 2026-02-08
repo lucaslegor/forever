@@ -122,7 +122,7 @@ describe('Cuota Module', () => {
       expect(response.status).toBe(404);
     });
 
-    it('deberia retornar 409 si la cuota ya existe', async () => {
+    it('deberia retornar 409 si la cuota ya existe (mismo deportista, mes, año y disciplina)', async () => {
       (mockPrisma.cuentaUsuario.findUnique as jest.Mock).mockResolvedValue(adminUser);
       (mockPrisma.deportista.findUnique as jest.Mock).mockResolvedValue({ id: 1 });
       (mockPrisma.cuota.findFirst as jest.Mock).mockResolvedValue({ id: 1 });
@@ -133,6 +133,66 @@ describe('Cuota Module', () => {
         .send(cuotaData);
 
       expect(response.status).toBe(409);
+    });
+
+    it('permite crear cuota del mismo mes en otro año (no debe bloquear)', async () => {
+      (mockPrisma.cuentaUsuario.findUnique as jest.Mock).mockResolvedValue(adminUser);
+      (mockPrisma.deportista.findUnique as jest.Mock).mockResolvedValue({ id: 1 });
+      (mockPrisma.cuota.findFirst as jest.Mock).mockResolvedValue(null);
+      (mockPrisma.cuota.create as jest.Mock).mockResolvedValue({
+        id: 1,
+        nroCuota: 3,
+        anio: 2024,
+        monto: 5000,
+        estadoCuota: EstadoCuota.PENDIENTE,
+        disciplina: { nombre: 'Futbol' },
+        deportista: { nombre: 'Juan' },
+      });
+
+      // Marzo 2024
+      const res2024 = await request(app)
+        .post('/api/cuotas/asignar')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          deportistaId: 1,
+          nroCuota: 3,
+          monto: 5000,
+          fechaEmision: '2024-03-01',
+          fechaVencimiento: '2024-03-31',
+          disciplinaId: 1,
+        });
+
+      expect(res2024.status).toBe(201);
+
+      // Marzo 2025 (mismo mes, otro año) — no debe bloquear
+      (mockPrisma.cuota.create as jest.Mock).mockResolvedValue({
+        id: 2,
+        nroCuota: 3,
+        anio: 2025,
+        monto: 5000,
+        estadoCuota: EstadoCuota.PENDIENTE,
+        disciplina: { nombre: 'Futbol' },
+        deportista: { nombre: 'Juan' },
+      });
+
+      const res2025 = await request(app)
+        .post('/api/cuotas/asignar')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          deportistaId: 1,
+          nroCuota: 3,
+          monto: 5000,
+          fechaEmision: '2025-03-01',
+          fechaVencimiento: '2025-03-31',
+          disciplinaId: 1,
+        });
+
+      expect(res2025.status).toBe(201);
+      expect(mockPrisma.cuota.findFirst).toHaveBeenCalledTimes(2);
+      // Verificar que findFirst se llamó con anio correcto en cada caso
+      const findFirstCalls = (mockPrisma.cuota.findFirst as jest.Mock).mock.calls;
+      expect(findFirstCalls[0][0].where.anio).toBe(2024);
+      expect(findFirstCalls[1][0].where.anio).toBe(2025);
     });
 
     it('deberia retornar 201 al asignar cuota', async () => {
