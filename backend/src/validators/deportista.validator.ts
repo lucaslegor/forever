@@ -64,9 +64,19 @@ export const updateDeportistaSchema = z.object({
   adultoResponsable: adultoResponsableSchema.partial().optional(),
 });
 
+// Acepta string, number o array (query params a veces vienen como array); devuelve number o undefined
 const optionalPosIntQuery = z.preprocess(
-  (v) => (v === '' || v === undefined || v === null ? undefined : v),
-  z.string().regex(/^\d+$/).transform(Number).optional()
+  (v) => {
+    if (v === '' || v === undefined || v === null) return undefined;
+    if (Array.isArray(v)) v = v[0];
+    if (typeof v === 'number') return Number.isInteger(v) && v > 0 ? v : undefined;
+    if (typeof v === 'string') return v.trim() === '' ? undefined : v.trim();
+    return undefined;
+  },
+  z.union([
+    z.string().regex(/^\d+$/).transform(Number),
+    z.number().int().positive(),
+  ]).optional()
 );
 
 export const deportistasQuerySchema = z.object({

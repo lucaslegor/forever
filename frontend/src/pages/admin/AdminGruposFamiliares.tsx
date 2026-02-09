@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { UserPlus, Pencil, Trash2, DollarSign } from 'lucide-react';
 import type { GrupoFamiliarAdmin } from '../../types/admin';
 import type { Deportista } from '../../types/admin';
@@ -57,31 +57,40 @@ export const AdminGruposFamiliares = () => {
         fetchGrupos();
     }, []);
 
-    useEffect(() => {
-        (async () => {
-            try {
-                // Cargar todos los deportistas para filtrar en el modal (límite alto para no cortar la lista)
-                const res = await deportistaService.getAll({ limit: 10000 });
-                if (res.success && res.data?.data) {
-                    const raw = res.data.data as any[];
-                    setDeportistas(raw.map((d) => ({
-                        id: d.id,
-                        nombre: d.nombre,
-                        apellido: d.apellido,
-                        dni: d.dni,
-                        disciplina: d.disciplina?.nombre ?? '',
-                        genero: d.genero?.nombre ?? '',
-                        categoria: d.categoria?.nombre ?? '',
-                        subcategoria: d.subcategoria?.nombre ?? '',
-                        adultoResponsable: d.adultoResponsable ? { nombre: d.adultoResponsable.nombre, apellido: d.adultoResponsable.apellido, dni: d.adultoResponsable.dni, email: d.adultoResponsable.email, telefono: d.adultoResponsable.telefono } : null,
-                        activo: d.cuenta?.activo ?? true,
-                    })));
-                }
-            } catch {
-                setDeportistas([]);
-            }
-        })();
+    const mapDeportistaFromApi = (d: any) => ({
+        id: d.id,
+        nombre: d.nombre,
+        apellido: d.apellido,
+        dni: d.dni,
+        disciplina: d.disciplina?.nombre ?? '',
+        genero: d.genero?.nombre ?? '',
+        categoria: d.categoria?.nombre ?? '',
+        subcategoria: d.subcategoria?.nombre ?? '',
+        adultoResponsable: d.adultoResponsable ? { nombre: d.adultoResponsable.nombre, apellido: d.adultoResponsable.apellido, dni: d.adultoResponsable.dni, email: d.adultoResponsable.email, telefono: d.adultoResponsable.telefono } : null,
+        activo: d.cuenta?.activo ?? true,
+    });
+
+    const fetchDeportistasForModal = useCallback(async () => {
+        try {
+            const res = await deportistaService.getAll({ limit: 10000 });
+            if (!res.success) return;
+            // Backend devuelve { data: { data: [...], total, page, limit, totalPages } }
+            const raw = Array.isArray(res.data) ? res.data : (res.data && typeof res.data === 'object' && Array.isArray((res.data as any).data) ? (res.data as any).data : []);
+            setDeportistas(raw.map(mapDeportistaFromApi));
+        } catch {
+            setDeportistas([]);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchDeportistasForModal();
+    }, [fetchDeportistasForModal]);
+
+    useEffect(() => {
+        if (modal === 'crear' || modal === 'editar') {
+            fetchDeportistasForModal();
+        }
+    }, [modal, fetchDeportistasForModal]);
 
     const openCrear = () => {
         setForm({ miembros: [], titularDni: '' });
@@ -162,9 +171,12 @@ export const AdminGruposFamiliares = () => {
             }
             setModal(null);
             await fetchGrupos();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            alert('Error al guardar el grupo familiar');
+            const msg = err.response?.status === 409
+                ? (err.response?.data?.error || 'Ya existe un grupo familiar con los mismos miembros. No se pueden crear grupos duplicados.')
+                : 'Error al guardar el grupo familiar';
+            alert(msg);
         }
     };
 

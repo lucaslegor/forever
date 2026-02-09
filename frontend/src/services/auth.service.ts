@@ -29,4 +29,9 @@ export const authService = {
     const response = await api.get(`/users?${params}`);
     return response.data;
   },
+
+  resetAdminPassword: async (adminId: number, newPassword: string): Promise<ApiResponse<{ message: string }>> => {
+    const response = await api.put(`/users/admin/${adminId}/reset-password`, { newPassword });
+    return response.data;
+  },
 };

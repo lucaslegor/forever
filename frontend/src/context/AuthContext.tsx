@@ -149,11 +149,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetAdminPassword = useCallback(async (adminId: number, newPassword: string): Promise<boolean> => {
     try {
-      // TODO: Implementar endpoint de reset password para admin
-      // const response = await adminService.resetPassword(adminId, newPassword);
-      // return response.success;
-      console.warn('Endpoint de reset password para admin no implementado aún');
-      return false;
+      const response = await authService.resetAdminPassword(adminId, newPassword);
+      return response.success;
     } catch (error) {
       console.error('Error al restablecer contraseña de admin:', error);
       return false;

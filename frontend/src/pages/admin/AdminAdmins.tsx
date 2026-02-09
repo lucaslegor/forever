@@ -6,12 +6,13 @@ import { authService } from '../../services/auth.service';
 import styles from './AdminAdmins.module.css';
 
 export const AdminAdmins = () => {
-    const { setAdminPassword } = useAuth();
+    const { resetAdminPassword } = useAuth();
     const [admins, setAdmins] = useState<AdminUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [form, setForm] = useState({ documento: '', contraseña: '', nombre: '' });
+    const [saving, setSaving] = useState(false);
 
     const fetchAdmins = async () => {
         setLoading(true);
@@ -55,9 +56,43 @@ export const AdminAdmins = () => {
     const guardar = async (e: React.FormEvent) => {
         e.preventDefault();
         const doc = form.documento.trim();
-        if (form.contraseña) setAdminPassword(doc, form.contraseña);
-        setShowForm(false);
-        await fetchAdmins();
+        const nombreMostrar = form.nombre.trim() || 'Administrador';
+        const partes = nombreMostrar.split(/\s+/);
+        const nombre = partes[0] || 'Administrador';
+        const apellido = partes.slice(1).join(' ') || 'Panel';
+
+        setSaving(true);
+        try {
+            if (editingId === null) {
+                const res = await authService.register({
+                    dni: doc,
+                    nombre,
+                    apellido,
+                    email: `${doc}@admin.forever`,
+                    password: form.contraseña,
+                    rol: 'ADMINISTRATIVO',
+                });
+                if (!res.success) {
+                    alert(res.error || 'Error al crear el administrador');
+                    return;
+                }
+            } else {
+                if (form.contraseña) {
+                    const ok = await resetAdminPassword(editingId, form.contraseña);
+                    if (!ok) {
+                        alert('Error al actualizar la contraseña');
+                        return;
+                    }
+                }
+            }
+            setShowForm(false);
+            await fetchAdmins();
+        } catch (err: any) {
+            const msg = err.response?.data?.error || err.response?.data?.errors?.password?.[0] || err.message || 'Error al guardar';
+            alert(msg);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const toggleActivo = (id: number) => {
@@ -95,12 +130,12 @@ export const AdminAdmins = () => {
                             <label>Contraseña *</label>
                             <input
                                 type="password"
-                                placeholder="Contraseña que se le proporciona al admin"
+                                placeholder="Mín. 8 caracteres y una mayúscula"
                                 value={form.contraseña}
                                 onChange={(e) => setForm((f) => ({ ...f, contraseña: e.target.value }))}
                                 required
                                 className={styles.input}
-                                minLength={6}
+                                minLength={8}
                             />
                         </div>
                     )}
@@ -127,8 +162,8 @@ export const AdminAdmins = () => {
                         />
                     </div>
                     <div className={styles.formActions}>
-                        <button type="submit" className={styles.btnGuardar}>Guardar</button>
-                        <button type="button" className={styles.btnCancelar} onClick={() => setShowForm(false)}>Cancelar</button>
+                        <button type="submit" className={styles.btnGuardar} disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
+                        <button type="button" className={styles.btnCancelar} onClick={() => setShowForm(false)} disabled={saving}>Cancelar</button>
                     </div>
                 </form>
             )}
