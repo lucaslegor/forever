@@ -5,6 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { ArrowLeft, Save, CheckCircle, XCircle, Pencil, Trash2, Lock } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { deportistaService } from '../services/deportista.service';
 import { authService } from '../services/auth.service';
 import styles from './ProfileEdit.module.css';
@@ -326,7 +327,7 @@ export const ProfileEdit = () => {
             <div className={styles.profilePage}>
                 <main className={styles.mainContent}>
                     <div className={styles.formCard}>
-                        <p className={styles.loadingText}>Cargando perfil...</p>
+                        <LoadingScreen message="Cargando perfil" fullPage={false} />
                     </div>
                 </main>
                 <Footer />

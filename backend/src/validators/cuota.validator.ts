@@ -36,13 +36,38 @@ export const cuotasQuerySchema = z.object({
   disciplinaId: z.string().regex(/^\d+$/).transform(Number).optional(),
 });
 
+// Listado admin: filtro por año y opcionalmente mes
+export const listCuotasQuerySchema = z.object({
+  anio: z.string().regex(/^\d+$/).transform(Number).optional(),
+  mes: z.string().regex(/^\d+$/).transform(Number).optional(),
+  page: z.string().regex(/^\d+$/).transform(Number).optional(),
+  limit: z.string().regex(/^\d+$/).transform(Number).optional(),
+  estado: z.enum(['PAGADA', 'PENDIENTE', 'VENCIDA']).optional(),
+  disciplinaId: z.string().regex(/^\d+$/).transform(Number).optional(),
+});
+
 // Generar cuotas mensuales
 export const generarCuotasSchema = z.object({
   mes: z.number({ message: 'El mes es requerido' }).int().min(1, 'Mes invalido').max(12, 'Mes invalido'),
   anio: z.number({ message: 'El año es requerido' }).int().min(2024, 'Año invalido').max(2030, 'Año invalido'),
 });
 
+// Borrar todas las cuotas de una generación (anio + mes + disciplina)
+export const deletePorGeneracionQuerySchema = z.object({
+  anio: z.string().regex(/^\d+$/).transform(Number),
+  mes: z.string().regex(/^\d+$/).transform(Number),
+  disciplinaId: z.string().regex(/^\d+$/).transform(Number),
+});
+
+// Borrar todas las cuotas de un mes (anio + mes)
+export const deletePorMesQuerySchema = z.object({
+  anio: z.string().regex(/^\d+$/).transform(Number),
+  mes: z.string().regex(/^\d+$/).transform(Number),
+});
+
 export type AsignarCuotaInput = z.infer<typeof asignarCuotaSchema>;
 export type UpdateCuotaInput = z.infer<typeof updateCuotaSchema>;
 export type CuotasQuery = z.infer<typeof cuotasQuerySchema>;
+export type ListCuotasQuery = z.infer<typeof listCuotasQuerySchema>;
 export type GenerarCuotasInput = z.infer<typeof generarCuotasSchema>;
+export type DeletePorGeneracionQuery = z.infer<typeof deletePorGeneracionQuerySchema>;

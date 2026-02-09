@@ -112,7 +112,6 @@ describe('Tests de API con datos del Seed', () => {
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
                     nombre: 'Hockey Test',
-                    descripcion: 'Hockey para tests',
                     precioMensual: 12000,
                 });
 
@@ -127,7 +126,6 @@ describe('Tests de API con datos del Seed', () => {
                 .set('Authorization', `Bearer ${deportistaToken}`)
                 .send({
                     nombre: 'Voley Test',
-                    descripcion: 'No deberia crearse',
                     precioMensual: 10000,
                 });
 
@@ -372,7 +370,7 @@ describe('Tests de API con datos del Seed', () => {
 
             expect(response.status).toBe(201);
             expect(response.body.data).toHaveProperty('cuotasGeneradas');
-            expect(response.body.data).toHaveProperty('descuentosAplicados');
+            expect(response.body.data).toHaveProperty('montoTotal');
             console.log('✅ Cuotas mensuales generadas:', response.body.data.cuotasGeneradas);
         });
 

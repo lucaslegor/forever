@@ -5,7 +5,6 @@ export const createDisciplinaSchema = z.object({
     .string({ message: 'El nombre es requerido' })
     .min(2, 'El nombre debe tener al menos 2 caracteres')
     .max(100, 'El nombre no puede exceder 100 caracteres'),
-  descripcion: z.string().optional(),
   precioMensual: z
     .number({ message: 'El precio mensual es requerido' })
     .positive('El precio mensual debe ser mayor a 0'),
@@ -13,7 +12,6 @@ export const createDisciplinaSchema = z.object({
 
 export const updateDisciplinaSchema = z.object({
   nombre: z.string().min(2).max(100).optional(),
-  descripcion: z.string().optional(),
   precioMensual: z.number().positive().optional(),
   activa: z.boolean().optional(),
 });

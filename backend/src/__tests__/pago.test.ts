@@ -3,6 +3,17 @@ import jwt from 'jsonwebtoken';
 import app from '../app';
 import { Rol, EstadoCuota, EstadoPago } from '@prisma/client';
 
+// Mock mercadopago service (no llamar a la API en tests)
+jest.mock('../services/mercadopago.service', () => ({
+  crearPreferenciaPago: jest.fn().mockResolvedValue({
+    initPoint: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=test',
+    preferenceId: 'test-pref-id',
+  }),
+  getPaymentById: jest.fn().mockImplementation((id: string) =>
+    id === 'MP_INEXISTENTE' ? Promise.resolve(null) : Promise.resolve({ external_reference: '1', status: 'approved' })
+  ),
+}));
+
 // Mock prisma
 jest.mock('../config/prisma', () => {
   const mockPrisma = {
@@ -15,6 +26,7 @@ jest.mock('../config/prisma', () => {
     },
     cuota: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
       count: jest.fn(),
     },
@@ -158,7 +170,9 @@ describe('Pago Module', () => {
         monto: 5000,
         estadoCuota: EstadoCuota.PENDIENTE,
         deportista: { id: 1 },
+        disciplina: { nombre: 'Futbol' },
       });
+      (mockPrisma.cuota.findFirst as jest.Mock).mockResolvedValue(null);
       (mockPrisma.pago.create as jest.Mock).mockResolvedValue({
         id: 1,
         fechaPago: new Date(),
@@ -175,6 +189,8 @@ describe('Pago Module', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('pago');
+      expect(response.body.data).toHaveProperty('initPoint');
     });
   });
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, DollarSign, CheckCircle, XCircle } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { deportistaService } from '../services/deportista.service';
 import styles from './HistorialPagos.module.css';
 
@@ -127,7 +128,7 @@ export const HistorialPagos = () => {
         return (
             <div className={styles.page}>
                 <main className={styles.mainContent}>
-                    <p className={styles.loadingText}>Cargando...</p>
+                    <LoadingScreen fullPage />
                 </main>
                 <Footer />
             </div>

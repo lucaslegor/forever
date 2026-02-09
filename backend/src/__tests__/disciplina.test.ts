@@ -69,7 +69,6 @@ describe('Disciplina Module', () => {
   describe('POST /api/disciplinas', () => {
     const disciplinaData = {
       nombre: 'Futbol',
-      descripcion: 'Futbol 11',
       precioMensual: 5000,
     };
 
@@ -132,7 +131,6 @@ describe('Disciplina Module', () => {
       (mockPrisma.disciplina.create as jest.Mock).mockResolvedValue({
         id: 1,
         nombre: 'Futbol',
-        descripcion: 'Futbol 11',
         precioMensual: 5000,
         activa: true,
       });
@@ -197,7 +195,6 @@ describe('Disciplina Module', () => {
       (mockPrisma.disciplina.findUnique as jest.Mock).mockResolvedValue({
         id: 1,
         nombre: 'Futbol',
-        descripcion: 'Futbol 11',
         precioMensual: 5000,
         activa: true,
         _count: { deportistas: 10 },

@@ -50,12 +50,11 @@ export const OpcionesAdminProvider = ({ children }: { children: ReactNode }) => 
       if (response.success && response.data) {
         const data = response.data;
         
-        // Mapear disciplinas al formato esperado
+        // Mapear disciplinas al formato esperado (backend usa precioMensual, puede venir como Decimal/string)
         const disciplinasMap: Disciplina[] = data.disciplinas.map(d => ({
           id: d.id,
           nombre: d.nombre,
-          descripcion: '',
-          cuotaMensual: d.precioMensual,
+          valorMensual: Number(d.precioMensual) || 0,
           activo: true,
         }));
 

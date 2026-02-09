@@ -8,6 +8,7 @@ import {
   ErrorMessages,
 } from '../utils/errors';
 import { Rol, EstadoDeportista, EstadoCuota } from '@prisma/client';
+import { cuotaService } from './cuota.service';
 
 export class DeportistaService {
   async create(data: CreateDeportistaDTO) {
@@ -59,10 +60,6 @@ export class DeportistaService {
       if (data.subcategoriaId != null && Number(data.subcategoriaId) > 0) {
         createData.subcategoria = { connect: { id: Number(data.subcategoriaId) } };
       }
-      if (data.obraSocial != null && data.obraSocial !== '') createData.obraSocial = data.obraSocial;
-      if (data.telefonos != null && data.telefonos !== '') createData.telefonos = data.telefonos;
-      if (data.enfermedades != null && data.enfermedades !== '') createData.enfermedades = data.enfermedades;
-
       const nuevoDeportista = await tx.deportista.create({ data: createData });
 
       // Si es menor (Juveniles/Infantiles), crear adulto responsable
@@ -81,6 +78,14 @@ export class DeportistaService {
 
       return nuevoDeportista;
     });
+
+    // Si ya existe generación del mes actual, asignar automáticamente la cuota al nuevo deportista
+    try {
+      await cuotaService.asignarCuotaDelMesActual(deportista.id);
+    } catch (err) {
+      // No fallar la creación del deportista si falla la asignación de cuota
+      console.error('Error al asignar cuota del mes al nuevo deportista:', err);
+    }
 
     return this.getById(deportista.id);
   }
@@ -186,10 +191,7 @@ export class DeportistaService {
           generoId: data.generoId,
           categoriaId: data.categoriaId,
           subcategoriaId: data.subcategoriaId,
-          obraSocial: data.obraSocial,
           disciplinaId: data.disciplinaId,
-          telefonos: data.telefonos,
-          enfermedades: data.enfermedades,
         },
       });
 

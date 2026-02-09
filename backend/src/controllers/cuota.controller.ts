@@ -3,7 +3,7 @@ import { cuotaService } from '../services/cuota.service';
 import { deportistaService } from '../services/deportista.service';
 import { sendSuccess, sendCreated } from '../utils/response';
 import { AuthenticatedRequest } from '../types';
-import { AsignarCuotaInput, UpdateCuotaInput, CuotasQuery, GenerarCuotasInput } from '../validators/cuota.validator';
+import { AsignarCuotaInput, UpdateCuotaInput, CuotasQuery, ListCuotasQuery, GenerarCuotasInput } from '../validators/cuota.validator';
 import { Rol } from '@prisma/client';
 
 export class CuotaController {
@@ -94,6 +94,56 @@ export class CuotaController {
       const data = req.body as GenerarCuotasInput;
       const result = await cuotaService.generarCuotasMensuales(data.mes, data.anio);
       sendCreated(res, result, 'Cuotas generadas exitosamente');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAll(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const query = req.query as unknown as ListCuotasQuery;
+      const result = await cuotaService.getAll(query);
+      sendSuccess(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async delete(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = parseInt(req.params.id as string, 10);
+      const result = await cuotaService.delete(id);
+      sendSuccess(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deletePorGeneracion(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const query = req.query as unknown as { anio: number; mes: number; disciplinaId: number };
+      const result = await cuotaService.deletePorGeneracion(query.anio, query.mes, query.disciplinaId);
+      sendSuccess(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deletePorMes(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const query = req.query as unknown as { anio: number; mes: number };
+      const result = await cuotaService.deletePorMes(query.anio, query.mes);
+      sendSuccess(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async marcarPagadaEfectivo(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = parseInt(req.params.id as string, 10);
+      const result = await cuotaService.marcarPagadaEfectivo(id);
+      sendSuccess(res, result, 'Cuota marcada como pagada en efectivo');
     } catch (error) {
       next(error);
     }

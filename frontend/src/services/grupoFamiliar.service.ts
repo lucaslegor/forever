@@ -8,7 +8,6 @@ export interface CreateGrupoFamiliarDTO {
   cuotaHermano?: number;
   integrantes: Array<{
     deportistaId: number;
-    vinculo: string;
     esPrincipal?: boolean;
   }>;
 }
@@ -19,7 +18,6 @@ export interface UpdateGrupoFamiliarDTO {
   cuotaHermano?: number;
   integrantes?: Array<{
     deportistaId: number;
-    vinculo: string;
     esPrincipal?: boolean;
   }>;
 }

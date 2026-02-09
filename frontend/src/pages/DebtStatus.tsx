@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, DollarSign, AlertCircle, CheckCircle, CreditCard, Info } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { useAuth } from '../context/AuthContext';
 import { cuotaService } from '../services/cuota.service';
 import { grupoFamiliarService } from '../services/grupoFamiliar.service';
+import { pagoService } from '../services/pago.service';
 import styles from './DebtStatus.module.css';
 
 interface Quota {
@@ -26,6 +28,7 @@ export const DebtStatus = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
+    const [payingQuotaId, setPayingQuotaId] = useState<number | null>(null);
     const [debtData, setDebtData] = useState<DebtStatusData | null>(null);
     const [esTitular, setEsTitular] = useState(true);
 
@@ -63,12 +66,13 @@ export const DebtStatus = () => {
                     const pendientes = (d.cuotasPendientes || []).map((c: any) => ({
                         id: c.id,
                         nroCuota: c.nroCuota,
-                        anio: new Date(c.fechaVencimiento).getFullYear(),
+                        anio: c.anio != null ? c.anio : new Date(c.fechaVencimiento).getFullYear(),
                         monto: Number(c.monto),
                         fechaVencimiento: typeof c.fechaVencimiento === 'string' ? c.fechaVencimiento : new Date(c.fechaVencimiento).toISOString().slice(0, 10),
                         estadoCuota: c.estadoCuota === 'VENCIDA' ? 'VENCIDA' : 'PENDIENTE',
-                        disciplina: c.disciplina || 'Cuota',
+                        disciplina: c.disciplina ?? '—',
                     }));
+                    pendientes.sort((a: Quota, b: Quota) => a.anio !== b.anio ? a.anio - b.anio : a.nroCuota - b.nroCuota);
                     setDebtData({
                         cuotasPendientes: pendientes,
                         totalAdeudado: Number(d.totalAdeudado) || 0,
@@ -83,10 +87,21 @@ export const DebtStatus = () => {
         return () => { cancelled = true; };
     }, []);
 
-    const handlePayQuota = (quotaId: number) => {
-        // TODO: Implement payment flow
-        console.log('Pagar cuota:', quotaId);
-        alert('Funcionalidad de pago en desarrollo');
+    const handlePayQuota = async (quotaId: number) => {
+        setPayingQuotaId(quotaId);
+        try {
+            const res = await pagoService.crear(quotaId);
+            if (res.success && res.data?.initPoint) {
+                window.location.href = res.data.initPoint;
+                return;
+            }
+            alert(res.message || 'No se pudo iniciar el pago. Revisá que Mercado Pago esté configurado.');
+        } catch (e: any) {
+            const msg = e.response?.data?.message || e.message || 'Error al iniciar el pago.';
+            alert(msg);
+        } finally {
+            setPayingQuotaId(null);
+        }
     };
 
     const formatCurrency = (amount: number) => {
@@ -116,7 +131,7 @@ export const DebtStatus = () => {
         return (
             <div className={styles.debtStatusPage}>
                 <main className={styles.mainContent}>
-                    <p className={styles.loadingText}>Cargando...</p>
+                    <LoadingScreen fullPage />
                 </main>
                 <Footer />
             </div>
@@ -158,7 +173,9 @@ export const DebtStatus = () => {
                         <div className={styles.quotasSection}>
                             <h2 className={styles.sectionTitle}>Cuotas Pendientes</h2>
                             <div className={styles.quotasList}>
-                                {debtData.cuotasPendientes.map((quota) => (
+                                {debtData.cuotasPendientes.map((quota, index) => {
+                                    const puedePagar = esTitular && index === 0;
+                                    return (
                                     <div key={quota.id} className={styles.quotaCard}>
                                         <div className={styles.quotaInfo}>
                                             <div className={styles.quotaHeader}>
@@ -182,21 +199,25 @@ export const DebtStatus = () => {
                                         </div>
                                         <div className={styles.quotaActions}>
                                             <span className={styles.quotaAmount}>{formatCurrency(quota.monto)}</span>
-                                            {esTitular ? (
+                                            {puedePagar ? (
                                                 <button
                                                     type="button"
                                                     className={styles.payButton}
                                                     onClick={() => handlePayQuota(quota.id)}
+                                                    disabled={payingQuotaId === quota.id}
                                                 >
                                                     <CreditCard size={20} />
-                                                    Pagar Cuota
+                                                    {payingQuotaId === quota.id ? 'Redirigiendo...' : 'Pagar Cuota'}
                                                 </button>
+                                            ) : esTitular ? (
+                                                <span className={styles.payDisabled}>Pagá la cuota anterior primero</span>
                                             ) : (
                                                 <span className={styles.payDisabled}>Solo el titular puede pagar</span>
                                             )}
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             <div className={styles.totalDebt}>

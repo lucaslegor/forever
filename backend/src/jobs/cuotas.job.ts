@@ -28,8 +28,7 @@ export const iniciarJobGeneracionCuotas = () => {
             console.log('✅ [CRON JOB] Generación de cuotas completada exitosamente');
             console.log(`📊 Cuotas generadas: ${resultado.cuotasGeneradas}`);
             console.log(`⏭️  Cuotas omitidas: ${resultado.cuotasOmitidas}`);
-            console.log(`💰 Descuentos aplicados: ${resultado.descuentosAplicados}`);
-            console.log(`💵 Monto total: $${resultado.montoTotalConDescuento}`);
+            console.log(`💵 Monto total: $${resultado.montoTotal}`);
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
         } catch (error) {
             console.error('❌ [CRON JOB] Error al generar cuotas mensuales');

@@ -25,7 +25,6 @@ export async function cleanDatabase() {
 export const testData = {
   disciplina: {
     nombre: 'Futbol Test',
-    descripcion: 'Futbol para tests',
     precioMensual: 5000,
   },
   admin: {

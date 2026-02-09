@@ -1,0 +1,113 @@
+/* Modal de confirmación alineado con el sistema (Club For Ever) */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-md);
+}
+
+.dialog {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  color: var(--color-dark-gray);
+}
+
+.header {
+  background: var(--color-blue);
+  color: var(--color-white);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.body {
+  padding: var(--spacing-lg);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-dark-gray);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+}
+
+.btnCancel {
+  padding: 0.65rem 1.35rem;
+  background: #f0f4f8;
+  color: var(--color-dark-gray);
+  border: 1px solid #d0d8e0;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  min-width: 100px;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  outline: none;
+}
+
+.btnCancel:hover {
+  background: #e4e9ef;
+  border-color: #b8c2cc;
+}
+
+.btnCancel:focus-visible {
+  box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.25);
+}
+
+.btnConfirm {
+  padding: 0.65rem 1.35rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  min-width: 100px;
+  transition: background 0.2s;
+  outline: none;
+  box-sizing: border-box;
+  appearance: none;
+}
+
+.btnConfirm:focus {
+  outline: none;
+}
+
+.btnConfirm:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 0 4px rgba(0, 51, 102, 0.3);
+}
+
+.btnConfirmPrimary {
+  background: var(--color-blue);
+  color: #fff;
+}
+
+.btnConfirmPrimary:hover {
+  background: #002244;
+}
+
+.btnConfirmDanger {
+  background: #c62828;
+  color: #fff;
+  border: none;
+  box-shadow: none;
+}
+
+.btnConfirmDanger:hover {
+  background: #b71c1c;
+}
+
+.btnConfirmDanger:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(198, 40, 40, 0.5);
+}

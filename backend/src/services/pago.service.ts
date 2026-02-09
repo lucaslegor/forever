@@ -6,6 +6,7 @@ import {
   ErrorMessages,
 } from '../utils/errors';
 import { EstadoPago, EstadoCuota, EstadoDeportista } from '@prisma/client';
+import { crearPreferenciaPago } from './mercadopago.service';
 
 export class PagoService {
   async crear(deportistaId: number, data: CreatePagoDTO) {
@@ -30,6 +31,20 @@ export class PagoService {
       throw new BadRequestError(ErrorMessages.CUOTA_NOT_PENDING);
     }
 
+    const anteriorImpaga = await prisma.cuota.findFirst({
+      where: {
+        deportistaId: cuota.deportistaId,
+        estadoCuota: { in: [EstadoCuota.PENDIENTE, EstadoCuota.VENCIDA] },
+        OR: [
+          { anio: { lt: cuota.anio } },
+          { anio: cuota.anio, nroCuota: { lt: cuota.nroCuota } },
+        ],
+      },
+    });
+    if (anteriorImpaga) {
+      throw new BadRequestError('Debe pagar las cuotas en orden. Tené cuotas anteriores pendientes.');
+    }
+
     const pago = await prisma.pago.create({
       data: {
         fechaPago: new Date(),
@@ -46,7 +61,28 @@ export class PagoService {
       },
     });
 
-    return pago;
+    if (!process.env.MERCADOPAGO_ACCESS_TOKEN) {
+      return { pago, initPoint: null, preferenceId: null };
+    }
+
+    const disciplinaNombre = cuota.disciplina?.nombre ?? 'Cuota';
+    const tituloPreferencia = `Cuota For Ever - ${disciplinaNombre} ${cuota.nroCuota}/${cuota.anio}`;
+
+    try {
+      const preferencia = await crearPreferenciaPago({
+        pagoId: pago.id,
+        title: tituloPreferencia,
+        unitPrice: Number(cuota.monto),
+      });
+      return {
+        pago,
+        initPoint: preferencia.initPoint,
+        preferenceId: preferencia.preferenceId,
+      };
+    } catch (err) {
+      console.error('Error creando preferencia Mercado Pago:', err);
+      return { pago, initPoint: null, preferenceId: null };
+    }
   }
 
   async confirmarPago(pagoId: number, mercadoPagoId: string, status: string) {
@@ -59,7 +95,8 @@ export class PagoService {
       throw new NotFoundError(ErrorMessages.PAGO_NOT_FOUND);
     }
 
-    const estadoPago = status === 'approved' ? EstadoPago.APROBADO : EstadoPago.RECHAZADO;
+    const estadoPago =
+      status === 'approved' ? EstadoPago.APROBADO : status === 'rejected' ? EstadoPago.RECHAZADO : EstadoPago.PENDIENTE;
 
     await prisma.$transaction(async (tx) => {
       await tx.pago.update({

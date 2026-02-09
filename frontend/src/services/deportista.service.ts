@@ -10,12 +10,9 @@ export interface CreateDeportistaDTO {
   generoId: number;
   categoriaId: number;
   subcategoriaId?: number;
-  obraSocial?: string;
   disciplinaId: number;
   email: string;
   password: string;
-  telefonos?: string;
-  enfermedades?: string;
   adultoResponsable?: {
     nombre: string;
     apellido: string;
@@ -32,10 +29,7 @@ export interface UpdateDeportistaDTO {
   generoId?: number;
   categoriaId?: number;
   subcategoriaId?: number | null;
-  obraSocial?: string;
   disciplinaId?: number;
-  telefonos?: string;
-  enfermedades?: string;
   adultoResponsable?: Partial<CreateDeportistaDTO['adultoResponsable']>;
 }
 

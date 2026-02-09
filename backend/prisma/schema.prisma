@@ -36,14 +36,6 @@ enum Rol {
   DEPORTISTA      @map("Deportista")
 }
 
-enum Vinculo {
-  PADRE    @map("Padre")
-  MADRE    @map("Madre")
-  HIJO     @map("Hijo")
-  HERMANO  @map("Hermano")
-  OTRO     @map("Otro")
-}
-
 enum Periodicidad {
   MENSUAL   @map("Mensual")
   ANUAL     @map("Anual")
@@ -58,7 +50,6 @@ enum Periodicidad {
 model Disciplina {
   id             Int            @id @default(autoincrement()) @map("id_disciplina")
   nombre         String         @unique
-  descripcion    String?
   precioMensual  Decimal        @map("precio_mensual") @db.Decimal(10, 2)
   activa         Boolean        @default(true)
   deportistas    Deportista[]
@@ -157,14 +148,11 @@ model Deportista {
   categoria          Categoria                 @relation(fields: [categoriaId], references: [id])
   subcategoriaId     Int?                      @map("id_subcategoria")
   subcategoria       Subcategoria?             @relation(fields: [subcategoriaId], references: [id])
-  obraSocial         String?                   @map("obra_social")
   estado             EstadoDeportista          @default(AL_DIA)
   disciplinaId       Int                       @map("id_disciplina")
   disciplina         Disciplina                @relation(fields: [disciplinaId], references: [id])
   cuentaId           Int                       @unique @map("id_cuenta")
   cuenta             CuentaUsuario             @relation(fields: [cuentaId], references: [id], onDelete: Cascade)
-  enfermedades       String?
-  telefonos          String?
   adultoResponsable  AdultoResponsable?
   pagos              Pago[]
   cuotas             Cuota[]
@@ -207,7 +195,6 @@ model GrupoFamiliar {
 model GrupoFamiliarIntegrante {
   grupoId      Int           @map("id_grupo_familiar")
   deportistaId Int           @map("id_deportista")
-  vinculo      Vinculo
   esPrincipal  Boolean       @default(false) @map("es_principal")
   grupo        GrupoFamiliar @relation(fields: [grupoId], references: [id], onDelete: Cascade)
   deportista   Deportista    @relation(fields: [deportistaId], references: [id], onDelete: Cascade)

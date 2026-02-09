@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { pagoService } from '../services/pago.service';
+import { getPaymentById } from '../services/mercadopago.service';
 import { deportistaService } from '../services/deportista.service';
-import { sendSuccess, sendCreated } from '../utils/response';
+import { sendSuccess, sendCreated, sendUnauthorized } from '../utils/response';
+import { validateMercadoPagoWebhookSignature } from '../utils/webhookSignature';
 import { AuthenticatedRequest } from '../types';
 import { CreatePagoInput } from '../validators/pago.validator';
 
@@ -11,7 +13,7 @@ export class PagoController {
       const data = req.body as CreatePagoInput;
       const deportista = await deportistaService.getByUserId(req.user!.id);
       const result = await pagoService.crear(deportista.id, data);
-      sendCreated(res, result, 'Pago iniciado correctamente');
+      sendCreated(res, result, 'Preferencia creada. Redirigiendo al checkout.');
     } catch (error) {
       next(error);
     }
@@ -19,13 +21,22 @@ export class PagoController {
 
   async webhook(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      if (!validateMercadoPagoWebhookSignature(req)) {
+        sendUnauthorized(res, 'Firma de webhook inválida');
+        return;
+      }
+
       const { type, data } = req.body;
 
-      if (type === 'payment') {
-        const paymentId = data.id;
-        const pago = await pagoService.getByMercadoPagoId(paymentId);
-        if (pago) {
-          await pagoService.confirmarPago(pago.id, paymentId, 'approved');
+      if (type === 'payment' && data?.id) {
+        const paymentId = String(data.id);
+        const payment = await getPaymentById(paymentId);
+        if (payment?.external_reference) {
+          const pagoId = parseInt(payment.external_reference, 10);
+          if (!Number.isNaN(pagoId)) {
+            const status = payment.status === 'approved' ? 'approved' : payment.status === 'rejected' ? 'rejected' : 'pending';
+            await pagoService.confirmarPago(pagoId, paymentId, status);
+          }
         }
       }
 

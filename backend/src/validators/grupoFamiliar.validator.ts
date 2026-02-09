@@ -5,7 +5,6 @@ const integranteSchema = z.object({
     .number({ message: 'El deportista es requerido' })
     .int()
     .positive('ID de deportista invalido'),
-  vinculo: z.enum(['PADRE', 'MADRE', 'HIJO', 'HERMANO', 'OTRO'], { message: 'Vinculo invalido' }),
   esPrincipal: z.boolean().default(false),
 });
 

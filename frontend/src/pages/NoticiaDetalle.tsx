@@ -73,9 +73,15 @@ export const NoticiaDetalle = () => {
                     <p className={styles.resumen}>{noticia.resumen}</p>
 
                     <div className={styles.contenido}>
-                        {noticia.contenido.split('\n\n').map((parrafo, i) => (
-                            <p key={i}>{parrafo}</p>
-                        ))}
+                        {/<[a-z][\s\S]*>/i.test(noticia.contenido) ? (
+                            <div dangerouslySetInnerHTML={{ __html: noticia.contenido }} />
+                        ) : (
+                            noticia.contenido
+                                .split(/\n\n+/)
+                                .map((parrafo, i) =>
+                                    parrafo.trim() ? <p key={i}>{parrafo}</p> : null
+                                )
+                        )}
                     </div>
 
                     <div className={styles.actions}>

@@ -15,10 +15,11 @@ export const env = {
   MERCADOPAGO_FAILURE_URL: process.env.MERCADOPAGO_FAILURE_URL || '',
   MERCADOPAGO_PENDING_URL: process.env.MERCADOPAGO_PENDING_URL || '',
   MERCADOPAGO_WEBHOOK_URL: process.env.MERCADOPAGO_WEBHOOK_URL || '',
+  /** Clave secreta de Webhooks (Tus integraciones > Webhooks). Opcional; si está definida se valida x-signature. */
+  MERCADOPAGO_WEBHOOK_SECRET: process.env.MERCADOPAGO_WEBHOOK_SECRET || '',
   MAX_LOGIN_ATTEMPTS: parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10),
   LOGIN_BLOCK_TIME: parseInt(process.env.LOGIN_BLOCK_TIME || '15', 10),
   CLUB_NAME: process.env.CLUB_NAME || 'Club Deportivo Forever',
-  DESCUENTO_FAMILIAR: parseFloat(process.env.DESCUENTO_FAMILIAR || '0.30'),
 };
 
 export default env;

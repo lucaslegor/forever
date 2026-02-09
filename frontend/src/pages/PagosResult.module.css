@@ -1,0 +1,75 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.card {
+  max-width: 420px;
+  width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 34, 68, 0.08);
+  padding: 2.5rem;
+  text-align: center;
+  border: 1px solid #e8ecf0;
+}
+
+.icon {
+  display: block;
+  margin: 0 auto 1.25rem;
+}
+
+.resultSuccess .icon {
+  color: #2e7d32;
+}
+
+.resultFailure .icon {
+  color: #c62828;
+}
+
+.resultPending .icon {
+  color: #f9a825;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.75rem 0;
+}
+
+.message {
+  font-size: 1rem;
+  color: #5c6b7a;
+  line-height: 1.55;
+  margin: 0 0 1.5rem 0;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background: transparent;
+  color: #003366;
+  border: 2px solid #003366;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.backButton:hover {
+  background: rgba(0, 51, 102, 0.08);
+}

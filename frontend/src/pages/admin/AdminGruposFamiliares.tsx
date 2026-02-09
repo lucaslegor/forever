@@ -3,8 +3,10 @@ import { UserPlus, Pencil, Trash2, DollarSign } from 'lucide-react';
 import type { GrupoFamiliarAdmin } from '../../types/admin';
 import type { Deportista } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { grupoFamiliarService } from '../../services/grupoFamiliar.service';
 import { deportistaService } from '../../services/deportista.service';
+import { LoadingScreen } from '../../components/LoadingScreen';
 import styles from './AdminGruposFamiliares.module.css';
 
 type MiembroForm = { deportistaId: number; nombre: string; apellido: string; dni: string };
@@ -26,6 +28,7 @@ export const AdminGruposFamiliares = () => {
     const [inputCuotaHermano, setInputCuotaHermano] = useState('');
     const [deportistas, setDeportistas] = useState<Deportista[]>([]);
     const { disciplinasNombres, generosNombres, getCategoriasOptions, getSubcategoriaOptions } = useOpcionesAdmin();
+    const confirm = useConfirm();
 
     const fetchGrupos = async () => {
         setLoading(true);
@@ -160,7 +163,6 @@ export const AdminGruposFamiliares = () => {
         const titularDni = form.titularDni?.trim() || form.miembros[0]?.dni || '';
         const integrantes = form.miembros.map((m, idx) => ({
             deportistaId: m.deportistaId,
-            vinculo: idx === 0 ? 'PADRE' : 'HIJO',
             esPrincipal: idx === 0,
         }));
         try {
@@ -181,7 +183,14 @@ export const AdminGruposFamiliares = () => {
     };
 
     const borrar = async (id: number) => {
-        if (!window.confirm('¿Borrar este grupo familiar?')) return;
+        const ok = await confirm({
+            title: 'Borrar grupo familiar',
+            message: '¿Borrar este grupo familiar?',
+            confirmLabel: 'Borrar',
+            cancelLabel: 'Cancelar',
+            variant: 'danger',
+        });
+        if (!ok) return;
         try {
             await grupoFamiliarService.delete(id);
             await fetchGrupos();
@@ -213,7 +222,7 @@ export const AdminGruposFamiliares = () => {
         setModalCuotaHermano(null);
     };
 
-    if (loading) return <p className={styles.loading}>Cargando...</p>;
+    if (loading) return <LoadingScreen fullPage />;
 
     return (
         <div className={styles.page}>

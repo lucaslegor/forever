@@ -2,8 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { UserPlus, UserMinus, Pencil, Plus, Filter } from 'lucide-react';
 import type { Deportista, AdultoResponsable } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { deportistaService } from '../../services/deportista.service';
 import { clasificacionService } from '../../services/clasificacion.service';
+import { LoadingScreen } from '../../components/LoadingScreen';
 import styles from './AdminDeportistas.module.css';
 
 const initialAdulto = (): AdultoResponsable => ({
@@ -16,6 +18,7 @@ const initialAdulto = (): AdultoResponsable => ({
 
 export const AdminDeportistas = () => {
     const { disciplinas, disciplinasNombres, generos, generosNombres, categorias, categoriasNombres, getCategoriasOptions, getSubcategoriaOptions } = useOpcionesAdmin();
+    const confirm = useConfirm();
     const [deportistas, setDeportistas] = useState<Deportista[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -149,14 +152,20 @@ export const AdminDeportistas = () => {
     };
 
     const handleDarDeBaja = async (id: number) => {
-        if (window.confirm('¿Dar de baja a este deportista?')) {
-            try {
-                await deportistaService.delete(id);
-                await fetchDeportistas();
-            } catch (error) {
-                console.error('Error al dar de baja:', error);
-                alert('Error al dar de baja al deportista');
-            }
+        const ok = await confirm({
+            title: 'Dar de baja',
+            message: '¿Dar de baja a este deportista?',
+            confirmLabel: 'Dar de baja',
+            cancelLabel: 'Cancelar',
+            variant: 'danger',
+        });
+        if (!ok) return;
+        try {
+            await deportistaService.delete(id);
+            await fetchDeportistas();
+        } catch (error) {
+            console.error('Error al dar de baja:', error);
+            alert('Error al dar de baja al deportista');
         }
     };
 
@@ -332,7 +341,7 @@ export const AdminDeportistas = () => {
         }));
     };
 
-    if (loading) return <p className={styles.loading}>Cargando...</p>;
+    if (loading) return <LoadingScreen fullPage />;
 
     return (
         <div className={styles.page}>

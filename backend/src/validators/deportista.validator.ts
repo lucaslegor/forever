@@ -35,7 +35,6 @@ export const createDeportistaSchema = z.object({
   generoId: z.coerce.number({ message: 'El género es requerido' }).int().positive(),
   categoriaId: z.coerce.number({ message: 'La categoría es requerida' }).int().positive(),
   subcategoriaId: z.coerce.number().int().positive().optional(),
-  obraSocial: z.string().optional(),
   disciplinaId: z
     .coerce
     .number({ message: 'La disciplina es requerida' })
@@ -45,8 +44,6 @@ export const createDeportistaSchema = z.object({
   password: z
     .string({ message: 'La contrasena es requerida' })
     .min(6, 'La contrasena debe tener al menos 6 caracteres'),
-  telefonos: z.string().optional(),
-  enfermedades: z.string().optional(),
   adultoResponsable: adultoResponsableSchema.optional(),
 });
 
@@ -57,10 +54,7 @@ export const updateDeportistaSchema = z.object({
   generoId: z.number().int().positive().optional(),
   categoriaId: z.number().int().positive().optional(),
   subcategoriaId: z.number().int().positive().nullable().optional(),
-  obraSocial: z.string().optional(),
   disciplinaId: z.number().int().positive().optional(),
-  telefonos: z.string().optional(),
-  enfermedades: z.string().optional(),
   adultoResponsable: adultoResponsableSchema.partial().optional(),
 });
 

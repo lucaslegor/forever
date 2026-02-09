@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, ImagePlus } from 'lucide-react';
+import { Save, ImagePlus, FileText } from 'lucide-react';
 import { useNoticias } from '../../context/NoticiasContext';
+import { RichTextEditor } from '../../components/RichTextEditor';
 import styles from './AdminNoticiasCrear.module.css';
 
 export const AdminNoticiasCrear = () => {
@@ -45,8 +46,11 @@ export const AdminNoticiasCrear = () => {
         setForm((f) => ({ ...f, imagenes: f.imagenes.filter((_, i) => i !== index) }));
     };
 
+    const contenidoVacio = !form.contenido.trim() || form.contenido.trim() === '<p></p>';
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (contenidoVacio) return;
         addNoticia({
             titulo: form.titulo.trim(),
             fecha: form.fecha,
@@ -61,8 +65,15 @@ export const AdminNoticiasCrear = () => {
 
     return (
         <div className={styles.page}>
-            <h2 className={styles.title}>Crear noticias</h2>
-            <p className={styles.subtitle}>Publicar una nueva noticia del club.</p>
+            <header className={styles.pageHeader}>
+                <h1 className={styles.title}>
+                    <FileText size={28} aria-hidden />
+                    Crear noticia
+                </h1>
+                <p className={styles.subtitle}>
+                    Redactá la noticia como en un diario: título, resumen y texto con fotos en el contenido.
+                </p>
+            </header>
 
             {success && (
                 <div className={styles.successBanner}>
@@ -71,48 +82,60 @@ export const AdminNoticiasCrear = () => {
             )}
 
             <form onSubmit={handleSubmit} className={styles.form}>
-                <div className={styles.field}>
-                    <label>Título *</label>
-                    <input
-                        className={styles.input}
-                        value={form.titulo}
-                        onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
-                        required
-                        placeholder="Ej: Inicio de temporada 2026"
-                    />
-                </div>
-                <div className={styles.field}>
-                    <label>Fecha *</label>
-                    <input
-                        type="date"
-                        className={styles.input}
-                        value={form.fecha}
-                        onChange={(e) => setForm((f) => ({ ...f, fecha: e.target.value }))}
-                        required
-                    />
-                </div>
-                <div className={styles.field}>
-                    <label>Resumen *</label>
-                    <textarea
-                        className={styles.input}
-                        value={form.resumen}
-                        onChange={(e) => setForm((f) => ({ ...f, resumen: e.target.value }))}
-                        required
-                        rows={2}
-                        placeholder="Breve descripción para la lista"
-                    />
-                </div>
-                <div className={styles.field}>
-                    <label>Contenido *</label>
-                    <textarea
-                        className={styles.input}
-                        value={form.contenido}
-                        onChange={(e) => setForm((f) => ({ ...f, contenido: e.target.value }))}
-                        required
-                        rows={6}
-                        placeholder="Texto completo de la noticia"
-                    />
-                </div>
+                <section className={styles.section}>
+                    <h2 className={styles.sectionTitle}>Datos de la noticia</h2>
+                    <div className={styles.field}>
+                        <label htmlFor="noticia-titulo">Título *</label>
+                        <input
+                            id="noticia-titulo"
+                            className={styles.input}
+                            value={form.titulo}
+                            onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
+                            required
+                            placeholder="Ej: Inicio de temporada 2026"
+                        />
+                    </div>
+                    <div className={styles.field}>
+                        <label htmlFor="noticia-fecha">Fecha *</label>
+                        <input
+                            id="noticia-fecha"
+                            type="date"
+                            className={styles.input}
+                            value={form.fecha}
+                            onChange={(e) => setForm((f) => ({ ...f, fecha: e.target.value }))}
+                            required
+                        />
+                    </div>
+                    <div className={styles.field}>
+                        <label htmlFor="noticia-resumen">Resumen *</label>
+                        <textarea
+                            id="noticia-resumen"
+                            className={styles.input}
+                            value={form.resumen}
+                            onChange={(e) => setForm((f) => ({ ...f, resumen: e.target.value }))}
+                            required
+                            rows={2}
+                            placeholder="Breve descripción para la lista"
+                        />
+                    </div>
+                </section>
+
+                <section className={styles.section}>
+                    <h2 className={styles.sectionTitle}>Texto completo (estilo diario)</h2>
+                    <div className={styles.field}>
+                        <label id="contenido-label">Contenido *</label>
+                        <RichTextEditor
+                            value={form.contenido}
+                            onChange={(html) => setForm((f) => ({ ...f, contenido: html }))}
+                            minHeight="240px"
+                        />
+                        {contenidoVacio && (
+                            <p className={styles.fieldError} role="alert">El contenido es obligatorio.</p>
+                        )}
+                    </div>
+                </section>
+                <section className={styles.section}>
+                    <h2 className={styles.sectionTitle}>Galería de imágenes</h2>
                 <div className={styles.imagenesSection}>
                     <label>Imágenes</label>
                     <input
@@ -151,6 +174,7 @@ export const AdminNoticiasCrear = () => {
                         </div>
                     )}
                 </div>
+                </section>
                 <div className={styles.actions}>
                     <button type="submit" className={styles.btnPrimary}>
                         <Save size={20} />

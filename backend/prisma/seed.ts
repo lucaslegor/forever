@@ -1,4 +1,4 @@
-import { PrismaClient, Rol, EstadoDeportista, EstadoCuota, EstadoPago, Periodicidad, Vinculo } from '@prisma/client';
+import { PrismaClient, Rol, EstadoDeportista, EstadoCuota, EstadoPago, Periodicidad } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -33,7 +33,6 @@ async function main() {
     const futbol = await prisma.disciplina.create({
         data: {
             nombre: 'Fútbol',
-            descripcion: 'Entrenamiento de fútbol para todas las edades',
             precioMensual: 15000,
             activa: true,
         },
@@ -42,7 +41,6 @@ async function main() {
     const natacion = await prisma.disciplina.create({
         data: {
             nombre: 'Natación',
-            descripcion: 'Clases de natación en pileta climatizada',
             precioMensual: 18000,
             activa: true,
         },
@@ -51,7 +49,6 @@ async function main() {
     const tenis = await prisma.disciplina.create({
         data: {
             nombre: 'Tenis',
-            descripcion: 'Clases de tenis para principiantes y avanzados',
             precioMensual: 20000,
             activa: true,
         },
@@ -118,12 +115,9 @@ async function main() {
             fechaNac: new Date('2005-03-15'),
             generoId: masculino.id,
             categoriaId: juveniles.id,
-            obraSocial: 'OSDE',
             estado: EstadoDeportista.AL_DIA,
             disciplinaId: futbol.id,
             cuentaId: deportista1Cuenta.id,
-            telefonos: '351-1234567, 351-7654321',
-            enfermedades: 'Asma leve',
         },
     });
 
@@ -144,12 +138,9 @@ async function main() {
             fechaNac: new Date('2008-07-20'),
             generoId: femenino.id,
             categoriaId: infantiles.id,
-            obraSocial: 'Swiss Medical',
             estado: EstadoDeportista.AL_DIA,
             disciplinaId: natacion.id,
             cuentaId: deportista2Cuenta.id,
-            telefonos: '351-9876543',
-            enfermedades: null,
         },
     });
 
@@ -170,12 +161,9 @@ async function main() {
             fechaNac: new Date('2003-11-10'),
             generoId: masculino.id,
             categoriaId: mayores.id,
-            obraSocial: null,
             estado: EstadoDeportista.EN_DEUDA,
             disciplinaId: tenis.id,
             cuentaId: deportista3Cuenta.id,
-            telefonos: '351-5555555, 351-4444444',
-            enfermedades: 'Diabetes tipo 1, Alergia al sol',
         },
     });
 
@@ -196,12 +184,9 @@ async function main() {
             fechaNac: new Date('2010-05-25'),
             generoId: femenino.id,
             categoriaId: infantiles.id,
-            obraSocial: 'Medife',
             estado: EstadoDeportista.INACTIVA,
             disciplinaId: futbol.id,
             cuentaId: deportista4Cuenta.id,
-            telefonos: '351-3333333',
-            enfermedades: null,
         },
     });
 
@@ -218,7 +203,6 @@ async function main() {
         data: {
             grupoId: grupoFamiliar1.id,
             deportistaId: deportista1.id,
-            vinculo: Vinculo.HIJO,
             esPrincipal: true,
         },
     });

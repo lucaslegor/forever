@@ -15,7 +15,6 @@ export class DisciplinaService {
     const disciplina = await prisma.disciplina.create({
       data: {
         nombre: data.nombre,
-        descripcion: data.descripcion ?? null,
         precioMensual: data.precioMensual,
         activa: true,
       },
@@ -90,7 +89,6 @@ export class DisciplinaService {
       where: { id },
       data: {
         nombre: data.nombre,
-        descripcion: data.descripcion,
         precioMensual: data.precioMensual,
         activa: data.activa,
       },

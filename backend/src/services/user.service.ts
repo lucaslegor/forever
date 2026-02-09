@@ -77,14 +77,6 @@ export class UserService {
       },
     });
 
-    // Si hay teléfono y es deportista, actualizar
-    if (data.telefono && updatedCuenta.deportista) {
-      await prisma.deportista.update({
-        where: { id: updatedCuenta.deportista.id },
-        data: { telefonos: data.telefono },
-      });
-    }
-
     const { password, ...cuentaSinPassword } = updatedCuenta;
     return cuentaSinPassword;
   }

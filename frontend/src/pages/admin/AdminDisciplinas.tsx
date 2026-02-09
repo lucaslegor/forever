@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Pencil } from 'lucide-react';
 import type { Disciplina } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { clasificacionService } from '../../services/clasificacion.service';
 import styles from './AdminDisciplinas.module.css';
 
@@ -20,6 +21,7 @@ export const AdminDisciplinas = () => {
         disciplinasNombres,
         refetch,
     } = useOpcionesAdmin();
+    const confirm = useConfirm();
 
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -61,10 +63,15 @@ export const AdminDisciplinas = () => {
         setShowForm(false);
     };
 
-    const borrar = (id: number) => {
-        if (window.confirm('¿Dar de baja esta disciplina?')) {
-            setDisciplinas((prev) => prev.map((d) => (d.id === id ? { ...d, activo: false } : d)));
-        }
+    const borrar = async (id: number) => {
+        const ok = await confirm({
+            title: 'Dar de baja disciplina',
+            message: '¿Dar de baja esta disciplina?',
+            confirmLabel: 'Dar de baja',
+            cancelLabel: 'Cancelar',
+            variant: 'danger',
+        });
+        if (ok) setDisciplinas((prev) => prev.map((d) => (d.id === id ? { ...d, activo: false } : d)));
     };
 
     const reactivar = (id: number) => {

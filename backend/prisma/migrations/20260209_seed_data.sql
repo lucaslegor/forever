@@ -173,9 +173,9 @@ BEGIN
 
     IF grupo_id IS NOT NULL THEN
       -- Add integrantes
-      INSERT INTO "grupo_familiar_integrantes" ("id_grupo_familiar", "id_deportista", "vinculo", "es_principal") VALUES
-        (grupo_id, juan_id, 'Hijo', true),
-        (grupo_id, maria_id, 'Hermano', false)
+      INSERT INTO "grupo_familiar_integrantes" ("id_grupo_familiar", "id_deportista", "es_principal") VALUES
+        (grupo_id, juan_id, true),
+        (grupo_id, maria_id, false)
       ON CONFLICT DO NOTHING;
     END IF;
   END IF;

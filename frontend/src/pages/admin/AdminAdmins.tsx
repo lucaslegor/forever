@@ -3,6 +3,7 @@ import { UserPlus, Pencil } from 'lucide-react';
 import type { AdminUser } from '../../types/admin';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth.service';
+import { LoadingScreen } from '../../components/LoadingScreen';
 import styles from './AdminAdmins.module.css';
 
 export const AdminAdmins = () => {
@@ -99,7 +100,7 @@ export const AdminAdmins = () => {
         setAdmins((prev) => prev.map((a) => (a.id === id ? { ...a, activo: !a.activo } : a)));
     };
 
-    if (loading) return <p className={styles.loading}>Cargando...</p>;
+    if (loading) return <LoadingScreen fullPage />;
 
     return (
         <div className={styles.page}>
