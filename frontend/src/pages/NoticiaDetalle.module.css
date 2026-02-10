@@ -123,16 +123,6 @@
     text-align: justify;
 }
 
-.contenido p:first-of-type::first-letter {
-    float: left;
-    font-size: 3.2rem;
-    line-height: 1;
-    font-weight: 700;
-    margin: 0.08em 0.12em 0 0;
-    color: #002244;
-    font-family: Georgia, serif;
-}
-
 .contenido p:last-child {
     margin-bottom: 0;
 }

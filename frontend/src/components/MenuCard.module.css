@@ -74,6 +74,28 @@
     transform: translateX(4px);
 }
 
+.menuItemLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.newBadge {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    min-height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-blue);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
 @media (max-width: 768px) {
     .menuCard {
         max-width: 100%;
