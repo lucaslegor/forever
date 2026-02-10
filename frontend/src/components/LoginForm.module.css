@@ -168,6 +168,28 @@
     transform: translateY(0);
 }
 
+.canchaLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+    background: transparent;
+    color: var(--color-blue);
+    border: 2px solid var(--color-blue);
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.canchaLink:hover {
+    background: rgba(0, 51, 102, 0.08);
+    color: #002952;
+}
+
 .footer {
     margin-top: var(--spacing-xl);
     padding-top: var(--spacing-lg);

@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { CreditCard, Lock, Eye, EyeOff } from 'lucide-react';
+import { CreditCard, Lock, Eye, EyeOff, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import styles from './LoginForm.module.css';
 
@@ -161,13 +161,12 @@ export const LoginForm = () => {
                     <button type="submit" className={styles.submitButton} disabled={isLoading}>
                         {isLoading ? 'Iniciando sesión...' : 'Ingresar'}
                     </button>
-                </form>
 
-                <div className={styles.footer}>
-                    <a href="#" className={styles.footerLink}>Privacidad</a>
-                    <a href="#" className={styles.footerLink}>Términos</a>
-                    <a href="#" className={styles.footerLink}>Ayuda</a>
-                </div>
+                    <Link to="/alquilar-cancha" className={styles.canchaLink}>
+                        <Calendar size={20} />
+                        Alquilar cancha de césped sintético
+                    </Link>
+                </form>
 
                 <p className={styles.copyright}>
                     CLUB FOR EVER DE LA PLATA © 2026 <br />

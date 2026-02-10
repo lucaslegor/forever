@@ -12,7 +12,7 @@ export class PagoService {
   async crear(deportistaId: number, data: CreatePagoDTO) {
     const cuota = await prisma.cuota.findUnique({
       where: { id: data.cuotaId },
-      include: { deportista: true },
+      include: { deportista: true, disciplina: true },
     });
 
     if (!cuota) {

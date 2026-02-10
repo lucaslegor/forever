@@ -27,6 +27,8 @@ export const env = {
   AUTH_COOKIE_NAME: process.env.AUTH_COOKIE_NAME || 'forever_token',
   /** Email del admin principal (único que puede crear otros admins y restablecer sus contraseñas) */
   PRINCIPAL_ADMIN_EMAIL: (process.env.PRINCIPAL_ADMIN_EMAIL || 'admin@foreverclub.com').toLowerCase(),
+  /** WhatsApp del club para transferencia de seña (código país + número sin +). Ej: 5492211234567 */
+  CLUB_WHATSAPP_NUMBER: process.env.CLUB_WHATSAPP_NUMBER || '5492211234567',
 };
 
 /** Convierte JWT_EXPIRES_IN (ej: '7d', '24h') a segundos para maxAge de cookie */

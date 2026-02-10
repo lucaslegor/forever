@@ -1,0 +1,257 @@
+.page {
+    max-width: 100%;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-blue);
+    margin: 0 0 0.25rem 0;
+}
+
+.subtitle {
+    color: #555;
+    margin: 0 0 var(--spacing-lg) 0;
+}
+
+.mensajeOk {
+    padding: var(--spacing-md);
+    background: rgba(76, 175, 80, 0.12);
+    color: #2e7d32;
+    border-radius: 8px;
+    margin-bottom: var(--spacing-md);
+}
+
+.mensajeError {
+    padding: var(--spacing-md);
+    background: rgba(198, 40, 40, 0.1);
+    color: #b71c1c;
+    border-radius: 8px;
+    margin-bottom: var(--spacing-md);
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.filterRow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.filterRow label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.btnNueva {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    background: var(--color-blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btnNueva:hover {
+    background: #002244;
+}
+
+.tableWrap {
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e8e8e8;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.table th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--color-blue);
+}
+
+.table tbody td {
+    color: #1a1a1a;
+}
+
+.empty {
+    text-align: center;
+    color: #666;
+    padding: var(--spacing-xl);
+}
+
+.badgeOk {
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.btnPago {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btnPago:hover:not(:disabled) {
+    background: #c8e6c9;
+}
+
+.btnPago:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btnDanger {
+    padding: 0.25rem 0.5rem;
+    background: transparent;
+    color: #c62828;
+    border: 1px solid #c62828;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btnDanger:hover {
+    background: rgba(198, 40, 40, 0.1);
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+}
+
+.modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: var(--spacing-xl);
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.modalHeader h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--color-blue);
+}
+
+.modalClose {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.modalClose:hover {
+    color: #333;
+}
+
+.form .field {
+    margin-bottom: var(--spacing-md);
+}
+
+.form .field label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: #333;
+}
+
+.form .formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.form .input {
+    width: 100%;
+}
+
+.modalActions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+}
+
+.btnCancel {
+    padding: 0.6rem 1.25rem;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btnCancel:hover:not(:disabled) {
+    background: #e0e0e0;
+}
+
+.btnSubmit {
+    padding: 0.6rem 1.25rem;
+    background: var(--color-blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btnSubmit:hover:not(:disabled) {
+    background: #002244;
+}
+
+.btnSubmit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}

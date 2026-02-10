@@ -43,6 +43,7 @@ export const AdminDeportistas = () => {
     });
     
     const [formError, setFormError] = useState<string | null>(null);
+    const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [verAdultosDeportista, setVerAdultosDeportista] = useState<Deportista | null>(null);
     const [modalAdultosData, setModalAdultosData] = useState<Deportista | null>(null);
     const [filtroDisciplina, setFiltroDisciplina] = useState<string>('');
@@ -156,8 +157,13 @@ export const AdminDeportistas = () => {
             passwordConfirm: '',
         });
         setFormError(null);
+        setTouched({});
         setEditingId(null);
         setMode('list');
+    };
+
+    const setFieldTouched = (field: string) => {
+        setTouched((t) => ({ ...t, [field]: true }));
     };
 
     const openCreate = () => {
@@ -206,38 +212,161 @@ export const AdminDeportistas = () => {
         alert('Funcionalidad de reactivar en desarrollo');
     };
 
+    const validateForm = (): string | null => {
+        const nombre = form.nombre.trim();
+        const apellido = form.apellido.trim();
+        if (!nombre) return 'El nombre es obligatorio.';
+        if (nombre.length < 2) return 'El nombre debe tener al menos 2 caracteres.';
+        if (nombre.length > 50) return 'El nombre no puede exceder 50 caracteres.';
+        if (!apellido) return 'El apellido es obligatorio.';
+        if (apellido.length < 2) return 'El apellido debe tener al menos 2 caracteres.';
+        if (apellido.length > 50) return 'El apellido no puede exceder 50 caracteres.';
+
+        const dniDeportistaSolo = form.dni.replace(/\D/g, '');
+        if (!dniDeportistaSolo) return 'El DNI del deportista es obligatorio.';
+        if (!/^\d{7,8}$/.test(dniDeportistaSolo)) {
+            return 'El DNI del deportista debe tener 7 u 8 dígitos (solo números, sin puntos ni espacios).';
+        }
+
+        if (mode === 'create') {
+            if (!form.fechaNac || !form.fechaNac.trim()) return 'La fecha de nacimiento es obligatoria.';
+            const fechaNacNorm = form.fechaNac.trim();
+            let fechaDate: Date;
+            const matchDDMMYYYY = fechaNacNorm.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (matchDDMMYYYY) {
+                const [, d, m, y] = matchDDMMYYYY;
+                fechaDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+            } else {
+                fechaDate = new Date(fechaNacNorm);
+            }
+            if (Number.isNaN(fechaDate.getTime())) return 'La fecha de nacimiento no es válida.';
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            if (fechaDate > hoy) return 'La fecha de nacimiento no puede ser futura.';
+            const años = Math.floor((hoy.getTime() - fechaDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+            if (años > 120) return 'La fecha de nacimiento no es válida.';
+        } else if (mode === 'edit' && form.fechaNac.trim()) {
+            const fechaDate = new Date(form.fechaNac.trim());
+            if (Number.isNaN(fechaDate.getTime())) return 'La fecha de nacimiento no es válida.';
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            if (fechaDate > hoy) return 'La fecha de nacimiento no puede ser futura.';
+        }
+
+        if (!form.categoria || form.categoria === '') return 'Seleccioná una categoría.';
+        if (subcategoriaOptions.length > 0 && !form.subcategoria.trim()) {
+            return 'Seleccioná una subcategoría para la disciplina y categoría elegidas.';
+        }
+
+        if (mode === 'create') {
+            if (!form.password) return 'La contraseña es obligatoria.';
+            if (form.password.length < 6) return 'La contraseña debe tener al menos 6 caracteres.';
+            if (form.password !== form.passwordConfirm) return 'La contraseña y la confirmación no coinciden.';
+        }
+
+        if (isMenor) {
+            const a = form.adultoResponsable;
+            if (!a.nombre.trim()) return 'El nombre del adulto responsable es obligatorio.';
+            if (a.nombre.trim().length < 2) return 'El nombre del adulto responsable debe tener al menos 2 caracteres.';
+            if (!a.apellido.trim()) return 'El apellido del adulto responsable es obligatorio.';
+            if (a.apellido.trim().length < 2) return 'El apellido del adulto responsable debe tener al menos 2 caracteres.';
+            const dniSolo = a.dni.replace(/\D/g, '');
+            if (!dniSolo) return 'El DNI del adulto responsable es obligatorio.';
+            if (!/^\d{7,8}$/.test(dniSolo)) {
+                return 'El DNI del adulto responsable debe tener 7 u 8 dígitos (solo números).';
+            }
+            if (!a.email.trim()) return 'El email del adulto responsable es obligatorio.';
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(a.email.trim())) return 'Ingresá un email válido para el adulto responsable.';
+            if (!a.telefono.trim()) return 'El teléfono del adulto responsable es obligatorio.';
+        }
+
+        return null;
+    };
+
+    const fieldErrors = useMemo((): Record<string, string> => {
+        const err: Record<string, string> = {};
+        const nombre = form.nombre.trim();
+        const apellido = form.apellido.trim();
+        if (!nombre) err.nombre = 'El nombre es obligatorio.';
+        else if (nombre.length < 2) err.nombre = 'Mínimo 2 caracteres.';
+        else if (nombre.length > 50) err.nombre = 'Máximo 50 caracteres.';
+        if (!apellido) err.apellido = 'El apellido es obligatorio.';
+        else if (apellido.length < 2) err.apellido = 'Mínimo 2 caracteres.';
+        else if (apellido.length > 50) err.apellido = 'Máximo 50 caracteres.';
+
+        const dniSolo = form.dni.replace(/\D/g, '');
+        if (!dniSolo) err.dni = 'El DNI es obligatorio.';
+        else if (!/^\d{7,8}$/.test(dniSolo)) err.dni = '7 u 8 dígitos (solo números).';
+
+        if (mode === 'create') {
+            if (!form.fechaNac?.trim()) err.fechaNac = 'La fecha es obligatoria.';
+            else {
+                const fechaNacNorm = form.fechaNac.trim();
+                let fechaDate: Date;
+                const matchDDMMYYYY = fechaNacNorm.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                if (matchDDMMYYYY) {
+                    const [, d, m, y] = matchDDMMYYYY;
+                    fechaDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+                } else {
+                    fechaDate = new Date(fechaNacNorm);
+                }
+                if (Number.isNaN(fechaDate.getTime())) err.fechaNac = 'Fecha no válida.';
+                else {
+                    const hoy = new Date();
+                    hoy.setHours(0, 0, 0, 0);
+                    if (fechaDate > hoy) err.fechaNac = 'No puede ser futura.';
+                    else if (Math.floor((hoy.getTime() - fechaDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) > 120) err.fechaNac = 'Fecha no válida.';
+                }
+            }
+        } else if (mode === 'edit' && form.fechaNac.trim()) {
+            const fechaDate = new Date(form.fechaNac.trim());
+            if (Number.isNaN(fechaDate.getTime())) err.fechaNac = 'Fecha no válida.';
+            else {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                if (fechaDate > hoy) err.fechaNac = 'No puede ser futura.';
+            }
+        }
+
+        if (!form.categoria?.trim()) err.categoria = 'Seleccioná una categoría.';
+        if (subcategoriaOptions.length > 0 && !form.subcategoria.trim()) err.subcategoria = 'Seleccioná una subcategoría.';
+
+        if (mode === 'create') {
+            if (!form.password) err.password = 'La contraseña es obligatoria.';
+            else if (form.password.length < 6) err.password = 'Mínimo 6 caracteres.';
+            if (form.password !== form.passwordConfirm) err.passwordConfirm = 'No coincide con la contraseña.';
+        }
+
+        if (isMenor) {
+            const a = form.adultoResponsable;
+            if (!a.nombre.trim()) err.adulto_nombre = 'Obligatorio.';
+            else if (a.nombre.trim().length < 2) err.adulto_nombre = 'Mínimo 2 caracteres.';
+            if (!a.apellido.trim()) err.adulto_apellido = 'Obligatorio.';
+            else if (a.apellido.trim().length < 2) err.adulto_apellido = 'Mínimo 2 caracteres.';
+            const adni = a.dni.replace(/\D/g, '');
+            if (!adni) err.adulto_dni = 'Obligatorio.';
+            else if (!/^\d{7,8}$/.test(adni)) err.adulto_dni = '7 u 8 dígitos.';
+            if (!a.email.trim()) err.adulto_email = 'Obligatorio.';
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email.trim())) err.adulto_email = 'Email no válido.';
+            if (!a.telefono.trim()) err.adulto_telefono = 'Obligatorio.';
+        }
+        return err;
+    }, [form, mode, isMenor, subcategoriaOptions.length]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setFormError(null);
+        setTouched({
+            nombre: true, apellido: true, dni: true, fechaNac: true, categoria: true, subcategoria: true,
+            password: true, passwordConfirm: true,
+            adulto_nombre: true, adulto_apellido: true, adulto_dni: true, adulto_email: true, adulto_telefono: true,
+        });
 
-        // Validaciones
-        if (mode === 'create') {
-            if (form.password.length < 6) {
-                setFormError('La contraseña debe tener al menos 6 caracteres.');
-                return;
-            }
-            if (form.password !== form.passwordConfirm) {
-                setFormError('La contraseña y la confirmación no coinciden.');
-                return;
-            }
-        }
-
-        const dniDeportistaSolo = form.dni.replace(/\D/g, '');
-        if (!/^\d{7,8}$/.test(dniDeportistaSolo)) {
-            setFormError('El DNI del deportista debe tener 7 u 8 dígitos (solo números).');
+        const validationError = validateForm();
+        if (validationError) {
+            setFormError(validationError);
             return;
-        }
-        if (isMenor) {
-            const a = form.adultoResponsable;
-            const dniSoloNumeros = a.dni.replace(/\D/g, '');
-            if (!a.nombre.trim() || !a.apellido.trim() || !a.dni.trim() || !a.email.trim() || !a.telefono.trim()) {
-                setFormError('Completá todos los datos del adulto responsable (Infantil/Juvenil).');
-                return;
-            }
-            if (!/^\d{7,8}$/.test(dniSoloNumeros)) {
-                setFormError('El DNI del adulto responsable debe tener 7 u 8 dígitos (solo números, sin puntos ni espacios).');
-                return;
-            }
         }
 
         setSaving(true);
@@ -283,11 +412,6 @@ export const AdminDeportistas = () => {
             }
 
             if (mode === 'create') {
-                if (!form.fechaNac || !form.fechaNac.trim()) {
-                    setFormError('La fecha de nacimiento es obligatoria.');
-                    setSaving(false);
-                    return;
-                }
                 const dniDeportista = form.dni.replace(/\D/g, '').trim();
                 // Asegurar fecha en YYYY-MM-DD (input type="date" ya lo da; por si acaso normalizar dd/mm/yyyy)
                 let fechaNac = form.fechaNac.trim();
@@ -548,50 +672,62 @@ export const AdminDeportistas = () => {
                     {formError && <p className={styles.formError}>{formError}</p>}
                     <form onSubmit={handleSubmit} className={styles.form}>
                         <div className={styles.formRow}>
-                            <div>
+                            <div className={styles.fieldWrap}>
                                 <label>Nombre *</label>
                                 <input
                                     type="text"
                                     value={form.nombre}
                                     onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                                    onBlur={() => setFieldTouched('nombre')}
+                                    className={touched.nombre && fieldErrors.nombre ? styles.inputError : ''}
                                     required
                                 />
+                                {touched.nombre && fieldErrors.nombre && <span className={styles.fieldError}>{fieldErrors.nombre}</span>}
                             </div>
-                            <div>
+                            <div className={styles.fieldWrap}>
                                 <label>Apellido *</label>
                                 <input
                                     type="text"
                                     value={form.apellido}
                                     onChange={(e) => setForm({ ...form, apellido: e.target.value })}
+                                    onBlur={() => setFieldTouched('apellido')}
+                                    className={touched.apellido && fieldErrors.apellido ? styles.inputError : ''}
                                     required
                                 />
+                                {touched.apellido && fieldErrors.apellido && <span className={styles.fieldError}>{fieldErrors.apellido}</span>}
                             </div>
                         </div>
 
                         <div className={styles.formRow}>
-                            <div>
+                            <div className={styles.fieldWrap}>
                                 <label>DNI *</label>
                                 <input
                                     type="text"
                                     value={form.dni}
                                     onChange={(e) => setForm({ ...form, dni: e.target.value })}
+                                    onBlur={() => setFieldTouched('dni')}
+                                    className={touched.dni && fieldErrors.dni ? styles.inputError : ''}
                                     required
                                     disabled={mode === 'edit'}
                                 />
+                                {touched.dni && fieldErrors.dni && <span className={styles.fieldError}>{fieldErrors.dni}</span>}
                             </div>
-                            <div>
+                            <div className={styles.fieldWrap}>
                                 <label>Fecha de Nacimiento *</label>
                                 <input
                                     type="date"
                                     value={form.fechaNac}
                                     onChange={(e) => setForm({ ...form, fechaNac: e.target.value })}
+                                    onBlur={() => setFieldTouched('fechaNac')}
+                                    className={touched.fechaNac && fieldErrors.fechaNac ? styles.inputError : ''}
                                     required
                                 />
+                                {touched.fechaNac && fieldErrors.fechaNac && <span className={styles.fieldError}>{fieldErrors.fechaNac}</span>}
                             </div>
                         </div>
 
                         <div className={styles.formRow}>
-                            <div>
+                            <div className={styles.fieldWrap}>
                                 <label>Disciplina *</label>
                                 <select value={form.disciplina} onChange={(e) => setForm({ ...form, disciplina: e.target.value })} required>
                                     {disciplinasNombres.map((d) => (
@@ -601,7 +737,7 @@ export const AdminDeportistas = () => {
                                     ))}
                                 </select>
                             </div>
-                            <div>
+                            <div className={styles.fieldWrap}>
                                 <label>Género *</label>
                                 <select value={form.genero} onChange={(e) => setForm({ ...form, genero: e.target.value })} required>
                                     {generosNombres.map((g) => (
@@ -614,9 +750,15 @@ export const AdminDeportistas = () => {
                         </div>
 
                         <div className={styles.formRow}>
-                            <div>
+                            <div className={styles.fieldWrap}>
                                 <label>Categoría *</label>
-                                <select value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })} required>
+                                <select
+                                    value={form.categoria}
+                                    onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+                                    onBlur={() => setFieldTouched('categoria')}
+                                    className={touched.categoria && fieldErrors.categoria ? styles.inputError : ''}
+                                    required
+                                >
                                     <option value="">Seleccionar</option>
                                     {categoriasOptions.map((c) => (
                                         <option key={c} value={c}>
@@ -624,10 +766,16 @@ export const AdminDeportistas = () => {
                                         </option>
                                     ))}
                                 </select>
+                                {touched.categoria && fieldErrors.categoria && <span className={styles.fieldError}>{fieldErrors.categoria}</span>}
                             </div>
-                            <div>
+                            <div className={styles.fieldWrap}>
                                 <label>Subcategoría</label>
-                                <select value={form.subcategoria} onChange={(e) => setForm({ ...form, subcategoria: e.target.value })}>
+                                <select
+                                    value={form.subcategoria}
+                                    onChange={(e) => setForm({ ...form, subcategoria: e.target.value })}
+                                    onBlur={() => setFieldTouched('subcategoria')}
+                                    className={touched.subcategoria && fieldErrors.subcategoria ? styles.inputError : ''}
+                                >
                                     <option value="">Seleccionar</option>
                                     {subcategoriaOptions.map((s) => (
                                         <option key={s} value={s}>
@@ -635,28 +783,35 @@ export const AdminDeportistas = () => {
                                         </option>
                                     ))}
                                 </select>
+                                {touched.subcategoria && fieldErrors.subcategoria && <span className={styles.fieldError}>{fieldErrors.subcategoria}</span>}
                             </div>
                         </div>
 
                         {mode === 'create' && (
                             <div className={styles.formRow}>
-                                <div>
+                                <div className={styles.fieldWrap}>
                                     <label>Contraseña *</label>
                                     <input
                                         type="password"
                                         value={form.password}
                                         onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                        onBlur={() => setFieldTouched('password')}
+                                        className={touched.password && fieldErrors.password ? styles.inputError : ''}
                                         required
                                     />
+                                    {touched.password && fieldErrors.password && <span className={styles.fieldError}>{fieldErrors.password}</span>}
                                 </div>
-                                <div>
+                                <div className={styles.fieldWrap}>
                                     <label>Confirmar contraseña *</label>
                                     <input
                                         type="password"
                                         value={form.passwordConfirm}
                                         onChange={(e) => setForm({ ...form, passwordConfirm: e.target.value })}
+                                        onBlur={() => setFieldTouched('passwordConfirm')}
+                                        className={touched.passwordConfirm && fieldErrors.passwordConfirm ? styles.inputError : ''}
                                         required
                                     />
+                                    {touched.passwordConfirm && fieldErrors.passwordConfirm && <span className={styles.fieldError}>{fieldErrors.passwordConfirm}</span>}
                                 </div>
                             </div>
                         )}
@@ -665,55 +820,70 @@ export const AdminDeportistas = () => {
                             <div className={styles.adultoResponsableSection}>
                                 <h4>Adulto Responsable (Obligatorio para Juveniles e Infantiles)</h4>
                                 <div className={styles.formRow}>
-                                    <div>
+                                    <div className={styles.fieldWrap}>
                                         <label>Nombre *</label>
                                         <input
                                             type="text"
                                             value={form.adultoResponsable.nombre}
                                             onChange={(e) => updateAdulto('nombre', e.target.value)}
+                                            onBlur={() => setFieldTouched('adulto_nombre')}
+                                            className={touched.adulto_nombre && fieldErrors.adulto_nombre ? styles.inputError : ''}
                                             required
                                         />
+                                        {touched.adulto_nombre && fieldErrors.adulto_nombre && <span className={styles.fieldError}>{fieldErrors.adulto_nombre}</span>}
                                     </div>
-                                    <div>
+                                    <div className={styles.fieldWrap}>
                                         <label>Apellido *</label>
                                         <input
                                             type="text"
                                             value={form.adultoResponsable.apellido}
                                             onChange={(e) => updateAdulto('apellido', e.target.value)}
+                                            onBlur={() => setFieldTouched('adulto_apellido')}
+                                            className={touched.adulto_apellido && fieldErrors.adulto_apellido ? styles.inputError : ''}
                                             required
                                         />
+                                        {touched.adulto_apellido && fieldErrors.adulto_apellido && <span className={styles.fieldError}>{fieldErrors.adulto_apellido}</span>}
                                     </div>
                                 </div>
                                 <div className={styles.formRow}>
-                                    <div>
+                                    <div className={styles.fieldWrap}>
                                         <label>DNI *</label>
                                         <input
                                             type="text"
                                             value={form.adultoResponsable.dni}
                                             onChange={(e) => updateAdulto('dni', e.target.value)}
+                                            onBlur={() => setFieldTouched('adulto_dni')}
                                             placeholder="7 u 8 dígitos, sin puntos ni espacios"
+                                            className={touched.adulto_dni && fieldErrors.adulto_dni ? styles.inputError : ''}
                                             required
                                         />
+                                        {touched.adulto_dni && fieldErrors.adulto_dni && <span className={styles.fieldError}>{fieldErrors.adulto_dni}</span>}
                                     </div>
-                                    <div>
+                                    <div className={styles.fieldWrap}>
                                         <label>Email *</label>
                                         <input
                                             type="email"
                                             value={form.adultoResponsable.email}
                                             onChange={(e) => updateAdulto('email', e.target.value)}
+                                            onBlur={() => setFieldTouched('adulto_email')}
+                                            className={touched.adulto_email && fieldErrors.adulto_email ? styles.inputError : ''}
                                             required
                                         />
+                                        {touched.adulto_email && fieldErrors.adulto_email && <span className={styles.fieldError}>{fieldErrors.adulto_email}</span>}
                                     </div>
                                 </div>
                                 <div className={styles.formRow}>
-                                    <div>
+                                    <div className={styles.fieldWrap}>
                                         <label>Teléfono *</label>
                                         <input
                                             type="tel"
                                             value={form.adultoResponsable.telefono}
                                             onChange={(e) => updateAdulto('telefono', e.target.value)}
+                                            onBlur={() => setFieldTouched('adulto_telefono')}
+                                            className={touched.adulto_telefono && fieldErrors.adulto_telefono ? styles.inputError : ''}
                                             required
                                         />
+                                        {touched.adulto_telefono && fieldErrors.adulto_telefono && <span className={styles.fieldError}>{fieldErrors.adulto_telefono}</span>}
                                     </div>
                                 </div>
                             </div>

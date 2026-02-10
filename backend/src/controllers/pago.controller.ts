@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { pagoService } from '../services/pago.service';
+import { reservaCanchaService } from '../services/reservaCancha.service';
 import { getPaymentById } from '../services/mercadopago.service';
 import { deportistaService } from '../services/deportista.service';
 import { sendSuccess, sendCreated, sendUnauthorized, sendForbidden, sendError } from '../utils/response';
@@ -39,10 +40,18 @@ export class PagoController {
         const paymentId = String(data.id);
         const payment = await getPaymentById(paymentId);
         if (payment?.external_reference) {
-          const pagoId = parseInt(payment.external_reference, 10);
-          if (!Number.isNaN(pagoId)) {
-            const status = payment.status === 'approved' ? 'approved' : payment.status === 'rejected' ? 'rejected' : 'pending';
-            await pagoService.confirmarPago(pagoId, paymentId, status);
+          const ref = payment.external_reference;
+          if (typeof ref === 'string' && ref.startsWith('reserva-')) {
+            const reservaId = parseInt(ref.slice(8), 10);
+            if (!Number.isNaN(reservaId) && payment.status === 'approved') {
+              await reservaCanchaService.updatePagos(reservaId, { senaPagada: true });
+            }
+          } else {
+            const pagoId = parseInt(ref, 10);
+            if (!Number.isNaN(pagoId)) {
+              const status = payment.status === 'approved' ? 'approved' : payment.status === 'rejected' ? 'rejected' : 'pending';
+              await pagoService.confirmarPago(pagoId, paymentId, status);
+            }
           }
         }
       }

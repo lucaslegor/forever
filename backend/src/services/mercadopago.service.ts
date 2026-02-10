@@ -45,6 +45,10 @@ export async function crearPreferenciaPago(params: CrearPreferenciaParams): Prom
       pending: pendingUrl,
     },
     external_reference: String(pagoId),
+    payment_methods: {
+      installments: 1,
+      excluded_payment_types: [{ id: 'consumer_credits' }],
+    },
   };
   // Sin auto_return: el usuario vuelve con el botón "Volver al sitio" (evita error de la API)
   // body.auto_return = 'approved';
@@ -86,6 +90,72 @@ export async function crearPreferenciaPago(params: CrearPreferenciaParams): Prom
     initPoint,
     sandboxInitPoint: response.sandbox_init_point,
     preferenceId,
+  };
+}
+
+/** Preferencia para pagar la seña de una reserva de cancha (external_reference = "reserva-{id}") */
+export interface CrearPreferenciaReservaSenaParams {
+  reservaId: number;
+  title: string;
+  unitPrice: number;
+}
+
+export async function crearPreferenciaReservaSena(
+  params: CrearPreferenciaReservaSenaParams
+): Promise<CrearPreferenciaResult> {
+  const { reservaId, title, unitPrice } = params;
+  const base = (env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+  const successUrl = `${base}/pagos/success?origen=reserva`;
+  const failureUrl = `${base}/pagos/failure?origen=reserva`;
+  const pendingUrl = `${base}/pagos/pending?origen=reserva`;
+
+  const body: Record<string, unknown> = {
+    items: [
+      {
+        id: `reserva-${reservaId}`,
+        title: title.length > 127 ? title.slice(0, 124) + '...' : title,
+        quantity: 1,
+        unit_price: Number(unitPrice),
+        currency_id: 'ARS',
+      },
+    ],
+    back_urls: { success: successUrl, failure: failureUrl, pending: pendingUrl },
+    external_reference: `reserva-${reservaId}`,
+    payment_methods: {
+      installments: 1,
+      excluded_payment_types: [{ id: 'consumer_credits' }],
+    },
+  };
+  if (env.MERCADOPAGO_WEBHOOK_URL) {
+    body.notification_url = env.MERCADOPAGO_WEBHOOK_URL;
+  }
+
+  const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const data = (await res.json()) as {
+    init_point?: string;
+    sandbox_init_point?: string;
+    id?: string;
+    message?: string;
+    error?: string | string[];
+  };
+
+  if (!res.ok) {
+    const msg = data.message ?? data.error ?? JSON.stringify(data);
+    throw new Error(typeof msg === 'string' ? msg : Array.isArray(msg) ? msg.join(' ') : String(msg));
+  }
+
+  return {
+    initPoint: data.init_point || data.sandbox_init_point || '',
+    sandboxInitPoint: data.sandbox_init_point,
+    preferenceId: data.id || '',
   };
 }
 

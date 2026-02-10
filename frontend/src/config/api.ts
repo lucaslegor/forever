@@ -15,10 +15,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const isLoginRequest = error.config?.url?.includes('/auth/login');
-      if (!isLoginRequest) {
+      const url = error.config?.url ?? '';
+      const isLoginRequest = url.includes('/auth/login');
+      const isProfileCheck = url.includes('/users/profile');
+      // No redirigir en getProfile: 401 es normal cuando no hay sesión (ej. en la página de login).
+      if (!isLoginRequest && !isProfileCheck) {
         localStorage.removeItem('forever_auth');
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     }
     return Promise.reject(error);

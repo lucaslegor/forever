@@ -40,14 +40,31 @@ export const webhookRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+/** Rutas de solo lectura que no consumen cupo del rate limit (evitan 429 en carga inicial). */
+function skipReadOnlyPaths(req: { method: string; originalUrl?: string; path?: string; url?: string }): boolean {
+  if (req.method !== 'GET') return false;
+  const raw = req.originalUrl ?? req.url ?? req.path ?? '';
+  const path = (raw.split('?')[0] || '').replace(/\/$/, '');
+  const normalized = path.startsWith('/api') ? path : `/api${path.startsWith('/') ? path : `/${path}`}`;
+  return (
+    normalized === '/api/noticias' ||
+    normalized.startsWith('/api/noticias/') ||
+    normalized === '/api/users/profile' ||
+    normalized.includes('/reservas-cancha/disponibilidad')
+  );
+}
+
 /**
- * Rate limit global para toda la API (opcional).
- * Por IP: 300 requests cada 15 minutos.
+ * Rate limit global para toda la API.
+ * En desarrollo no se aplica (skip siempre) para evitar 429 al cargar noticias/perfil.
+ * En producción: GET a noticias, profile y disponibilidad no cuentan; resto 1000/15 min.
  */
 export const globalApiRateLimiter = rateLimit({
   windowMs: WINDOW_MS,
-  max: env.NODE_ENV === 'test' ? 10000 : 300,
+  max: env.NODE_ENV === 'test' ? 10000 : env.NODE_ENV === 'development' ? 10000 : 1000,
   message: limitResponse,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req, _res) =>
+    env.NODE_ENV === 'development' || env.NODE_ENV === 'test' ? true : skipReadOnlyPaths(req),
 });

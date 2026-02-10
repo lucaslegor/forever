@@ -276,3 +276,32 @@ model NoticiaImagen {
 
   @@map("noticia_imagenes")
 }
+
+// =============================================================================
+// ALQUILER CANCHA CÉSPED SINTÉTICO
+// Turnos de 14:00 a 01:00 (12 slots/hora), Lunes a Domingo.
+// Seña 5000 pesos; el resto se paga en cancha (transferencia/efectivo).
+// =============================================================================
+
+model ReservaCancha {
+  id              Int       @id @default(autoincrement()) @map("id_reserva")
+  fecha           DateTime  @db.Date
+  hora            Int       @map("hora") // 14-23 y 0, 1 (0 = 00:00, 1 = 01:00)
+  nombreCliente   String    @map("nombre_cliente")
+  telefono        String    @map("telefono")
+  email           String?   @map("email")
+  montoSena       Decimal   @default(5000) @map("monto_sena") @db.Decimal(10, 2)
+  senaPagada      Boolean   @default(false) @map("sena_pagada")
+  senaMetodoPago  String?   @map("sena_metodo_pago") // 'mercadopago' | 'transferencia'
+  senaExpiraAt    DateTime? @map("sena_expira_at") // para transferencia: vence en 20 min
+  restoPagado     Boolean   @default(false) @map("resto_pagado")
+  montoTotal      Decimal?  @map("monto_total") @db.Decimal(10, 2)
+  notas           String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([fecha, hora])
+  @@index([fecha])
+  @@index([senaMetodoPago, senaExpiraAt])
+  @@map("reservas_cancha")
+}

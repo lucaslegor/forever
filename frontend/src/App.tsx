@@ -20,6 +20,8 @@ import { AdminDisciplinas } from './pages/admin/AdminDisciplinas';
 import { AdminNoticiasCrear } from './pages/admin/AdminNoticiasCrear';
 import { AdminRestablecerContrasena } from './pages/admin/AdminRestablecerContrasena';
 import { AdminPerfil } from './pages/admin/AdminPerfil';
+import { AdminCancha } from './pages/admin/AdminCancha';
+import { AlquilarCancha } from './pages/AlquilarCancha';
 import { OpcionesAdminProvider } from './context/OpcionesAdminContext';
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -43,6 +45,7 @@ function App() {
         <Route path="/grupo-familiar" element={<GrupoFamiliar />} />
         <Route path="/noticias" element={<Noticias />} />
         <Route path="/noticias/:id" element={<NoticiaDetalle />} />
+        <Route path="/alquilar-cancha" element={<AlquilarCancha />} />
         <Route path="/registrarse" element={<div style={{ padding: '2rem', textAlign: 'center' }}><h1>Registrarse</h1><p>Página en construcción</p></div>} />
 
         <Route path="/admin" element={<ProtectedAdminRoute><ConfirmProvider><OpcionesAdminProvider><AdminLayout /></OpcionesAdminProvider></ConfirmProvider></ProtectedAdminRoute>}>
@@ -55,6 +58,7 @@ function App() {
           <Route path="noticias/crear" element={<AdminNoticiasCrear />} />
           <Route path="restablecer-contrasena" element={<AdminRestablecerContrasena />} />
           <Route path="perfil" element={<AdminPerfil />} />
+          <Route path="cancha" element={<AdminCancha />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

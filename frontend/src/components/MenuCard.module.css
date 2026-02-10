@@ -49,6 +49,9 @@
     border-bottom: 1px solid #E5E5E5;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-decoration: none;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .menuItem:last-child {

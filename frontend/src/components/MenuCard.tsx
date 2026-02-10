@@ -6,9 +6,13 @@ import styles from './MenuCard.module.css';
 const NOTICIAS_PATH = '/noticias';
 const DIAS_NOTICIA_NUEVA = 7;
 
+const LAPF_FIXTURE_URL = 'https://lapf.com.ar/fixture/';
+
 interface MenuItem {
     label: string;
     path: string;
+    /** Si está definido, se abre en nueva pestaña en lugar de navegar dentro de la app */
+    externalUrl?: string;
 }
 
 const menuItems: MenuItem[] = [
@@ -17,6 +21,7 @@ const menuItems: MenuItem[] = [
     { label: 'Historial de Pagos', path: '/historial-pagos' },
     { label: 'Grupo Familiar', path: '/grupo-familiar' },
     { label: 'Noticias', path: NOTICIAS_PATH },
+    { label: 'Fixture y tablas LAPF', path: '/fixture-lapf', externalUrl: LAPF_FIXTURE_URL },
 ];
 
 function isNoticiaReciente(fecha: string): boolean {
@@ -46,21 +51,34 @@ export const MenuCard = () => {
             </div>
 
             <nav className={styles.menuList}>
-                {menuItems.map((item) => (
-                    <button
-                        key={item.path}
-                        className={styles.menuItem}
-                        onClick={() => handleMenuClick(item.path)}
-                    >
-                        <span className={styles.menuItemLabel}>
-                            {item.label}
-                            {item.path === NOTICIAS_PATH && hayNoticiasNuevas && (
-                                <span className={styles.newBadge} title="Hay noticias nuevas" aria-hidden />
-                            )}
-                        </span>
-                        <ChevronRight className={styles.menuItemIcon} size={20} />
-                    </button>
-                ))}
+                {menuItems.map((item) =>
+                    item.externalUrl ? (
+                        <a
+                            key={item.path}
+                            href={item.externalUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.menuItem}
+                        >
+                            <span className={styles.menuItemLabel}>{item.label}</span>
+                            <ChevronRight className={styles.menuItemIcon} size={20} />
+                        </a>
+                    ) : (
+                        <button
+                            key={item.path}
+                            className={styles.menuItem}
+                            onClick={() => handleMenuClick(item.path)}
+                        >
+                            <span className={styles.menuItemLabel}>
+                                {item.label}
+                                {item.path === NOTICIAS_PATH && hayNoticiasNuevas && (
+                                    <span className={styles.newBadge} title="Hay noticias nuevas" aria-hidden />
+                                )}
+                            </span>
+                            <ChevronRight className={styles.menuItemIcon} size={20} />
+                        </button>
+                    )
+                )}
             </nav>
         </div>
     );

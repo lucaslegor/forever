@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Users, DollarSign, UserCircle, Shield, Trophy, FileText, Home, KeyRound, User } from 'lucide-react';
+import { LogOut, Users, DollarSign, UserCircle, Shield, Trophy, FileText, Home, KeyRound, User, CalendarDays } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Footer } from '../../components/Footer';
 import styles from './AdminLayout.module.css';
@@ -13,6 +13,7 @@ const menuItems = [
     { to: '/admin/admins', label: 'Gestión admin', icon: Shield },
     { to: '/admin/restablecer-contrasena', label: 'Restablecer contraseña', icon: KeyRound },
     { to: '/admin/disciplinas', label: 'Gestión disciplinas', icon: Trophy },
+    { to: '/admin/cancha', label: 'Alquiler cancha', icon: CalendarDays },
     { to: '/admin/noticias/crear', label: 'Crear noticias', icon: FileText },
 ];
 

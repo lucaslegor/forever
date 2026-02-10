@@ -8,7 +8,7 @@ import disciplinaRoutes from './disciplina.routes';
 import grupoFamiliarRoutes from './grupoFamiliar.routes';
 import clasificacionRoutes from './clasificacion.routes';
 import noticiaRoutes from './noticia.routes';
-
+import reservaCanchaRoutes from './reservaCancha.routes';
 const router = Router();
 
 router.use('/auth', authRoutes);
@@ -20,5 +20,5 @@ router.use('/disciplinas', disciplinaRoutes);
 router.use('/grupos-familiares', grupoFamiliarRoutes);
 router.use('/clasificacion', clasificacionRoutes);
 router.use('/noticias', noticiaRoutes);
-
+router.use('/reservas-cancha', reservaCanchaRoutes);
 export default router;

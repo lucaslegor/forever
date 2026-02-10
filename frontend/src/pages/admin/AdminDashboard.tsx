@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Users, DollarSign, UserCircle, Shield, Trophy, FileText } from 'lucide-react';
+import { Users, DollarSign, UserCircle, Shield, Trophy, FileText, CalendarDays } from 'lucide-react';
 import styles from './AdminDashboard.module.css';
 
 const cards = [
@@ -8,6 +8,7 @@ const cards = [
     { to: '/admin/grupos-familiares', label: 'Gestión grupo familiar', icon: UserCircle, desc: 'Crear, modificar y borrar grupos' },
     { to: '/admin/admins', label: 'Gestión admin', icon: Shield, desc: 'Administrar usuarios admin' },
     { to: '/admin/disciplinas', label: 'Gestión disciplinas', icon: Trophy, desc: 'ABM y valor por disciplina' },
+    { to: '/admin/cancha', label: 'Alquiler cancha', icon: CalendarDays, desc: 'Turnos, seña y pago en cancha' },
     { to: '/admin/noticias/crear', label: 'Crear noticias', icon: FileText, desc: 'Publicar noticias del club' },
 ];
 

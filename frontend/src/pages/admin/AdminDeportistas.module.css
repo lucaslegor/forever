@@ -272,9 +272,28 @@
   gap: var(--spacing-md);
 }
 
-.formRow > div {
+.formRow > div,
+.fieldWrap {
   display: flex;
   flex-direction: column;
+}
+
+.formRow input.inputError,
+.formRow select.inputError {
+  border-color: #c62828;
+  background: rgba(198, 40, 40, 0.04);
+}
+
+.formRow input.inputError:focus,
+.formRow select.inputError:focus {
+  border-color: #c62828;
+  box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.15);
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  color: #c62828;
+  margin-top: 0.25rem;
 }
 
 .formRow label {

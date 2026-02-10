@@ -6,7 +6,7 @@ import {
   ConflictError,
   ErrorMessages,
 } from '../utils/errors';
-import { EstadoCuota, EstadoPago, Periodicidad } from '@prisma/client';
+import { Prisma, EstadoCuota, EstadoPago, Periodicidad } from '@prisma/client';
 
 export class CuotaService {
   async asignar(data: AsignarCuotaDTO) {
@@ -176,11 +176,12 @@ export class CuotaService {
     for (const c of pendientesRaw) {
       let monto = c.monto;
       if (montoGrupoFamiliar != null && Number(c.monto) !== montoGrupoFamiliar) {
+        const montoDecimal = new Prisma.Decimal(montoGrupoFamiliar);
         await prisma.cuota.update({
           where: { id: c.id },
-          data: { monto: montoGrupoFamiliar },
+          data: { monto: montoDecimal },
         });
-        monto = montoGrupoFamiliar;
+        monto = montoDecimal;
       }
       cuotasPendientes.push({
         id: c.id,
@@ -373,7 +374,7 @@ export class CuotaService {
     }
 
     const fechaPago = new Date();
-    const steps: Promise<unknown>[] = [
+    const steps: Prisma.PrismaPromise<unknown>[] = [
       prisma.pago.create({
         data: {
           cuotaId: id,
