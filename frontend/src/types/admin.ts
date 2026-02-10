@@ -19,6 +19,7 @@ export interface Deportista {
     categoria: string;
     subcategoria: string;
     adultoResponsable?: AdultoResponsable | null;
+    adultosResponsables?: AdultoResponsable[];
     activo: boolean;
 }
 
@@ -53,6 +54,8 @@ export interface GrupoFamiliarAdmin {
 /** Usuario admin: ingreso con documento + contraseña */
 export interface AdminUser {
     id: number;
+    /** ID de la cuenta (cuentaUsuario) para saber si es el usuario actual */
+    cuentaId?: number;
     documento: string;
     nombre: string;
     activo: boolean;

@@ -69,7 +69,7 @@ export const AdminGruposFamiliares = () => {
         genero: d.genero?.nombre ?? '',
         categoria: d.categoria?.nombre ?? '',
         subcategoria: d.subcategoria?.nombre ?? '',
-        adultoResponsable: d.adultoResponsable ? { nombre: d.adultoResponsable.nombre, apellido: d.adultoResponsable.apellido, dni: d.adultoResponsable.dni, email: d.adultoResponsable.email, telefono: d.adultoResponsable.telefono } : null,
+        adultoResponsable: (d.adultosResponsables?.[0] || d.adultoResponsable) ? { nombre: (d.adultosResponsables?.[0] || d.adultoResponsable)!.nombre, apellido: (d.adultosResponsables?.[0] || d.adultoResponsable)!.apellido, dni: (d.adultosResponsables?.[0] || d.adultoResponsable)!.dni, email: (d.adultosResponsables?.[0] || d.adultoResponsable)!.email, telefono: (d.adultosResponsables?.[0] || d.adultoResponsable)!.telefono } : null,
         activo: d.cuenta?.activo ?? true,
     });
 

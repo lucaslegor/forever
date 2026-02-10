@@ -153,7 +153,7 @@ model Deportista {
   disciplina         Disciplina                @relation(fields: [disciplinaId], references: [id])
   cuentaId           Int                       @unique @map("id_cuenta")
   cuenta             CuentaUsuario             @relation(fields: [cuentaId], references: [id], onDelete: Cascade)
-  adultoResponsable  AdultoResponsable?
+  adultosResponsables AdultoResponsable[]
   pagos              Pago[]
   cuotas             Cuota[]
   grupoFamiliar      GrupoFamiliarIntegrante[]
@@ -164,15 +164,16 @@ model Deportista {
 }
 
 model AdultoResponsable {
-  id           Int        @id @default(autoincrement()) @map("id_adulto")
-  deportistaId Int        @unique @map("id_deportista")
-  deportista   Deportista @relation(fields: [deportistaId], references: [id], onDelete: Cascade)
+  id           Int         @id @default(autoincrement()) @map("id_adulto")
+  deportistaId Int         @map("id_deportista")
+  deportista   Deportista  @relation(fields: [deportistaId], references: [id], onDelete: Cascade)
   nombre       String
   apellido     String
   dni          String
   email        String
   telefono     String
 
+  @@index([deportistaId])
   @@map("adultos_responsables")
 }
 

@@ -6,13 +6,23 @@ import {
   requireDeportista,
 } from '../middlewares/auth.middleware';
 import { validateBody, validateParams } from '../middlewares/validation.middleware';
-import { createPagoSchema } from '../validators/pago.validator';
+import { createPagoSchema, syncPagoSchema } from '../validators/pago.validator';
 import { idParamSchema } from '../validators/user.validator';
+import { webhookRateLimiter } from '../middlewares/rateLimit.middleware';
 
 const router = Router();
 
-// POST /api/pagos/webhook - Webhook de Mercado Pago
-router.post('/webhook', pagoController.webhook.bind(pagoController));
+// POST /api/pagos/webhook - Webhook de Mercado Pago (rate limit anti abuso)
+router.post('/webhook', webhookRateLimiter, pagoController.webhook.bind(pagoController));
+
+// POST /api/pagos/sync - Sincronizar pago con MP (cuando el webhook no llegó; solo Deportista)
+router.post(
+  '/sync',
+  authenticateToken,
+  requireDeportista,
+  validateBody(syncPagoSchema),
+  pagoController.sync.bind(pagoController)
+);
 
 // POST /api/pagos/crear - CU08 Pagar cuota (solo Deportista)
 router.post(

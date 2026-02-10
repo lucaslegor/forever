@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from '../types';
 import {
   CreateDeportistaInput,
   UpdateDeportistaInput,
+  UpdateMiPerfilInput,
   DeportistasQuery,
 } from '../validators/deportista.validator';
 import { Rol } from '@prisma/client';
@@ -92,6 +93,16 @@ export class DeportistaController {
     try {
       const deportista = await deportistaService.getByUserId(req.user!.id);
       sendSuccess(res, deportista);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateMiPerfil(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = req.body as UpdateMiPerfilInput;
+      const result = await deportistaService.updateMiPerfilAdultos(req.user!.id, data);
+      sendSuccess(res, result, 'Adultos responsables guardados correctamente');
     } catch (error) {
       next(error);
     }

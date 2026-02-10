@@ -1,6 +1,9 @@
+import path from 'path';
 import dotenv from 'dotenv';
 
+// Cargar .env: primero cwd, luego backend (con override para que backend/.env gane)
 dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
 export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
@@ -20,6 +23,23 @@ export const env = {
   MAX_LOGIN_ATTEMPTS: parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10),
   LOGIN_BLOCK_TIME: parseInt(process.env.LOGIN_BLOCK_TIME || '15', 10),
   CLUB_NAME: process.env.CLUB_NAME || 'Club Deportivo Forever',
+  /** Nombre de la cookie HttpOnly donde se guarda el JWT */
+  AUTH_COOKIE_NAME: process.env.AUTH_COOKIE_NAME || 'forever_token',
+  /** Email del admin principal (único que puede crear otros admins y restablecer sus contraseñas) */
+  PRINCIPAL_ADMIN_EMAIL: (process.env.PRINCIPAL_ADMIN_EMAIL || 'admin@foreverclub.com').toLowerCase(),
 };
 
+/** Convierte JWT_EXPIRES_IN (ej: '7d', '24h') a segundos para maxAge de cookie */
+function jwtExpiresInToSeconds(expiresIn: string): number {
+  const match = expiresIn.match(/^(\d+)([dhms])$/);
+  if (!match) return 7 * 24 * 60 * 60; // default 7 días
+  const n = parseInt(match[1], 10);
+  const unit = match[2];
+  if (unit === 'd') return n * 24 * 60 * 60;
+  if (unit === 'h') return n * 60 * 60;
+  if (unit === 'm') return n * 60;
+  return n;
+}
+
+export const authCookieMaxAgeSeconds = jwtExpiresInToSeconds(env.JWT_EXPIRES_IN);
 export default env;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { UserPlus, UserMinus, Pencil, Plus, Filter } from 'lucide-react';
+import { UserPlus, UserMinus, Pencil, Plus, Filter, Users } from 'lucide-react';
 import type { Deportista, AdultoResponsable } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
 import { useConfirm } from '../../context/ConfirmContext';
@@ -43,6 +43,8 @@ export const AdminDeportistas = () => {
     });
     
     const [formError, setFormError] = useState<string | null>(null);
+    const [verAdultosDeportista, setVerAdultosDeportista] = useState<Deportista | null>(null);
+    const [modalAdultosData, setModalAdultosData] = useState<Deportista | null>(null);
     const [filtroDisciplina, setFiltroDisciplina] = useState<string>('');
     const [filtroGenero, setFiltroGenero] = useState<string>('');
     const [filtroCategoria, setFiltroCategoria] = useState<string>('');
@@ -68,13 +70,18 @@ export const AdminDeportistas = () => {
                     genero: d.genero?.nombre || '',
                     categoria: d.categoria?.nombre || '',
                     subcategoria: d.subcategoria?.nombre || '',
-                    adultoResponsable: d.adultoResponsable ? {
-                        nombre: d.adultoResponsable.nombre,
-                        apellido: d.adultoResponsable.apellido,
-                        dni: d.adultoResponsable.dni,
-                        email: d.adultoResponsable.email,
-                        telefono: d.adultoResponsable.telefono,
+                    adultoResponsable: (d.adultosResponsables?.[0] || d.adultoResponsable) ? {
+                        nombre: (d.adultosResponsables?.[0] || d.adultoResponsable)!.nombre,
+                        apellido: (d.adultosResponsables?.[0] || d.adultoResponsable)!.apellido,
+                        dni: (d.adultosResponsables?.[0] || d.adultoResponsable)!.dni,
+                        email: (d.adultosResponsables?.[0] || d.adultoResponsable)!.email,
+                        telefono: (d.adultosResponsables?.[0] || d.adultoResponsable)!.telefono,
                     } : null,
+                    adultosResponsables: Array.isArray(d.adultosResponsables)
+                        ? d.adultosResponsables
+                        : d.adultoResponsable
+                            ? [d.adultoResponsable]
+                            : [],
                     activo: d.cuenta?.activo ?? true,
                 };
                 });
@@ -91,6 +98,31 @@ export const AdminDeportistas = () => {
     useEffect(() => {
         fetchDeportistas();
     }, []);
+
+    useEffect(() => {
+        if (!verAdultosDeportista) {
+            setModalAdultosData(null);
+            return;
+        }
+        let cancelled = false;
+        deportistaService.getById(verAdultosDeportista.id).then((res) => {
+            if (cancelled || !res.success || !res.data) return;
+            const d = res.data as any;
+            const lista = Array.isArray(d.adultosResponsables) && d.adultosResponsables.length > 0
+                ? d.adultosResponsables
+                : d.adultoResponsable
+                    ? [d.adultoResponsable]
+                    : [];
+            setModalAdultosData({
+                ...verAdultosDeportista,
+                adultosResponsables: lista,
+                adultoResponsable: d.adultoResponsable ?? (lista[0] || null),
+            });
+        }).catch(() => {
+            if (!cancelled) setModalAdultosData(verAdultosDeportista);
+        });
+        return () => { cancelled = true; };
+    }, [verAdultosDeportista]);
 
     const categoriasFiltroOptions = getCategoriasOptions(filtroDisciplina || primeraDisciplina, filtroGenero || primerGenero);
     const subcategoriasFiltroOptions = getSubcategoriaOptions(filtroDisciplina || '', filtroGenero || '', filtroCategoria);
@@ -143,7 +175,7 @@ export const AdminDeportistas = () => {
             genero: d.genero,
             categoria: d.categoria,
             subcategoria: d.subcategoria,
-            adultoResponsable: d.adultoResponsable ?? initialAdulto(),
+            adultoResponsable: (d.adultosResponsables?.[0] || d.adultoResponsable) ?? initialAdulto(),
             password: '',
             passwordConfirm: '',
         });
@@ -439,6 +471,16 @@ export const AdminDeportistas = () => {
                                         </td>
                                         <td>
                                             <div className={styles.actions}>
+                                                {(d.categoria === 'Infantiles' || d.categoria === 'Juveniles') && (
+                                                    <button
+                                                        type="button"
+                                                        className={styles.btnVerAdultos}
+                                                        onClick={() => setVerAdultosDeportista(d)}
+                                                        title="Ver adultos responsables"
+                                                    >
+                                                        <Users size={16} />
+                                                    </button>
+                                                )}
                                                 <button className={styles.btnEdit} onClick={() => openEdit(d)} title="Editar">
                                                     <Pencil size={16} />
                                                 </button>
@@ -461,6 +503,42 @@ export const AdminDeportistas = () => {
                             <p className={styles.emptyState}>No hay deportistas que coincidan con los filtros.</p>
                         )}
                     </div>
+
+                    {verAdultosDeportista !== null && (
+                        <div className={styles.overlay} onClick={() => { setVerAdultosDeportista(null); setModalAdultosData(null); }} role="dialog" aria-modal="true" aria-label="Adultos responsables">
+                            <div className={styles.modalAdultos} onClick={(e) => e.stopPropagation()}>
+                                <h3 className={styles.modalAdultosTitle}>
+                                    Adultos responsables
+                                </h3>
+                                <div className={styles.modalAdultosList}>
+                                    {(() => {
+                                        const data = modalAdultosData ?? verAdultosDeportista;
+                                        const lista = (data.adultosResponsables && data.adultosResponsables.length > 0)
+                                            ? data.adultosResponsables
+                                            : data.adultoResponsable
+                                                ? [data.adultoResponsable]
+                                                : [];
+                                        if (lista.length === 0) {
+                                            return <p className={styles.modalAdultosEmpty}>No hay adultos cargados.</p>;
+                                        }
+                                        return lista.map((ar, idx) => (
+                                            <div key={idx} className={styles.modalAdultosCard}>
+                                                <p><strong>{ar.nombre} {ar.apellido}</strong></p>
+                                                {ar.dni && <p>DNI: {ar.dni}</p>}
+                                                {ar.email && <p>Email: {ar.email}</p>}
+                                                {ar.telefono && <p>Teléfono: {ar.telefono}</p>}
+                                            </div>
+                                        ));
+                                    })()}
+                                </div>
+                                <div className={styles.modalAdultosActions}>
+                                    <button type="button" className={styles.btnCancel} onClick={() => { setVerAdultosDeportista(null); setModalAdultosData(null); }}>
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </>
             )}
 

@@ -89,6 +89,19 @@ export const deportistaService = {
     return response.data;
   },
 
+  /** Sincronizar la lista de adultos responsables del deportista logueado (reemplaza toda la lista) */
+  updateMiPerfil: async (data: {
+    adultosResponsables: Array<{ nombre: string; apellido: string; dni: string; email: string; telefono: string }>;
+  }): Promise<ApiResponse<Deportista>> => {
+    const response = await api.put('/deportistas/mi-perfil', {
+      adultosResponsables: data.adultosResponsables.map((ar) => ({
+        ...ar,
+        dni: ar.dni.replace(/\D/g, '').trim(),
+      })),
+    });
+    return response.data;
+  },
+
   getConPagosPendientes: async (): Promise<ApiResponse<any>> => {
     const response = await api.get('/deportistas/pagos-pendientes');
     return response.data;

@@ -1,11 +1,12 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Users, DollarSign, UserCircle, Shield, Trophy, FileText, Home, KeyRound } from 'lucide-react';
+import { LogOut, Users, DollarSign, UserCircle, Shield, Trophy, FileText, Home, KeyRound, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Footer } from '../../components/Footer';
 import styles from './AdminLayout.module.css';
 
 const menuItems = [
     { to: '/admin', label: 'Inicio', icon: Home },
+    { to: '/admin/perfil', label: 'Mi perfil', icon: User },
     { to: '/admin/deportistas', label: 'Gestión deportistas', icon: Users },
     { to: '/admin/cuotas', label: 'Gestión cuotas', icon: DollarSign },
     { to: '/admin/grupos-familiares', label: 'Gestión grupo familiar', icon: UserCircle },
@@ -17,7 +18,12 @@ const menuItems = [
 
 export const AdminLayout = () => {
     const navigate = useNavigate();
-    const { logout, user } = useAuth();
+    const { logout, user, isPrincipalAdmin } = useAuth();
+
+    const visibleMenuItems = menuItems.filter((item) => {
+        if (item.to === '/admin/admins') return isPrincipalAdmin;
+        return true;
+    });
 
     const handleLogout = () => {
         logout();
@@ -44,7 +50,7 @@ export const AdminLayout = () => {
             <div className={styles.body}>
                 <aside className={styles.sidebar}>
                     <nav className={styles.nav}>
-                        {menuItems.map(({ to, label, icon: Icon }) => (
+                        {visibleMenuItems.map(({ to, label, icon: Icon }) => (
                             <NavLink
                                 key={to}
                                 to={to}

@@ -18,5 +18,11 @@ export const pagosQuerySchema = z.object({
   fechaHasta: z.string().optional(),
 });
 
+// Sincronizar pago con Mercado Pago (cuando el webhook no llegó)
+export const syncPagoSchema = z.object({
+  paymentId: z.string().min(1, 'paymentId es requerido'),
+});
+
 export type CreatePagoInput = z.infer<typeof createPagoSchema>;
 export type PagosQuery = z.infer<typeof pagosQuerySchema>;
+export type SyncPagoInput = z.infer<typeof syncPagoSchema>;

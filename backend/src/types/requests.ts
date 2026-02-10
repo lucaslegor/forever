@@ -69,6 +69,7 @@ export interface UpdateDeportistaDTO {
   subcategoriaId?: number | null;
   disciplinaId?: number;
   adultoResponsable?: Partial<CreateAdultoResponsableDTO>;
+  adultosResponsables?: Partial<CreateAdultoResponsableDTO>[];
 }
 
 // =============================================================================

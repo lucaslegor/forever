@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Newspaper, Calendar, ChevronRight } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { useNoticias } from '../context/NoticiasContext';
+import { getFirstImageFromHtml } from '../utils/sanitize';
 import styles from './Noticias.module.css';
 
 export const Noticias = () => {
@@ -38,24 +39,34 @@ export const Noticias = () => {
                         <p className={styles.emptyState}>No hay noticias publicadas.</p>
                     ) : (
                         <ul className={styles.noticiasList}>
-                            {noticias.map((noticia) => (
-                                <li key={noticia.id}>
-                                    <Link to={`/noticias/${noticia.id}`} className={styles.noticiaCard}>
-                                        <div className={styles.noticiaHeader}>
-                                            <h2 className={styles.noticiaTitulo}>{noticia.titulo}</h2>
-                                            <span className={styles.noticiaFecha}>
-                                                <Calendar size={18} />
-                                                {formatDate(noticia.fecha)}
-                                            </span>
-                                        </div>
-                                        <p className={styles.noticiaResumen}>{noticia.resumen}</p>
-                                        <span className={styles.verMas}>
-                                            Ver noticia
-                                            <ChevronRight size={18} />
-                                        </span>
-                                    </Link>
-                                </li>
-                            ))}
+                            {noticias.map((noticia) => {
+                                const thumbSrc = noticia.imagenes?.[0] || getFirstImageFromHtml(noticia.contenido);
+                                return (
+                                    <li key={noticia.id}>
+                                        <Link to={`/noticias/${noticia.id}`} className={styles.noticiaCard}>
+                                            {thumbSrc && (
+                                                <div className={styles.noticiaThumb}>
+                                                    <img src={thumbSrc} alt="" className={styles.noticiaThumbImg} />
+                                                </div>
+                                            )}
+                                            <div className={styles.noticiaCardBody}>
+                                                <div className={styles.noticiaHeader}>
+                                                    <h2 className={styles.noticiaTitulo}>{noticia.titulo}</h2>
+                                                    <span className={styles.noticiaFecha}>
+                                                        <Calendar size={18} />
+                                                        {formatDate(noticia.fecha)}
+                                                    </span>
+                                                </div>
+                                                <p className={styles.noticiaResumen}>{noticia.resumen}</p>
+                                                <span className={styles.verMas}>
+                                                    Ver noticia
+                                                    <ChevronRight size={18} />
+                                                </span>
+                                            </div>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
 

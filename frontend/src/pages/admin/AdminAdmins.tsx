@@ -7,7 +7,7 @@ import { LoadingScreen } from '../../components/LoadingScreen';
 import styles from './AdminAdmins.module.css';
 
 export const AdminAdmins = () => {
-    const { resetAdminPassword } = useAuth();
+    const { user, isPrincipalAdmin } = useAuth();
     const [admins, setAdmins] = useState<AdminUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
@@ -25,6 +25,7 @@ export const AdminAdmins = () => {
                     .filter((u) => u.administrativo != null)
                     .map((u) => ({
                         id: u.administrativo.id,
+                        cuentaId: u.id,
                         documento: u.administrativo.dni ?? '',
                         nombre: [u.administrativo.nombre, u.administrativo.apellido].filter(Boolean).join(' ') || u.email,
                         activo: u.activo ?? true,
@@ -39,8 +40,9 @@ export const AdminAdmins = () => {
     };
 
     useEffect(() => {
-        fetchAdmins();
-    }, []);
+        if (isPrincipalAdmin) fetchAdmins();
+        else setLoading(false);
+    }, [isPrincipalAdmin]);
 
     const openCrear = () => {
         setForm({ documento: '', contraseña: '', nombre: '' });
@@ -78,13 +80,8 @@ export const AdminAdmins = () => {
                     return;
                 }
             } else {
-                if (form.contraseña) {
-                    const ok = await resetAdminPassword(editingId, form.contraseña);
-                    if (!ok) {
-                        alert('Error al actualizar la contraseña');
-                        return;
-                    }
-                }
+                // En Gestión admin no se puede cambiar la contraseña de otros admins (solo en Restablecer contraseña)
+                // Solo se actualiza nombre si en el futuro hay endpoint; por ahora solo cerramos el form
             }
             setShowForm(false);
             await fetchAdmins();
@@ -102,6 +99,15 @@ export const AdminAdmins = () => {
 
     if (loading) return <LoadingScreen fullPage />;
 
+    if (!isPrincipalAdmin) {
+        return (
+            <div className={styles.page}>
+                <h2 className={styles.title}>Gestión admin</h2>
+                <p className={styles.subtitle}>Solo el administrador principal puede acceder a esta sección.</p>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.page}>
             <h2 className={styles.title}>Gestión admin</h2>
@@ -115,6 +121,9 @@ export const AdminAdmins = () => {
             ) : (
                 <form onSubmit={guardar} className={styles.form}>
                     <h3 className={styles.formTitle}>{editingId ? 'Editar admin' : 'Nuevo admin'}</h3>
+                    {editingId !== null && (
+                        <p className={styles.formHint}>Para cambiar la contraseña de un admin usá la sección Restablecer contraseña.</p>
+                    )}
                     <div className={styles.field}>
                         <label>Documento del administrador *</label>
                         <input
@@ -123,6 +132,7 @@ export const AdminAdmins = () => {
                             value={form.documento}
                             onChange={(e) => setForm((f) => ({ ...f, documento: e.target.value }))}
                             required
+                            readOnly={editingId !== null}
                             className={styles.input}
                         />
                     </div>
@@ -137,18 +147,6 @@ export const AdminAdmins = () => {
                                 required
                                 className={styles.input}
                                 minLength={8}
-                            />
-                        </div>
-                    )}
-                    {editingId !== null && (
-                        <div className={styles.field}>
-                            <label>Nueva contraseña (opcional)</label>
-                            <input
-                                type="password"
-                                placeholder="Dejar en blanco para no cambiar"
-                                value={form.contraseña}
-                                onChange={(e) => setForm((f) => ({ ...f, contraseña: e.target.value }))}
-                                className={styles.input}
                             />
                         </div>
                     )}
@@ -194,13 +192,15 @@ export const AdminAdmins = () => {
                                         <Pencil size={18} />
                                         Editar
                                     </button>
-                                    <button
-                                        type="button"
-                                        className={a.activo ? styles.btnDesactivar : styles.btnToggle}
-                                        onClick={() => toggleActivo(a.id)}
-                                    >
-                                        {a.activo ? 'Desactivar' : 'Activar'}
-                                    </button>
+                                    {a.cuentaId !== undefined && a.cuentaId === user?.id && (
+                                        <button
+                                            type="button"
+                                            className={a.activo ? styles.btnDesactivar : styles.btnToggle}
+                                            onClick={() => toggleActivo(a.id)}
+                                        >
+                                            {a.activo ? 'Desactivar' : 'Activar'}
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}

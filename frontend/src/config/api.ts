@@ -4,35 +4,20 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true, // Enviar cookies HttpOnly en cada request
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor para agregar el token JWT a todas las requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor para manejar errores de respuesta
+// Interceptor para manejar errores de respuesta (cookie se envía automáticamente)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       const isLoginRequest = error.config?.url?.includes('/auth/login');
-      // No redirigir si el 401 viene del propio login (credenciales incorrectas)
       if (!isLoginRequest) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        localStorage.removeItem('forever_auth');
         window.location.href = '/login';
       }
     }

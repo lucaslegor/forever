@@ -9,6 +9,7 @@ import { validateBody, validateParams, validateQuery } from '../middlewares/vali
 import {
   createDeportistaSchema,
   updateDeportistaSchema,
+  updateMiPerfilSchema,
   deportistasQuerySchema,
 } from '../validators/deportista.validator';
 import { idParamSchema } from '../validators/user.validator';
@@ -29,6 +30,15 @@ router.get(
   authenticateToken,
   requireDeportista,
   deportistaController.getMiPerfil.bind(deportistaController)
+);
+
+// PUT /api/deportistas/mi-perfil - Actualizar adulto responsable del deportista logueado
+router.put(
+  '/mi-perfil',
+  authenticateToken,
+  requireDeportista,
+  validateBody(updateMiPerfilSchema),
+  deportistaController.updateMiPerfil.bind(deportistaController)
 );
 
 // GET /api/deportistas/mi-historial - CU06 Historial del deportista logueado

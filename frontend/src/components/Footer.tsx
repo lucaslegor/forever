@@ -17,11 +17,11 @@ export const Footer = () => {
                     <div className={styles.footerBlock}>
                         <h3 className={styles.blockTitle}>Redes</h3>
                         <div className={styles.socialLinks}>
-                            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className={styles.socialLink} aria-label="Instagram">
+                            <a href={"https://www.instagram.com/cscdforever/"} target="_blank" rel="noopener noreferrer" className={styles.socialLink} aria-label="Instagram">
                                 <Instagram size={20} />
                                 <span>Instagram</span>
                             </a>
-                            <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" className={styles.socialLink} aria-label="Facebook">
+                            <a href={"https://www.facebook.com/CSCDForEver?locale=es_LA"} target="_blank" rel="noopener noreferrer" className={styles.socialLink} aria-label="Facebook">
                                 <Facebook size={20} />
                                 <span>Facebook</span>
                             </a>
@@ -40,7 +40,7 @@ export const Footer = () => {
                                     className={styles.footerLink}
                                 >
                                     <MapPin size={16} />
-                                    <span>Av. 73 N° 520, La Plata</span>
+                                    <span> Calle 116 e/ 62 y 63, La Plata</span>
                                 </a>
                             </div>
                             <div className={styles.addressItem}>
@@ -79,7 +79,10 @@ export const Footer = () => {
                             </a>
                             <a href="tel:+542214211475" className={styles.footerLink}>
                                 <Phone size={18} />
-                                <span>(221) 421-1475</span>
+                                <span>(221) 426-6684</span>
+                                <br />
+                                <Phone size={18} />
+                                <span>(221) 558-5761</span>
                             </a>
                         </div>
                     </div>

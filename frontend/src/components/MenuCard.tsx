@@ -9,7 +9,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
     { label: 'Mi Perfil', path: '/perfil' },
-    { label: 'Estado Deuda', path: '/estado-deuda' },
+    { label: 'Pagar Cuota', path: '/estado-deuda' },
     { label: 'Historial de Pagos', path: '/historial-pagos' },
     { label: 'Grupo Familiar', path: '/grupo-familiar' },
     { label: 'Noticias', path: '/noticias' },

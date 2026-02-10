@@ -19,6 +19,7 @@ import { AdminAdmins } from './pages/admin/AdminAdmins';
 import { AdminDisciplinas } from './pages/admin/AdminDisciplinas';
 import { AdminNoticiasCrear } from './pages/admin/AdminNoticiasCrear';
 import { AdminRestablecerContrasena } from './pages/admin/AdminRestablecerContrasena';
+import { AdminPerfil } from './pages/admin/AdminPerfil';
 import { OpcionesAdminProvider } from './context/OpcionesAdminContext';
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -53,6 +54,7 @@ function App() {
           <Route path="disciplinas" element={<AdminDisciplinas />} />
           <Route path="noticias/crear" element={<AdminNoticiasCrear />} />
           <Route path="restablecer-contrasena" element={<AdminRestablecerContrasena />} />
+          <Route path="perfil" element={<AdminPerfil />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

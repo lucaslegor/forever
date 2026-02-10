@@ -19,4 +19,10 @@ export const pagoService = {
     const response = await api.post<ApiResponse<CrearPagoResponse>>('/pagos/crear', { cuotaId });
     return response.data;
   },
+
+  /** Sincronizar pago con Mercado Pago (cuando el webhook no llegó). Usar el payment_id de la URL de éxito. */
+  sync: async (paymentId: string): Promise<ApiResponse<unknown>> => {
+    const response = await api.post<ApiResponse<unknown>>('/pagos/sync', { paymentId });
+    return response.data;
+  },
 };

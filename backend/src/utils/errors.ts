@@ -70,6 +70,7 @@ export const ErrorMessages = {
   // Roles
   ADMIN_REQUIRED: 'Acceso denegado. Se requiere rol de Administrador',
   ADMINISTRATIVO_REQUIRED: 'Acceso denegado. Se requiere rol de Administrativo',
+  PRINCIPAL_ADMIN_REQUIRED: 'Solo el administrador principal puede realizar esta acción',
   LAST_ADMIN: 'No se puede cambiar el rol. Debe haber al menos un Administrador en el sistema',
 
   // Deportista

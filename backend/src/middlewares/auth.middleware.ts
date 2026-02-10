@@ -6,6 +6,9 @@ import prisma from '../config/prisma';
 import { ErrorMessages } from '../utils/errors';
 import { Rol } from '@prisma/client';
 
+/** Email del admin principal (único que puede crear otros admins y gestionar administradores) */
+export const PRINCIPAL_ADMIN_EMAIL = env.PRINCIPAL_ADMIN_EMAIL;
+
 export const authenticateToken = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -13,7 +16,9 @@ export const authenticateToken = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const bearerToken = authHeader && authHeader.split(' ')[1];
+    const cookieToken = req.cookies?.[env.AUTH_COOKIE_NAME];
+    const token = bearerToken || cookieToken;
 
     if (!token) {
       res.status(401).json({
@@ -100,6 +105,23 @@ export const requireAdministrativo = (
     res.status(403).json({
       success: false,
       error: ErrorMessages.ADMINISTRATIVO_REQUIRED,
+    });
+    return;
+  }
+  next();
+};
+
+/** Solo el admin principal (admin@foreverclub.com) puede crear admins, listar usuarios y restablecer contraseñas de admins */
+export const requirePrincipalAdmin = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  const email = req.user?.email?.toLowerCase();
+  if (email !== PRINCIPAL_ADMIN_EMAIL) {
+    res.status(403).json({
+      success: false,
+      error: ErrorMessages.PRINCIPAL_ADMIN_REQUIRED,
     });
     return;
   }

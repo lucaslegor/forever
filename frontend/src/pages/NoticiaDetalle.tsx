@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { useNoticias } from '../context/NoticiasContext';
+import { sanitizeHtml, wrapImageGalleries } from '../utils/sanitize';
 import styles from './NoticiaDetalle.module.css';
 
 export const NoticiaDetalle = () => {
@@ -56,25 +57,11 @@ export const NoticiaDetalle = () => {
                         </time>
                     </header>
 
-                    {noticia.imagenes.length > 0 && (
-                        <div className={styles.gallery}>
-                            {noticia.imagenes.map((src, index) => (
-                                <figure key={index} className={styles.galleryItem}>
-                                    <img
-                                        src={src}
-                                        alt={`${noticia.titulo} - imagen ${index + 1}`}
-                                        className={styles.galleryImage}
-                                    />
-                                </figure>
-                            ))}
-                        </div>
-                    )}
-
                     <p className={styles.resumen}>{noticia.resumen}</p>
 
                     <div className={styles.contenido}>
                         {/<[a-z][\s\S]*>/i.test(noticia.contenido) ? (
-                            <div dangerouslySetInnerHTML={{ __html: noticia.contenido }} />
+                            <div dangerouslySetInnerHTML={{ __html: wrapImageGalleries(sanitizeHtml(noticia.contenido)) }} />
                         ) : (
                             noticia.contenido
                                 .split(/\n\n+/)

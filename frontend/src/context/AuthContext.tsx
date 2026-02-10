@@ -4,6 +4,9 @@ import { deportistaService } from '../services/deportista.service';
 
 export type UserRole = 'deportista' | 'admin' | 'administrativo';
 
+/** Email del admin principal (único que puede crear otros admins y restablecer sus contraseñas) */
+export const PRINCIPAL_ADMIN_EMAIL = (import.meta.env.VITE_PRINCIPAL_ADMIN_EMAIL || 'admin@foreverclub.com').toLowerCase();
+
 export interface AuthUser {
   id: number;
   email: string;
@@ -16,7 +19,6 @@ export interface AuthUser {
 }
 
 const AUTH_KEY = 'forever_auth';
-const TOKEN_KEY = 'token';
 
 function getStoredAuth(): AuthUser | null {
   try {
@@ -33,6 +35,8 @@ interface AuthContextValue {
   login: (dni: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAdmin: boolean;
+  /** Solo el admin principal (admin@foreverclub.com) puede gestionar admins y restablecer sus contraseñas */
+  isPrincipalAdmin: boolean;
   loading: boolean;
   resetDeportistaPassword: (deportistaId: number, newPassword: string) => Promise<boolean>;
   resetAdminPassword: (adminId: number, newPassword: string) => Promise<boolean>;
@@ -44,13 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(getStoredAuth);
   const [loading, setLoading] = useState(false);
 
-  // Verificar si hay token al cargar
+  // Revalidar sesión con la cookie HttpOnly al cargar
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (token && !user) {
-      // Intentar obtener el perfil del usuario
-      authService.getProfile().then(response => {
-        if (response.success) {
+    authService.getProfile()
+      .then(response => {
+        if (response.success && response.data) {
           const userData = response.data;
           const authUser: AuthUser = {
             id: userData.id,
@@ -63,14 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
           setUser(authUser);
           localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
+        } else {
+          setUser(null);
+          localStorage.removeItem(AUTH_KEY);
         }
-      }).catch(() => {
-        // Token inválido, limpiar
-        localStorage.removeItem(TOKEN_KEY);
+      })
+      .catch(() => {
+        setUser(null);
         localStorage.removeItem(AUTH_KEY);
       });
-    }
-  }, [user]);
+  }, []);
 
   const mapRoleToUserRole = (rol: string): UserRole => {
     if (rol === 'Admin' || rol === 'ADMIN') return 'admin';
@@ -87,12 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Respuesta del backend:', response);
       
       if (response.success && response.data) {
-        const { user: userData, token } = response.data;
-        
-        // Guardar token
-        localStorage.setItem(TOKEN_KEY, token);
-        
-        // Crear objeto de usuario
+        const { user: userData } = response.data;
+        // El token va en cookie HttpOnly (no se guarda en el frontend)
+
         const authUser: AuthUser = {
           id: userData.id,
           email: userData.email,
@@ -132,9 +133,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    authService.logout().catch(() => {});
     setUser(null);
     localStorage.removeItem(AUTH_KEY);
-    localStorage.removeItem(TOKEN_KEY);
   }, []);
 
   const resetDeportistaPassword = useCallback(async (deportistaId: number, newPassword: string): Promise<boolean> => {
@@ -162,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     isAdmin: user?.role === 'admin',
+    isPrincipalAdmin: user?.role === 'admin' && (user?.email?.toLowerCase() === PRINCIPAL_ADMIN_EMAIL),
     loading,
     resetDeportistaPassword,
     resetAdminPassword,

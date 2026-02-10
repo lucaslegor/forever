@@ -182,25 +182,29 @@ export const ProfileEdit = () => {
                         categoriaGeneral: data.categoria?.nombre || '',
                         subcategoria: data.subcategoria?.nombre || '',
                         email: data.cuenta?.email || '',
-                        adultoNombre: data.adultoResponsable?.nombre || '',
-                        adultoApellido: data.adultoResponsable?.apellido || '',
-                        adultoDni: data.adultoResponsable?.dni || '',
-                        adultoEmail: data.adultoResponsable?.email || '',
-                        adultoTelefono: data.adultoResponsable?.telefono || '',
+                        adultoNombre: (data.adultosResponsables?.[0] || data.adultoResponsable)?.nombre || '',
+                        adultoApellido: (data.adultosResponsables?.[0] || data.adultoResponsable)?.apellido || '',
+                        adultoDni: (data.adultosResponsables?.[0] || data.adultoResponsable)?.dni || '',
+                        adultoEmail: (data.adultosResponsables?.[0] || data.adultoResponsable)?.email || '',
+                        adultoTelefono: (data.adultosResponsables?.[0] || data.adultoResponsable)?.telefono || '',
                     });
-                    
-                    // Configurar adulto responsable solo si NO es Mayores y existe
+
                     const categoria = data.categoria?.nombre || '';
                     const esMayores = categoria === 'Mayores';
-                    
-                    if (!esMayores && data.adultoResponsable) {
-                        setAdultosList([{
-                            nombre: data.adultoResponsable.nombre,
-                            apellido: data.adultoResponsable.apellido,
-                            dni: data.adultoResponsable.dni,
-                            email: data.adultoResponsable.email,
-                            telefono: data.adultoResponsable.telefono,
-                        }]);
+                    const adultos = Array.isArray(data.adultosResponsables) && data.adultosResponsables.length > 0
+                        ? data.adultosResponsables
+                        : data.adultoResponsable
+                            ? [data.adultoResponsable]
+                            : [];
+
+                    if (!esMayores && adultos.length > 0) {
+                        setAdultosList(adultos.map((a: any) => ({
+                            nombre: a.nombre,
+                            apellido: a.apellido,
+                            dni: a.dni,
+                            email: a.email,
+                            telefono: a.telefono,
+                        })));
                         setAdultoModo('ver');
                     } else {
                         setAdultosList([]);
@@ -234,25 +238,42 @@ export const ProfileEdit = () => {
                 email: data.adultoEmail ?? '',
                 telefono: data.adultoTelefono ?? '',
             };
+            const newList =
+                adultoModo === 'agregar'
+                    ? [...adultosList, nuevo]
+                    : adultoModo === 'editar' && adultoEditIndex !== null
+                        ? adultosList.map((a, i) => (i === adultoEditIndex ? nuevo : a))
+                        : adultosList;
+
+            setAdultosList(newList);
             if (adultoModo === 'agregar') {
-                setAdultosList((prev) => [...prev, nuevo]);
                 setValue('adultoNombre', '');
                 setValue('adultoApellido', '');
                 setValue('adultoDni', '');
                 setValue('adultoEmail', '');
                 setValue('adultoTelefono', '');
-                setNotification({ type: 'success', message: 'Adulto responsable agregado a la lista' });
-            } else if (adultoModo === 'editar' && adultoEditIndex !== null) {
-                setAdultosList((prev) => prev.map((a, i) => (i === adultoEditIndex ? nuevo : a)));
+            } else if (adultoEditIndex !== null) {
                 setAdultoEditIndex(null);
-                setNotification({ type: 'success', message: 'Datos del adulto responsable actualizados' });
+            }
+
+            const res = await deportistaService.updateMiPerfil({
+                adultosResponsables: newList,
+            });
+            if (res.success) {
+                setNotification({
+                    type: 'success',
+                    message: adultoModo === 'agregar' ? 'Adulto responsable agregado y guardado' : 'Datos del adulto responsable actualizados',
+                });
+            } else {
+                setNotification({ type: 'error', message: (res as { error?: string }).error || 'Error al guardar' });
             }
             await new Promise((r) => setTimeout(r, 400));
             setAdultoModo('ver');
             setTimeout(() => setNotification(null), 3000);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving profile:', error);
-            setNotification({ type: 'error', message: 'Error al guardar los datos' });
+            const msg = error?.response?.data?.error || error?.message || 'Error al guardar los datos';
+            setNotification({ type: 'error', message: msg });
             setTimeout(() => setNotification(null), 3000);
         }
     };
@@ -315,11 +336,20 @@ export const ProfileEdit = () => {
         }
     };
 
-    const handleEliminarAdulto = (index: number) => {
-        setAdultosList((prev) => {
-            if (prev.length <= 1) return prev; // Siempre debe haber al menos un adulto responsable (cargado por admin)
-            return prev.filter((_, i) => i !== index);
-        });
+    const handleEliminarAdulto = async (index: number) => {
+        const newList = adultosList.filter((_, i) => i !== index);
+        if (newList.length < 1) return; // Al menos uno
+        setAdultosList(newList);
+        try {
+            const res = await deportistaService.updateMiPerfil({ adultosResponsables: newList });
+            if (res.success) {
+                setNotification({ type: 'success', message: 'Adulto responsable eliminado' });
+                setTimeout(() => setNotification(null), 3000);
+            }
+        } catch (e) {
+            setNotification({ type: 'error', message: 'Error al eliminar' });
+            setTimeout(() => setNotification(null), 3000);
+        }
     };
 
     if (!profileLoaded) {

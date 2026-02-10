@@ -18,6 +18,7 @@ export interface LoginResponse {
       rol: string;
       activo: boolean;
     };
-    token: string;
+    /** Ya no se envía: el token va en cookie HttpOnly */
+    token?: string;
   };
 }

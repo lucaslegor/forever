@@ -1,6 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, XCircle, Clock, ArrowLeft } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { pagoService } from '../services/pago.service';
 import styles from './PagosResult.module.css';
 
 type Variant = 'success' | 'failure' | 'pending';
@@ -28,9 +30,40 @@ const config: Record<Variant, { title: string; message: string; icon: typeof Che
 
 export const PagosResult = () => {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const variant: Variant = pathname.includes('/failure') ? 'failure' : pathname.includes('/pending') ? 'pending' : 'success';
   const { title, message, icon: Icon, className } = config[variant];
+  const syncDone = useRef(false);
+  const [hadPaymentIdInUrl, setHadPaymentIdInUrl] = useState(false);
+  const [manualPaymentId, setManualPaymentId] = useState('');
+  const [syncMessage, setSyncMessage] = useState<'idle' | 'ok' | 'error'>('idle');
+
+  // Al volver de Mercado Pago con pago aprobado, sincronizar por si el webhook no llegó
+  useEffect(() => {
+    if (variant !== 'success' || syncDone.current) return;
+    const params = new URLSearchParams(search);
+    const paymentId = params.get('payment_id') || params.get('collection_id');
+    if (!paymentId) return;
+    setHadPaymentIdInUrl(true);
+    syncDone.current = true;
+    pagoService
+      .sync(paymentId)
+      .then(() => setSyncMessage('ok'))
+      .catch(() => setSyncMessage('error'));
+  }, [variant, search]);
+
+  const handleManualSync = () => {
+    const id = manualPaymentId.trim();
+    if (!id) return;
+    setSyncMessage('idle');
+    pagoService
+      .sync(id)
+      .then(() => {
+        setSyncMessage('ok');
+        setManualPaymentId('');
+      })
+      .catch(() => setSyncMessage('error'));
+  };
 
   return (
     <div className={styles.page}>
@@ -39,6 +72,30 @@ export const PagosResult = () => {
           <Icon size={64} className={styles.icon} aria-hidden />
           <h1 className={styles.title}>{title}</h1>
           <p className={styles.message}>{message}</p>
+          {variant === 'success' && hadPaymentIdInUrl && syncMessage === 'ok' && (
+            <p className={styles.syncOk}>Tu pago se registró correctamente. Ya podés ver tu estado de deuda actualizado.</p>
+          )}
+          {variant === 'success' && (syncMessage === 'error' || !hadPaymentIdInUrl) && (
+            <div className={styles.syncSection}>
+              <p className={styles.syncHint}>
+                {syncMessage === 'error' ? 'No se pudo sincronizar con la URL. Ingresá el ID del pago (Mercado Pago → Actividad) y sincronizá.' : 'Si tu estado de deuda no se actualizó, ingresá el ID del pago (Mercado Pago → Actividad) y sincronizá.'}
+              </p>
+              <div className={styles.syncRow}>
+                <input
+                  type="text"
+                  placeholder="ID del pago (ej. 123456789)"
+                  value={manualPaymentId}
+                  onChange={(e) => setManualPaymentId(e.target.value)}
+                  className={styles.syncInput}
+                />
+                <button type="button" className={styles.syncButton} onClick={handleManualSync} disabled={!manualPaymentId.trim()}>
+                  Sincronizar
+                </button>
+              </div>
+              {syncMessage === 'ok' && <p className={styles.syncOk}>Listo. Actualizá la página de estado de deuda.</p>}
+              {syncMessage === 'error' && <p className={styles.syncError}>No se pudo sincronizar. Revisá el ID del pago.</p>}
+            </div>
+          )}
           <button type="button" className={styles.backButton} onClick={() => navigate('/estado-deuda')}>
             <ArrowLeft size={20} />
             Volver al estado de deuda

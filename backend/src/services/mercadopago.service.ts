@@ -1,11 +1,10 @@
-import MercadoPagoConfig, { Preference, Payment } from 'mercadopago';
+import MercadoPagoConfig, { Payment } from 'mercadopago';
 import { env } from '../config/env';
 
 const config = new MercadoPagoConfig({
   accessToken: env.MERCADOPAGO_ACCESS_TOKEN,
 });
 
-const preferenceClient = new Preference(config);
 const paymentClient = new Payment(config);
 
 export interface CrearPreferenciaParams {
@@ -23,7 +22,14 @@ export interface CrearPreferenciaResult {
 export async function crearPreferenciaPago(params: CrearPreferenciaParams): Promise<CrearPreferenciaResult> {
   const { pagoId, title, unitPrice } = params;
 
-  const body = {
+  // Siempre usar FRONTEND_URL para back_urls (la redirección post-pago es al frontend)
+  const base = (env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+  const successUrl = `${base}/pagos/success`;
+  const failureUrl = `${base}/pagos/failure`;
+  const pendingUrl = `${base}/pagos/pending`;
+
+  // Llamada directa a la API REST (el SDK a veces provoca "back_url.success must be defined" con auto_return)
+  const body: Record<string, unknown> = {
     items: [
       {
         id: `pago-${pagoId}`,
@@ -34,19 +40,47 @@ export async function crearPreferenciaPago(params: CrearPreferenciaParams): Prom
       },
     ],
     back_urls: {
-      success: env.MERCADOPAGO_SUCCESS_URL || undefined,
-      failure: env.MERCADOPAGO_FAILURE_URL || undefined,
-      pending: env.MERCADOPAGO_PENDING_URL || undefined,
+      success: successUrl,
+      failure: failureUrl,
+      pending: pendingUrl,
     },
-    auto_return: 'approved' as const,
     external_reference: String(pagoId),
-    notification_url: env.MERCADOPAGO_WEBHOOK_URL || undefined,
+  };
+  // Sin auto_return: el usuario vuelve con el botón "Volver al sitio" (evita error de la API)
+  // body.auto_return = 'approved';
+  if (env.MERCADOPAGO_WEBHOOK_URL) {
+    body.notification_url = env.MERCADOPAGO_WEBHOOK_URL;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[MercadoPago] Creando preferencia con back_urls:', body.back_urls);
+  }
+
+  const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const data = (await res.json()) as {
+    init_point?: string;
+    sandbox_init_point?: string;
+    id?: string;
+    message?: string;
+    error?: string | string[];
   };
 
-  const response = await preferenceClient.create({ body });
+  if (!res.ok) {
+    const msg = data.message ?? data.error ?? JSON.stringify(data);
+    throw new Error(typeof msg === 'string' ? msg : Array.isArray(msg) ? msg.join(' ') : String(msg));
+  }
 
-  const initPoint = response.init_point || response.sandbox_init_point || '';
-  const preferenceId = response.id || '';
+  const initPoint = data.init_point || data.sandbox_init_point || '';
+  const preferenceId = data.id || '';
+  const response = { init_point: initPoint, sandbox_init_point: data.sandbox_init_point, id: preferenceId };
 
   return {
     initPoint,

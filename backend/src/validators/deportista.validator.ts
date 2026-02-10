@@ -56,6 +56,7 @@ export const updateDeportistaSchema = z.object({
   subcategoriaId: z.number().int().positive().nullable().optional(),
   disciplinaId: z.number().int().positive().optional(),
   adultoResponsable: adultoResponsableSchema.partial().optional(),
+  adultosResponsables: z.array(adultoResponsableSchema.partial()).optional(),
 });
 
 // Acepta string, number o array (query params a veces vienen como array); devuelve number o undefined
@@ -81,6 +82,12 @@ export const deportistasQuerySchema = z.object({
   search: z.preprocess((v) => (v === '' || v === undefined ? undefined : v), z.string().optional()),
 });
 
+/** Lista de adultos responsables; el deportista sincroniza la suya (PUT mi-perfil) */
+export const updateMiPerfilSchema = z.object({
+  adultosResponsables: z.array(adultoResponsableSchema),
+});
+
 export type CreateDeportistaInput = z.infer<typeof createDeportistaSchema>;
 export type UpdateDeportistaInput = z.infer<typeof updateDeportistaSchema>;
+export type UpdateMiPerfilInput = z.infer<typeof updateMiPerfilSchema>;
 export type DeportistasQuery = z.infer<typeof deportistasQuerySchema>;

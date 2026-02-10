@@ -73,3 +73,63 @@
 .backButton:hover {
   background: rgba(0, 51, 102, 0.08);
 }
+
+.syncSection {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem;
+  background: #f0f7ff;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.syncHint {
+  font-size: 0.9rem;
+  color: #5c6b7a;
+  margin: 0 0 0.75rem 0;
+}
+
+.syncRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.syncInput {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.syncButton {
+  padding: 0.5rem 1rem;
+  background: #003366;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.syncButton:hover:not(:disabled) {
+  background: #002244;
+}
+
+.syncButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.syncOk {
+  font-size: 0.9rem;
+  color: #2e7d32;
+  margin: 0.25rem 0 0;
+}
+
+.syncError {
+  font-size: 0.9rem;
+  color: #c62828;
+  margin: 0.25rem 0 0;
+}

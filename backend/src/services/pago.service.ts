@@ -79,10 +79,29 @@ export class PagoService {
         initPoint: preferencia.initPoint,
         preferenceId: preferencia.preferenceId,
       };
-    } catch (err) {
-      console.error('Error creando preferencia Mercado Pago:', err);
+    } catch (err: any) {
+      console.error('Error creando preferencia Mercado Pago:', err?.message || err);
+      if (err?.cause) console.error('Causa:', err.cause);
       return { pago, initPoint: null, preferenceId: null };
     }
+  }
+
+  /**
+   * Sincroniza un pago con el estado de Mercado Pago. Solo permite al deportista dueño del pago.
+   */
+  async syncPagoConMercadoPago(pagoId: number, mercadoPagoId: string, status: string, deportistaId: number) {
+    const pago = await prisma.pago.findUnique({
+      where: { id: pagoId },
+      include: { cuota: true },
+    });
+    if (!pago) {
+      throw new NotFoundError(ErrorMessages.PAGO_NOT_FOUND);
+    }
+    if (pago.deportistaId !== deportistaId) {
+      throw new BadRequestError('No podés sincronizar un pago de otro deportista');
+    }
+    const statusNorm = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending';
+    return this.confirmarPago(pagoId, mercadoPagoId, statusNorm);
   }
 
   async confirmarPago(pagoId: number, mercadoPagoId: string, status: string) {

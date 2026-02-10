@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { cuotaService } from '../services/cuota.service';
 import { deportistaService } from '../services/deportista.service';
-import { sendSuccess, sendCreated } from '../utils/response';
+import { sendSuccess, sendCreated, sendForbidden } from '../utils/response';
 import { AuthenticatedRequest } from '../types';
 import { AsignarCuotaInput, UpdateCuotaInput, CuotasQuery, ListCuotasQuery, GenerarCuotasInput } from '../validators/cuota.validator';
 import { Rol } from '@prisma/client';
@@ -21,6 +21,16 @@ export class CuotaController {
     try {
       const id = parseInt(req.params.id as string, 10);
       const result = await cuotaService.getById(id);
+      const rol = req.user!.rol;
+      if (rol === Rol.ADMIN || rol === Rol.ADMINISTRATIVO) {
+        sendSuccess(res, result);
+        return;
+      }
+      const deportista = await deportistaService.getByUserId(req.user!.id);
+      if (result.deportistaId !== deportista.id) {
+        sendForbidden(res, 'No tiene permisos para acceder a este recurso');
+        return;
+      }
       sendSuccess(res, result);
     } catch (error) {
       next(error);

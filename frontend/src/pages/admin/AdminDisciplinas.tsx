@@ -4,6 +4,7 @@ import type { Disciplina } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { clasificacionService } from '../../services/clasificacion.service';
+import { disciplinaService } from '../../services/disciplina.service';
 import styles from './AdminDisciplinas.module.css';
 
 export const AdminDisciplinas = () => {
@@ -43,24 +44,30 @@ export const AdminDisciplinas = () => {
         setShowForm(true);
     };
 
-    const guardar = (e: React.FormEvent) => {
+    const [guardando, setGuardando] = useState(false);
+    const guardar = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (editingId !== null) {
-            setDisciplinas((prev) =>
-                prev.map((d) =>
-                    d.id === editingId ? { ...d, nombre: form.nombre.trim(), valorMensual: form.valorMensual } : d
-                )
-            );
-        } else {
-            const nuevo: Disciplina = {
-                id: Math.max(0, ...disciplinas.map((d) => d.id)) + 1,
-                nombre: form.nombre.trim(),
-                valorMensual: form.valorMensual,
-                activo: true,
-            };
-            setDisciplinas((prev) => [...prev, nuevo]);
+        setGuardando(true);
+        try {
+            if (editingId !== null) {
+                await disciplinaService.update(editingId, {
+                    nombre: form.nombre.trim(),
+                    precioMensual: form.valorMensual,
+                });
+            } else {
+                await disciplinaService.create({
+                    nombre: form.nombre.trim(),
+                    precioMensual: form.valorMensual,
+                });
+            }
+            await refetch();
+            setShowForm(false);
+        } catch (err: any) {
+            console.error('Error al guardar disciplina:', err);
+            alert(err.response?.data?.message || 'Error al guardar la disciplina');
+        } finally {
+            setGuardando(false);
         }
-        setShowForm(false);
     };
 
     const borrar = async (id: number) => {
@@ -122,9 +129,10 @@ export const AdminDisciplinas = () => {
             await refetch();
             
             setNuevaSubcat({ disciplina: '', categoria: '', genero: '', nombre: '' });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error al crear subcategoría:', error);
-            alert('Error al crear la subcategoría');
+            const msg = error.response?.data?.message || error.message || 'Error al crear la subcategoría';
+            alert(msg);
         }
     };
 
@@ -179,7 +187,9 @@ export const AdminDisciplinas = () => {
                             />
                         </div>
                         <div className={styles.formActions}>
-                            <button type="submit" className={styles.btnGuardar}>Guardar</button>
+                            <button type="submit" className={styles.btnGuardar} disabled={guardando}>
+                            {guardando ? 'Guardando…' : 'Guardar'}
+                        </button>
                             <button type="button" className={styles.btnCancelar} onClick={() => setShowForm(false)}>Cancelar</button>
                         </div>
                     </form>

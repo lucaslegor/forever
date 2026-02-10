@@ -1,12 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { KeyRound, User, Shield } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { deportistaService } from '../../services/deportista.service';
+import { authService } from '../../services/auth.service';
 import styles from './AdminRestablecerContrasena.module.css';
 
 type TipoCuenta = 'deportista' | 'admin';
 
 export const AdminRestablecerContrasena = () => {
+    const { isPrincipalAdmin } = useAuth();
     const [tipoCuenta, setTipoCuenta] = useState<TipoCuenta>('deportista');
+
+    useEffect(() => {
+        if (!isPrincipalAdmin && tipoCuenta === 'admin') setTipoCuenta('deportista');
+    }, [isPrincipalAdmin, tipoCuenta]);
     const [identificador, setIdentificador] = useState('');
     const [nuevaContrasena, setNuevaContrasena] = useState('');
     const [confirmarContrasena, setConfirmarContrasena] = useState('');
@@ -50,11 +57,32 @@ export const AdminRestablecerContrasena = () => {
                     });
                 }
             } else {
-                // TODO: Implementar reset password para admin cuando el endpoint esté disponible
-                setMensaje({
-                    tipo: 'error',
-                    texto: 'Funcionalidad de reset para admin en desarrollo. Por favor, usa la gestión de administradores.',
-                });
+                const resUsers = await authService.getUsers(1, 500);
+                if (!resUsers.success || !resUsers.data?.data) {
+                    setMensaje({ tipo: 'error', texto: 'Error al buscar administradores.' });
+                    return;
+                }
+                const users = resUsers.data.data as Array<{ id: number; administrativo?: { id: number; dni: string } }>;
+                const adminUser = users.find((u) => u.administrativo?.dni?.trim().toLowerCase() === dni.toLowerCase());
+                if (!adminUser?.administrativo) {
+                    setMensaje({ tipo: 'error', texto: 'No se encontró un administrador con ese documento. Verifique el DNI.' });
+                    return;
+                }
+                const resReset = await authService.resetAdminPassword(adminUser.administrativo.id, nuevaContrasena);
+                if (resReset.success) {
+                    setMensaje({
+                        tipo: 'ok',
+                        texto: 'Contraseña del administrador actualizada. Comuníquela al usuario (por teléfono o en persona).',
+                    });
+                    setIdentificador('');
+                    setNuevaContrasena('');
+                    setConfirmarContrasena('');
+                } else {
+                    setMensaje({
+                        tipo: 'error',
+                        texto: (resReset as { error?: string }).error || 'Error al restablecer la contraseña.',
+                    });
+                }
             }
         } catch (error: any) {
             console.error('Error al restablecer contraseña:', error);
@@ -94,21 +122,23 @@ export const AdminRestablecerContrasena = () => {
                             <User size={18} />
                             Deportista
                         </label>
-                        <label className={styles.radioLabel}>
-                            <input
-                                type="radio"
-                                name="tipo"
-                                value="admin"
-                                checked={tipoCuenta === 'admin'}
-                                onChange={() => {
-                                    setTipoCuenta('admin');
-                                    setIdentificador('');
-                                    setMensaje(null);
-                                }}
-                            />
-                            <Shield size={18} />
-                            Administrador
-                        </label>
+                        {isPrincipalAdmin && (
+                            <label className={styles.radioLabel}>
+                                <input
+                                    type="radio"
+                                    name="tipo"
+                                    value="admin"
+                                    checked={tipoCuenta === 'admin'}
+                                    onChange={() => {
+                                        setTipoCuenta('admin');
+                                        setIdentificador('');
+                                        setMensaje(null);
+                                    }}
+                                />
+                                <Shield size={18} />
+                                Administrador
+                            </label>
+                        )}
                     </div>
                 </div>
 
@@ -157,9 +187,9 @@ export const AdminRestablecerContrasena = () => {
                 )}
 
                 <div className={styles.formActions}>
-                    <button type="submit" className={styles.btnGuardar}>
+                    <button type="submit" className={styles.btnGuardar} disabled={loading}>
                         <KeyRound size={18} />
-                        Restablecer contraseña
+                        {loading ? 'Procesando...' : 'Restablecer contraseña'}
                     </button>
                 </div>
             </form>
