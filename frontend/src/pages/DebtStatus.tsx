@@ -206,6 +206,7 @@ export const DebtStatus = () => {
                                                     onClick={() => handlePayQuota(quota.id)}
                                                     disabled={payingQuotaId === quota.id}
                                                 >
+                                                    <img src="/logo.png" alt="" className={styles.payButtonLogo} aria-hidden />
                                                     <CreditCard size={20} />
                                                     {payingQuotaId === quota.id ? 'Redirigiendo...' : 'Pagar Cuota'}
                                                 </button>

@@ -115,6 +115,29 @@
     font-weight: 600;
 }
 
+.badgeEstado {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badgeEstado.cancelado {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.badgeEstado.pendiente {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.badgeEstado.terminado {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
 .btnPago {
     display: inline-flex;
     align-items: center;
@@ -145,6 +168,24 @@
     border: 1px solid #c62828;
     border-radius: 6px;
     cursor: pointer;
+}
+
+.btnCancelarReserva {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    background: transparent;
+    color: #c62828;
+    border: 1px solid #c62828;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btnCancelarReserva:hover {
+    background: rgba(198, 40, 40, 0.08);
 }
 
 .btnDanger:hover {

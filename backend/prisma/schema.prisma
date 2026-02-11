@@ -297,6 +297,7 @@ model ReservaCancha {
   restoPagado     Boolean   @default(false) @map("resto_pagado")
   montoTotal      Decimal?  @map("monto_total") @db.Decimal(10, 2)
   notas           String?   @db.Text
+  canceladaAt     DateTime? @map("cancelada_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

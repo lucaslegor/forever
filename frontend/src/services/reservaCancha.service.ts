@@ -22,7 +22,16 @@ export interface ReservaCancha {
   restoPagado: boolean;
   montoTotal?: number | null;
   notas?: string | null;
+  canceladaAt?: string | null;
   createdAt?: string;
+}
+
+export type EstadoReserva = 'Cancelado' | 'Pendiente' | 'Terminado';
+
+export function getEstadoReserva(r: ReservaCancha): EstadoReserva {
+  if (r.canceladaAt) return 'Cancelado';
+  if (r.restoPagado) return 'Terminado';
+  return 'Pendiente'; // seña pagada o esperando seña
 }
 
 export const reservaCanchaService = {

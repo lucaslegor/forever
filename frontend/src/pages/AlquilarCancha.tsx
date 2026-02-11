@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, CheckCircle, Info, CreditCard, MessageCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Info, CreditCard, MessageCircle } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { reservaCanchaService, HORAS_TURNO, horaToLabel, MONTO_SENA } from '../services/reservaCancha.service';
 import styles from './AlquilarCancha.module.css';
@@ -126,12 +126,22 @@ export const AlquilarCancha = () => {
         }
     };
 
-    const hoy = new Date().toISOString().slice(0, 10);
-    const slots = HORAS_TURNO.map((h) => ({
-        hora: h,
-        label: horaToLabel(h),
-        ocupado: horasOcupadas.includes(h),
-    }));
+    const now = new Date();
+    const hoy = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const horaActual = now.getHours();
+    const minSegActual = now.getMinutes() > 0 || now.getSeconds() > 0;
+    // Turnos 14–23 son del mismo día; 0 y 1 son 00:00 y 01:00 del día siguiente. Una vez empezada la hora, no se puede reservar.
+    const slots = HORAS_TURNO.map((h) => {
+        const esHoy = fecha === hoy;
+        const yaPasado = esHoy && h >= 14 && (h < horaActual || (h === horaActual && minSegActual));
+        const ocupado = horasOcupadas.includes(h);
+        return {
+            hora: h,
+            label: horaToLabel(h),
+            ocupado,
+            noDisponible: ocupado || yaPasado,
+        };
+    });
 
     return (
         <div className={styles.page}>
@@ -212,9 +222,9 @@ export const AlquilarCancha = () => {
                                         <button
                                             key={s.hora}
                                             type="button"
-                                            className={`${styles.slotBtn} ${s.ocupado ? styles.slotOcupado : ''} ${slotElegido === s.hora ? styles.slotElegido : ''}`}
-                                            onClick={() => !s.ocupado && setSlotElegido(s.hora)}
-                                            disabled={s.ocupado}
+                                            className={`${styles.slotBtn} ${s.noDisponible ? styles.slotOcupado : ''} ${slotElegido === s.hora ? styles.slotElegido : ''}`}
+                                            onClick={() => !s.noDisponible && setSlotElegido(s.hora)}
+                                            disabled={s.noDisponible}
                                         >
                                             {s.label}
                                             {s.ocupado && ' (ocupado)'}
@@ -254,13 +264,14 @@ export const AlquilarCancha = () => {
                                         </div>
                                     </div>
                                     <div className={styles.field}>
-                                        <label>Email (opcional)</label>
+                                        <label>Email {metodoPago === 'mercadopago' ? '(requerido para pagar con Mercado Pago)' : '(opcional)'}</label>
                                         <input
                                             type="email"
                                             value={form.email}
                                             onChange={(e) => setForm({ ...form, email: e.target.value })}
                                             placeholder="correo@ejemplo.com"
                                             className={styles.input}
+                                            required={metodoPago === 'mercadopago'}
                                         />
                                     </div>
                                                     <div className={styles.section}>
@@ -297,6 +308,7 @@ export const AlquilarCancha = () => {
                                             Cambiar horario
                                         </button>
                                         <button type="submit" className={styles.btnPrimary} disabled={enviando}>
+                                            <img src="/logo.png" alt="" className={styles.btnPrimaryLogo} aria-hidden />
                                             {enviando ? 'Enviando...' : 'Reservar turno'}
                                         </button>
                                     </div>

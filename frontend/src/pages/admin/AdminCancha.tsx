@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Plus, Check, DollarSign, Trash2, X } from 'lucide-react';
 import { useConfirm } from '../../context/ConfirmContext';
-import { reservaCanchaService, type ReservaCancha, HORAS_TURNO, horaToLabel, MONTO_SENA } from '../../services/reservaCancha.service';
+import { reservaCanchaService, type ReservaCancha, getEstadoReserva, HORAS_TURNO, horaToLabel, MONTO_SENA } from '../../services/reservaCancha.service';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import styles from './AdminCancha.module.css';
 
@@ -89,7 +89,9 @@ export const AdminCancha = () => {
         if (!ok) return;
         try {
             const res = await reservaCanchaService.delete(r.id);
-            if (res.success) await cargar();
+            if (res.success) {
+                setReservas((prev) => prev.map((item) => (item.id === r.id ? { ...item, canceladaAt: new Date().toISOString() } : item)));
+            }
         } catch {
             setMensaje({ tipo: 'error', texto: 'Error al cancelar.' });
         }
@@ -178,6 +180,7 @@ export const AdminCancha = () => {
                             <th>Cliente</th>
                             <th>Teléfono</th>
                             <th>Seña</th>
+                            <th>Estado</th>
                             <th>Seña pagada</th>
                             <th>Resto pagado</th>
                             <th>Acciones</th>
@@ -186,7 +189,7 @@ export const AdminCancha = () => {
                     <tbody>
                         {reservas.length === 0 ? (
                             <tr>
-                                <td colSpan={8} className={styles.empty}>No hay reservas en el período seleccionado.</td>
+                                <td colSpan={9} className={styles.empty}>No hay reservas en el período seleccionado.</td>
                             </tr>
                         ) : (
                             reservas.map((r) => (
@@ -197,7 +200,14 @@ export const AdminCancha = () => {
                                     <td>{r.telefono}</td>
                                     <td>${(r.montoSena ?? MONTO_SENA).toLocaleString('es-AR')}</td>
                                     <td>
-                                        {r.senaPagada ? (
+                                        <span className={`${styles.badgeEstado} ${styles[getEstadoReserva(r).toLowerCase()]}`}>
+                                            {getEstadoReserva(r)}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {r.canceladaAt ? (
+                                            '—'
+                                        ) : r.senaPagada ? (
                                             <span className={styles.badgeOk}>Sí</span>
                                         ) : (
                                             <button
@@ -212,7 +222,9 @@ export const AdminCancha = () => {
                                         )}
                                     </td>
                                     <td>
-                                        {r.restoPagado ? (
+                                        {r.canceladaAt ? (
+                                            '—'
+                                        ) : r.restoPagado ? (
                                             <span className={styles.badgeOk}>Sí</span>
                                         ) : (
                                             <button
@@ -227,14 +239,17 @@ export const AdminCancha = () => {
                                         )}
                                     </td>
                                     <td>
-                                        <button
-                                            type="button"
-                                            className={styles.btnDanger}
-                                            onClick={() => cancelarReserva(r)}
-                                            title="Cancelar reserva"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                        {!r.canceladaAt && (
+                                            <button
+                                                type="button"
+                                                className={styles.btnCancelarReserva}
+                                                onClick={() => cancelarReserva(r)}
+                                                title="Cancelar reserva"
+                                            >
+                                                <Trash2 size={16} />
+                                                Cancelar reserva
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))

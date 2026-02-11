@@ -1,13 +1,13 @@
 import prisma from '../config/prisma';
 import { env } from '../config/env';
-import { NotFoundError, ConflictError } from '../utils/errors';
+import { NotFoundError, ConflictError, BadRequestError } from '../utils/errors';
 import { crearPreferenciaReservaSena } from './mercadopago.service';
 
 const MINUTOS_TRANSFERENCIA = 20;
 
 /** Horas válidas para turnos: 14 a 23 y 0, 1 (00:00 y 01:00) */
 export const HORAS_TURNO = [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1];
-export const MONTO_SENA = 5000;
+export const MONTO_SENA = 10;
 
 function normalizarFecha(fecha: string): Date {
   const d = new Date(fecha);
@@ -37,6 +37,7 @@ export class ReservaCanchaService {
     const reservas = await prisma.reservaCancha.findMany({
       where: {
         fecha: date,
+        canceladaAt: null,
         OR: [
           { senaPagada: true },
           {
@@ -81,6 +82,7 @@ export class ReservaCanchaService {
       restoPagado: r.restoPagado,
       montoTotal: r.montoTotal != null ? Number(r.montoTotal) : null,
       notas: r.notas,
+      canceladaAt: r.canceladaAt?.toISOString() ?? null,
       createdAt: r.createdAt.toISOString(),
     }));
   }
@@ -99,12 +101,19 @@ export class ReservaCanchaService {
     if (!HORAS_TURNO.includes(data.hora)) {
       throw new ConflictError('Hora de turno no válida');
     }
+    const now = new Date();
+    const hoyStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const horaYaEmpezada = now.getMinutes() > 0 || now.getSeconds() > 0;
+    // Solo bloquear horas 14–23 ya pasadas o en curso; 0 y 1 son 00:00 y 01:00 del día siguiente
+    if (data.fecha === hoyStr && data.hora >= 14 && (data.hora < now.getHours() || (data.hora === now.getHours() && horaYaEmpezada))) {
+      throw new BadRequestError('No se puede reservar un horario que ya pasó.');
+    }
     await this.cancelarReservasTransferenciaVencidas();
     const existente = await prisma.reservaCancha.findUnique({
       where: { fecha_hora: { fecha, hora: data.hora } },
     });
     if (existente) {
-      if (existente.senaPagada) {
+      if (!existente.canceladaAt && existente.senaPagada) {
         throw new ConflictError('Ese turno ya está reservado');
       }
       await prisma.reservaCancha.delete({ where: { id: existente.id } });
@@ -161,6 +170,7 @@ export class ReservaCanchaService {
         reservaId: reserva.id,
         title: `Seña alquiler cancha - ${reservaPayload.fecha} ${String(reserva.hora).padStart(2, '0')}:00`,
         unitPrice: MONTO_SENA,
+        payerEmail: reserva.email ?? undefined,
       });
       return {
         reserva: reservaPayload,
@@ -231,10 +241,15 @@ export class ReservaCanchaService {
   }
 
   /** Eliminar/cancelar reserva (admin) */
+  /** Cancela la reserva (soft-delete: set canceladaAt). El turno queda libre para nuevas reservas. */
   async delete(id: number) {
     const reserva = await prisma.reservaCancha.findUnique({ where: { id } });
     if (!reserva) throw new NotFoundError('Reserva no encontrada');
-    await prisma.reservaCancha.delete({ where: { id } });
+    if (reserva.canceladaAt) return { ok: true };
+    await prisma.reservaCancha.update({
+      where: { id },
+      data: { canceladaAt: new Date() },
+    });
     return { ok: true };
   }
 }

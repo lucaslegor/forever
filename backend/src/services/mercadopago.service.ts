@@ -98,12 +98,14 @@ export interface CrearPreferenciaReservaSenaParams {
   reservaId: number;
   title: string;
   unitPrice: number;
+  /** Email del pagador; si se envía, Mercado Pago puede pre-llenar el checkout y habilitar el botón Pagar. */
+  payerEmail?: string | null;
 }
 
 export async function crearPreferenciaReservaSena(
   params: CrearPreferenciaReservaSenaParams
 ): Promise<CrearPreferenciaResult> {
-  const { reservaId, title, unitPrice } = params;
+  const { reservaId, title, unitPrice, payerEmail } = params;
   const base = (env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
   const successUrl = `${base}/pagos/success?origen=reserva`;
   const failureUrl = `${base}/pagos/failure?origen=reserva`;
@@ -126,6 +128,9 @@ export async function crearPreferenciaReservaSena(
       excluded_payment_types: [{ id: 'consumer_credits' }],
     },
   };
+  if (payerEmail && payerEmail.trim()) {
+    body.payer = { email: payerEmail.trim() };
+  }
   if (env.MERCADOPAGO_WEBHOOK_URL) {
     body.notification_url = env.MERCADOPAGO_WEBHOOK_URL;
   }
