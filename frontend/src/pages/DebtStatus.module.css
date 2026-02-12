@@ -25,6 +25,11 @@
     min-width: 180px;
 }
 
+.headerHomeLink {
+    text-decoration: none;
+    color: inherit;
+}
+
 .headerLogo {
     height: 72px;
     width: 72px;
@@ -478,4 +483,172 @@
         width: 100%;
         justify-content: center;
     }
+}
+
+/* Modal sponsors antes de Mercado Pago */
+.sponsorsModalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 10, 20, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--spacing-md);
+    animation: sponsorsFadeIn 0.2s ease-out;
+}
+
+@keyframes sponsorsFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.sponsorsModal {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 520px;
+    width: 92%;
+    min-height: 320px;
+    padding: var(--spacing-xl) calc(var(--spacing-xl) + 0.5rem);
+    box-shadow: 0 20px 60px rgba(0, 51, 102, 0.2);
+    border: 1px solid rgba(0, 51, 102, 0.12);
+    animation: sponsorsSlideIn 0.25s ease-out;
+}
+
+@keyframes sponsorsSlideIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.sponsorsModalTitle {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-blue);
+    margin: 0 0 var(--spacing-sm) 0;
+    text-align: center;
+}
+
+.sponsorsModalIntro {
+    font-size: 0.9375rem;
+    color: var(--color-gray);
+    line-height: 1.5;
+    margin: 0 0 var(--spacing-lg) 0;
+    text-align: center;
+}
+
+.sponsorsModalList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.sponsorsModalCard {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(0, 51, 102, 0.04);
+    border-radius: 10px;
+    border: 1px solid transparent;
+}
+
+.sponsorsModalLogoLD {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #004080 0%, var(--color-blue) 100%);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    border-radius: 10px;
+}
+
+.sponsorsModalLogoM {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-blue);
+    font-size: 1.5rem;
+    font-weight: 800;
+    transform: rotate(-8deg);
+}
+
+.sponsorsModalName {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-dark-gray);
+    margin-bottom: 0.15rem;
+}
+
+.sponsorsModalTagline {
+    font-size: 0.8125rem;
+    color: var(--color-gray);
+    margin-bottom: 0.25rem;
+}
+
+.sponsorsModalPhone {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-blue);
+    text-decoration: none;
+}
+
+.sponsorsModalPhone:hover {
+    text-decoration: underline;
+}
+
+.sponsorsModalActions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.sponsorsModalCancel {
+    flex: 1;
+    min-width: 100px;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    color: var(--color-gray);
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.sponsorsModalCancel:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+.sponsorsModalConfirm {
+    flex: 1;
+    min-width: 140px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, #002244 0%, #003366 50%, #004080 100%);
+    color: var(--color-white);
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.sponsorsModalConfirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 51, 102, 0.35);
 }

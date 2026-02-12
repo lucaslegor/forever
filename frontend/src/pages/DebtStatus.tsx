@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, DollarSign, AlertCircle, CheckCircle, CreditCard, Info } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { LoadingScreen } from '../components/LoadingScreen';
@@ -28,6 +28,8 @@ export const DebtStatus = () => {
     const [payingQuotaId, setPayingQuotaId] = useState<number | null>(null);
     const [debtData, setDebtData] = useState<DebtStatusData | null>(null);
     const [esTitular, setEsTitular] = useState(true);
+    const [showSponsorsModal, setShowSponsorsModal] = useState(false);
+    const [quotaToPay, setQuotaToPay] = useState<number | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -79,6 +81,19 @@ export const DebtStatus = () => {
         }
     };
 
+    const openSponsorsThenPay = (quotaId: number) => {
+        setQuotaToPay(quotaId);
+        setShowSponsorsModal(true);
+    };
+
+    const confirmGoToMercadoPago = () => {
+        if (quotaToPay != null) {
+            setShowSponsorsModal(false);
+            setQuotaToPay(null);
+            handlePayQuota(quotaToPay);
+        }
+    };
+
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('es-AR', {
             style: 'currency',
@@ -118,10 +133,10 @@ export const DebtStatus = () => {
     return (
         <div className={styles.debtStatusPage}>
             <header className={styles.header}>
-                <div className={styles.headerLeft}>
+                <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
-                </div>
+                </Link>
                 <h1 className={styles.title}>Estado de Deuda</h1>
                 <div className={styles.headerRight} aria-hidden />
             </header>
@@ -178,7 +193,7 @@ export const DebtStatus = () => {
                                                 <button
                                                     type="button"
                                                     className={styles.payButton}
-                                                    onClick={() => handlePayQuota(quota.id)}
+                                                    onClick={() => openSponsorsThenPay(quota.id)}
                                                     disabled={payingQuotaId === quota.id}
                                                 >
                                                     <img src="/logo.png" alt="" className={styles.payButtonLogo} aria-hidden />
@@ -226,6 +241,45 @@ export const DebtStatus = () => {
             </main>
 
             <Footer />
+
+            {/* Modal sponsors antes de ir a Mercado Pago */}
+            {showSponsorsModal && (
+                <div className={styles.sponsorsModalOverlay} onClick={() => setShowSponsorsModal(false)} role="dialog" aria-modal="true" aria-labelledby="sponsors-modal-title">
+                    <div className={styles.sponsorsModal} onClick={(e) => e.stopPropagation()}>
+                        <h2 id="sponsors-modal-title" className={styles.sponsorsModalTitle}>Gracias a nuestros sponsors</h2>
+                        <p className={styles.sponsorsModalIntro}>
+                            Este espacio es posible gracias al apoyo de quienes nos acompañan. Antes de continuar al pago, te invitamos a conocerlos.
+                        </p>
+                        <div className={styles.sponsorsModalList}>
+                            <div className={styles.sponsorsModalCard}>
+                                <div className={styles.sponsorsModalLogoLD}>LD</div>
+                                <div>
+                                    <div className={styles.sponsorsModalName}>Lautaro Domato Nutricionista</div>
+                                    <div className={styles.sponsorsModalTagline}>Especializado en nutrición deportiva</div>
+                                    <a href="tel:+5491112345678" className={styles.sponsorsModalPhone}>11 1234-5678</a>
+                                </div>
+                            </div>
+                            <div className={styles.sponsorsModalCard}>
+                                <div className={styles.sponsorsModalLogoM}>M</div>
+                                <div>
+                                    <div className={styles.sponsorsModalName}>MAPS ASESORES</div>
+                                    <div className={styles.sponsorsModalTagline}>Tu organización de seguros de confianza</div>
+                                    <a href="tel:+5491155678901" className={styles.sponsorsModalPhone}>11 5567-8901</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div className={styles.sponsorsModalActions}>
+                            <button type="button" className={styles.sponsorsModalCancel} onClick={() => { setShowSponsorsModal(false); setQuotaToPay(null); }}>
+                                Cancelar
+                            </button>
+                            <button type="button" className={styles.sponsorsModalConfirm} onClick={confirmGoToMercadoPago}>
+                                <CreditCard size={20} />
+                                Continuar con el pago
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

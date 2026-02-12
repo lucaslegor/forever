@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, DollarSign, CheckCircle, XCircle } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { LoadingScreen } from '../components/LoadingScreen';
@@ -138,10 +138,10 @@ export const HistorialPagos = () => {
     return (
         <div className={styles.page}>
             <header className={styles.header}>
-                <div className={styles.headerLeft}>
+                <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
-                </div>
+                </Link>
                 <h1 className={styles.title}>Historial de Pagos</h1>
                 <div className={styles.headerRight} aria-hidden />
             </header>

@@ -136,16 +136,18 @@
 .sponsorsTrack {
     display: flex;
     width: max-content;
-    animation: sponsorsScroll 35s linear infinite;
+    animation: sponsorsScroll 20s linear infinite;
+    will-change: transform;
 }
 
 .sponsorsTrackWrap:hover .sponsorsTrack {
     animation-play-state: paused;
 }
 
+/* Track se mueve a la izquierda = las cards se mueven a la derecha, aparecen por la izquierda y salen por la derecha de forma continua sin espacios en blanco; loop 1 bloque (-12.5%) */
 @keyframes sponsorsScroll {
-    0% { transform: translateX(-50%); }
-    100% { transform: translateX(0); }
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-12.5%); }
 }
 
 .sponsorsSet {

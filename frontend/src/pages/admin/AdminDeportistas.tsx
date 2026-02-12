@@ -26,7 +26,7 @@ export const AdminDeportistas = () => {
     const [editingId, setEditingId] = useState<number | null>(null);
     
     const primeraDisciplina = disciplinasNombres[0] ?? 'Futbol';
-    const primerGenero = generos[0] ?? 'Masculino';
+    const primerGenero = generosNombres[0] ?? 'Masculino';
     
     const [form, setForm] = useState({
         nombre: '',
@@ -729,7 +729,7 @@ export const AdminDeportistas = () => {
                         <div className={styles.formRow}>
                             <div className={styles.fieldWrap}>
                                 <label>Disciplina *</label>
-                                <select value={form.disciplina} onChange={(e) => setForm({ ...form, disciplina: e.target.value })} required>
+                                <select value={form.disciplina} onChange={(e) => setForm({ ...form, disciplina: e.target.value, categoria: '', subcategoria: '' })} required>
                                     {disciplinasNombres.map((d) => (
                                         <option key={d} value={d}>
                                             {d}
@@ -739,7 +739,7 @@ export const AdminDeportistas = () => {
                             </div>
                             <div className={styles.fieldWrap}>
                                 <label>Género *</label>
-                                <select value={form.genero} onChange={(e) => setForm({ ...form, genero: e.target.value })} required>
+                                <select value={form.genero} onChange={(e) => setForm({ ...form, genero: e.target.value, categoria: '', subcategoria: '' })} required>
                                     {generosNombres.map((g) => (
                                         <option key={g} value={g}>
                                             {g}
@@ -754,7 +754,7 @@ export const AdminDeportistas = () => {
                                 <label>Categoría *</label>
                                 <select
                                     value={form.categoria}
-                                    onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+                                    onChange={(e) => setForm({ ...form, categoria: e.target.value, subcategoria: '' })}
                                     onBlur={() => setFieldTouched('categoria')}
                                     className={touched.categoria && fieldErrors.categoria ? styles.inputError : ''}
                                     required

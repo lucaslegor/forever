@@ -150,10 +150,10 @@ export const AlquilarCancha = () => {
     return (
         <div className={styles.page}>
             <header className={styles.header}>
-                <div className={styles.headerLeft}>
+                <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
-                </div>
+                </Link>
                 <h1 className={styles.title}>Alquiler cancha césped sintético</h1>
                 <div className={styles.headerRight}>
                     <Link to="/" className={styles.backLink}>

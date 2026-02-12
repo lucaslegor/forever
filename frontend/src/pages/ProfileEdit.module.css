@@ -25,6 +25,11 @@
     min-width: 180px;
 }
 
+.headerHomeLink {
+    text-decoration: none;
+    color: inherit;
+}
+
 .headerLogo {
     height: 72px;
     width: 72px;

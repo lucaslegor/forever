@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -400,10 +400,10 @@ export const ProfileEdit = () => {
         return (
             <div className={styles.profilePage}>
                 <header className={styles.header}>
-                    <div className={styles.headerLeft}>
+                    <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                         <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                         <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
-                    </div>
+                    </Link>
                     <h1 className={styles.title}>Perfil</h1>
                     <div className={styles.headerRight} aria-hidden />
                 </header>
@@ -427,10 +427,10 @@ export const ProfileEdit = () => {
     return (
         <div className={styles.profilePage}>
             <header className={styles.header}>
-                <div className={styles.headerLeft}>
+                <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
-                </div>
+                </Link>
                 <h1 className={styles.title}>Perfil</h1>
                 <div className={styles.headerRight} aria-hidden />
             </header>
