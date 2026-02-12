@@ -17,8 +17,15 @@ async function main() {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
       console.log(`Entorno: ${env.NODE_ENV}`);
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error al iniciar el servidor:', error);
+    const err = error as { code?: string; message?: string };
+    if (err?.code === 'P1001') {
+      console.error('\n--- No se pudo conectar a la base de datos ---');
+      console.error('• Si usás Supabase: entrá al dashboard y verificá que el proyecto no esté pausado (Restore si aparece pausado).');
+      console.error('• Revisá que DATABASE_URL en .env sea correcta (usuario, contraseña, host, puerto).');
+      console.error('• Probá conexión directa con puerto 5432 en lugar del pooler 6543.');
+    }
     process.exit(1);
   }
 }

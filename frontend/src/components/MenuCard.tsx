@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { useNoticias } from '../context/NoticiasContext';
 import styles from './MenuCard.module.css';
 
@@ -36,8 +37,10 @@ function isNoticiaReciente(fecha: string): boolean {
 
 export const MenuCard = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const { noticias } = useNoticias();
     const hayNoticiasNuevas = noticias.some((n) => isNoticiaReciente(n.fecha));
+    const saludo = user?.nombre?.trim() ? `Hola, ${user.nombre}` : 'Hola';
 
     const handleMenuClick = (path: string) => {
         navigate(path);
@@ -46,7 +49,10 @@ export const MenuCard = () => {
     return (
         <div className={styles.menuCard}>
             <div className={styles.menuHeader}>
-                <h2 className={styles.menuTitle}>DEPORTISTAS</h2>
+                <h2 className={styles.menuTitle}>
+                    {saludo}
+                    <span className={styles.waveEmoji} role="img" aria-label="Saludo">👋</span>
+                </h2>
                 <p className={styles.menuSubtitle}>Sistema de Gestión</p>
             </div>
 

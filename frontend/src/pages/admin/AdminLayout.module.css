@@ -21,6 +21,7 @@
     align-items: center;
     gap: var(--spacing-md);
     min-width: 180px;
+    order: 1;
 }
 
 .headerLogo {
@@ -42,6 +43,7 @@
     color: var(--color-white);
     text-align: center;
     margin: 0;
+    order: 2;
 }
 
 .headerRight {
@@ -50,6 +52,8 @@
     gap: var(--spacing-md);
     min-width: 180px;
     justify-content: flex-end;
+    order: 3;
+    margin-left: auto;
 }
 
 .userEmail {
@@ -165,5 +169,47 @@
 
     .userEmail {
         display: none;
+    }
+
+    .main {
+        padding: var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: var(--spacing-sm) var(--spacing-md);
+        flex-wrap: wrap;
+    }
+
+    .headerLeft,
+    .headerRight {
+        min-width: 0;
+    }
+
+    .headerLogo {
+        height: 40px;
+        width: 40px;
+    }
+
+    .title {
+        font-size: 1.1rem;
+        width: 100%;
+        order: 3;
+        margin-top: var(--spacing-xs);
+    }
+
+    .logoutBtn {
+        min-height: var(--touch-min);
+        padding: var(--spacing-sm);
+    }
+
+    .navItem {
+        min-height: var(--touch-min);
+        padding: var(--spacing-sm);
+    }
+
+    .main {
+        padding: var(--spacing-sm);
     }
 }

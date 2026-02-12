@@ -316,6 +316,15 @@ export class DeportistaService {
     };
   }
 
+  /** Solo el ID del deportista; para endpoints que no necesitan el perfil completo (ej. estado de cuenta). */
+  async getDeportistaIdByUserId(userId: number): Promise<number | null> {
+    const d = await prisma.deportista.findUnique({
+      where: { cuentaId: userId },
+      select: { id: true },
+    });
+    return d?.id ?? null;
+  }
+
   async getByUserId(userId: number) {
     const deportista = await prisma.deportista.findUnique({
       where: { cuentaId: userId },
@@ -324,6 +333,7 @@ export class DeportistaService {
         genero: true,
         categoria: true,
         subcategoria: true,
+        adultosResponsables: true,
       },
     });
 
@@ -331,11 +341,7 @@ export class DeportistaService {
       throw new NotFoundError(ErrorMessages.DEPORTISTA_NOT_FOUND);
     }
 
-    const adultos = await prisma.adultoResponsable.findMany({
-      where: { deportistaId: deportista.id },
-    });
-
-    return { ...deportista, adultosResponsables: adultos };
+    return deportista;
   }
 
   /**

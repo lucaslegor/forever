@@ -91,8 +91,12 @@ export class CuotaController {
 
   async getMiEstadoCuenta(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const deportista = await deportistaService.getByUserId(req.user!.id);
-      const result = await cuotaService.getEstadoCuenta(deportista.id);
+      const deportistaId = await deportistaService.getDeportistaIdByUserId(req.user!.id);
+      if (deportistaId == null) {
+        res.status(404).json({ success: false, error: 'Deportista no encontrado' });
+        return;
+      }
+      const result = await cuotaService.getEstadoCuenta(deportistaId);
       sendSuccess(res, result);
     } catch (error) {
       next(error);

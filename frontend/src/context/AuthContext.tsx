@@ -16,6 +16,8 @@ export interface AuthUser {
   loginId: string;
   role: UserRole;
   deportistaId?: number;
+  /** Nombre para saludar (deportista o administrativo) */
+  nombre?: string;
 }
 
 const AUTH_KEY = 'forever_auth';
@@ -48,12 +50,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(getStoredAuth);
   const [loading, setLoading] = useState(false);
 
-  // Revalidar sesión con la cookie HttpOnly al cargar
+  // Revalidar sesión con la cookie HttpOnly al cargar (solo si hay sesión guardada para evitar 401 en consola)
   useEffect(() => {
+    if (!getStoredAuth()) return;
     authService.getProfile()
       .then(response => {
         if (response.success && response.data) {
           const userData = response.data;
+          const perfil = userData.deportista || userData.administrativo;
           const authUser: AuthUser = {
             id: userData.id,
             email: userData.email,
@@ -62,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             loginId: userData.email,
             role: mapRoleToUserRole(userData.rol),
             deportistaId: userData.deportista?.id,
+            nombre: perfil?.nombre,
           };
           setUser(authUser);
           localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
@@ -85,36 +90,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (dni: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setLoading(true);
     try {
-      console.log('Intentando login con:', { email: dni, passwordLength: password.length });
       const response = await authService.login({ email: dni, password });
-      
-      console.log('Respuesta del backend:', response);
-      
+
       if (response.success && response.data) {
         const { user: userData } = response.data;
         // El token va en cookie HttpOnly (no se guarda en el frontend)
-
+        // deportistaId viene en la respuesta del login para evitar una segunda llamada a getMiPerfil
         const authUser: AuthUser = {
           id: userData.id,
           email: userData.email,
           rol: userData.rol,
-          activo: userData.activo,
+          activo: userData.activo ?? true,
           loginId: dni,
           role: mapRoleToUserRole(userData.rol),
+          deportistaId: userData.deportistaId,
+          nombre: userData.nombre,
         };
 
-        // Si es deportista, obtener su ID
-        if (authUser.role === 'deportista') {
-          try {
-            const deportistaResponse = await deportistaService.getMiPerfil();
-            if (deportistaResponse.success) {
-              authUser.deportistaId = deportistaResponse.data.id;
-            }
-          } catch (err) {
-            console.error('Error obteniendo perfil de deportista:', err);
-          }
-        }
-        
         setUser(authUser);
         localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
         setLoading(false);

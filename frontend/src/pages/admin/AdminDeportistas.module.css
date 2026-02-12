@@ -460,3 +460,71 @@
   padding-top: var(--spacing-md);
   border-top: 1px solid #eee;
 }
+
+@media (max-width: 768px) {
+  .page {
+    padding: var(--spacing-sm);
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+
+  .btnNew {
+    width: 100%;
+    justify-content: center;
+    min-height: var(--touch-min);
+  }
+
+  .filters {
+    padding: var(--spacing-md);
+  }
+
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--spacing-sm);
+    font-size: 0.875rem;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+  }
+
+  .btnVerAdultos,
+  .btnEdit,
+  .btnDanger,
+  .btnSuccess {
+    min-height: var(--touch-min);
+    min-width: var(--touch-min);
+  }
+
+  .formContainer {
+    padding: var(--spacing-md);
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .tableContainer {
+    border-radius: 8px;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--spacing-xs);
+    font-size: 0.8rem;
+  }
+}

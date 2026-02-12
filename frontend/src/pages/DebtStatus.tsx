@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, DollarSign, AlertCircle, CheckCircle, CreditCard, Info } from 'lucide-react';
 import { Footer } from '../components/Footer';
 import { LoadingScreen } from '../components/LoadingScreen';
-import { useAuth } from '../context/AuthContext';
 import { cuotaService } from '../services/cuota.service';
-import { grupoFamiliarService } from '../services/grupoFamiliar.service';
 import { pagoService } from '../services/pago.service';
 import styles from './DebtStatus.module.css';
 
@@ -26,34 +24,10 @@ interface DebtStatusData {
 
 export const DebtStatus = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [payingQuotaId, setPayingQuotaId] = useState<number | null>(null);
     const [debtData, setDebtData] = useState<DebtStatusData | null>(null);
     const [esTitular, setEsTitular] = useState(true);
-
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            const dni = user?.role === 'deportista' ? user.loginId : null;
-            if (dni) {
-                try {
-                    const resGrupos = await grupoFamiliarService.getMios();
-                    if (!cancelled && resGrupos.success && Array.isArray(resGrupos.data)) {
-                        const grupos = resGrupos.data as any[];
-                        const grupo = grupos.find((g) =>
-                            g.integrantes?.some((m: any) => m.deportista?.dni === dni)
-                        );
-                        const titularDni = grupo?.titularDni ?? (grupo?.integrantes?.[0]?.deportista?.dni);
-                        setEsTitular(!grupo || titularDni === dni);
-                    }
-                } catch {
-                    setEsTitular(true);
-                }
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [user?.loginId, user?.role]);
 
     useEffect(() => {
         let cancelled = false;
@@ -77,6 +51,7 @@ export const DebtStatus = () => {
                         cuotasPendientes: pendientes,
                         totalAdeudado: Number(d.totalAdeudado) || 0,
                     });
+                    setEsTitular(d.esTitularGrupoFamiliar !== false);
                 }
             } catch {
                 if (!cancelled) setDebtData({ cuotasPendientes: [], totalAdeudado: 0 });

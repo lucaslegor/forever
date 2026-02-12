@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Lock, CheckCircle, XCircle } from 'lucide-react';
+import { Lock, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import { authService } from '../../services/auth.service';
 import styles from './AdminPerfil.module.css';
@@ -28,6 +28,9 @@ export const AdminPerfil = () => {
   });
   const [contraseñaError, setContraseñaError] = useState<string | null>(null);
   const [contraseñaLoading, setContraseñaLoading] = useState(false);
+  const [showContraseñaActual, setShowContraseñaActual] = useState(false);
+  const [showNuevaContraseña, setShowNuevaContraseña] = useState(false);
+  const [showConfirmarContraseña, setShowConfirmarContraseña] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -54,6 +57,10 @@ export const AdminPerfil = () => {
     }
     if (contraseñaForm.nuevaContraseña.length < 6) {
       setContraseñaError('La nueva contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (!/[A-Z]/.test(contraseñaForm.nuevaContraseña) || !/[0-9]/.test(contraseñaForm.nuevaContraseña)) {
+      setContraseñaError('La nueva contraseña debe tener al menos una mayúscula y un número.');
       return;
     }
     if (contraseñaForm.nuevaContraseña !== contraseñaForm.confirmarContraseña) {
@@ -150,43 +157,58 @@ export const AdminPerfil = () => {
             <form onSubmit={handleCambiarContraseña}>
               <div className={styles.formGroup}>
                 <label htmlFor="contraseñaActual" className={styles.label}>Contraseña actual *</label>
-                <input
-                  id="contraseñaActual"
-                  type="password"
-                  className={styles.input}
-                  value={contraseñaForm.contraseñaActual}
-                  onChange={(e) => setContraseñaForm((f) => ({ ...f, contraseñaActual: e.target.value }))}
-                  placeholder="Ingresá tu contraseña actual para confirmar"
-                  autoComplete="current-password"
-                  required
-                />
+                <div className={styles.inputPasswordWrap}>
+                  <input
+                    id="contraseñaActual"
+                    type={showContraseñaActual ? 'text' : 'password'}
+                    className={styles.input}
+                    value={contraseñaForm.contraseñaActual}
+                    onChange={(e) => setContraseñaForm((f) => ({ ...f, contraseñaActual: e.target.value }))}
+                    placeholder="Ingresá tu contraseña actual para confirmar"
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button type="button" className={styles.passwordToggle} onClick={() => setShowContraseñaActual((v) => !v)} aria-label={showContraseñaActual ? 'Ocultar contraseña' : 'Mostrar contraseña'} tabIndex={-1}>
+                    {showContraseñaActual ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="nuevaContraseña" className={styles.label}>Nueva contraseña *</label>
-                <input
-                  id="nuevaContraseña"
-                  type="password"
-                  className={styles.input}
-                  value={contraseñaForm.nuevaContraseña}
-                  onChange={(e) => setContraseñaForm((f) => ({ ...f, nuevaContraseña: e.target.value }))}
-                  placeholder="Mínimo 6 caracteres"
-                  autoComplete="new-password"
-                  minLength={6}
-                  required
-                />
+                <div className={styles.inputPasswordWrap}>
+                  <input
+                    id="nuevaContraseña"
+                    type={showNuevaContraseña ? 'text' : 'password'}
+                    className={styles.input}
+                    value={contraseñaForm.nuevaContraseña}
+                    onChange={(e) => setContraseñaForm((f) => ({ ...f, nuevaContraseña: e.target.value }))}
+                    placeholder="Mín. 6 caracteres, una mayúscula y un número"
+                    autoComplete="new-password"
+                    minLength={6}
+                    required
+                  />
+                  <button type="button" className={styles.passwordToggle} onClick={() => setShowNuevaContraseña((v) => !v)} aria-label={showNuevaContraseña ? 'Ocultar contraseña' : 'Mostrar contraseña'} tabIndex={-1}>
+                    {showNuevaContraseña ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="confirmarContraseña" className={styles.label}>Confirmar nueva contraseña *</label>
-                <input
-                  id="confirmarContraseña"
-                  type="password"
-                  className={styles.input}
-                  value={contraseñaForm.confirmarContraseña}
-                  onChange={(e) => setContraseñaForm((f) => ({ ...f, confirmarContraseña: e.target.value }))}
-                  placeholder="Repetí la nueva contraseña"
-                  autoComplete="new-password"
-                  required
-                />
+                <div className={styles.inputPasswordWrap}>
+                  <input
+                    id="confirmarContraseña"
+                    type={showConfirmarContraseña ? 'text' : 'password'}
+                    className={styles.input}
+                    value={contraseñaForm.confirmarContraseña}
+                    onChange={(e) => setContraseñaForm((f) => ({ ...f, confirmarContraseña: e.target.value }))}
+                    placeholder="Repetí la nueva contraseña"
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button type="button" className={styles.passwordToggle} onClick={() => setShowConfirmarContraseña((v) => !v)} aria-label={showConfirmarContraseña ? 'Ocultar contraseña' : 'Mostrar contraseña'} tabIndex={-1}>
+                    {showConfirmarContraseña ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
               {contraseñaError && (
                 <p className={styles.contraseñaError}>{contraseñaError}</p>

@@ -70,6 +70,10 @@ export const AlquilarCancha = () => {
             return;
         }
         const metodo = metodoPago ?? 'mercadopago';
+        if (metodo === 'mercadopago' && !form.email.trim()) {
+            setMensaje({ tipo: 'error', texto: 'Para pagar con Mercado Pago es necesario ingresar tu email.' });
+            return;
+        }
         setEnviando(true);
         setMensaje(null);
         try {

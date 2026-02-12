@@ -133,3 +133,54 @@
   color: #c62828;
   margin: 0.25rem 0 0;
 }
+
+@media (max-width: 768px) {
+  .main {
+    padding: var(--spacing-md);
+  }
+
+  .card {
+    padding: var(--spacing-lg);
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .message {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: var(--spacing-sm);
+  }
+
+  .card {
+    padding: var(--spacing-md);
+    border-radius: 12px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .message {
+    font-size: 0.9rem;
+  }
+
+  .backButton {
+    min-height: var(--touch-min);
+    width: 100%;
+    justify-content: center;
+  }
+
+  .syncRow {
+    flex-direction: column;
+  }
+
+  .syncButton {
+    min-height: var(--touch-min);
+  }
+}

@@ -7,7 +7,7 @@ import styles from './Noticias.module.css';
 
 export const Noticias = () => {
     const navigate = useNavigate();
-    const { noticias } = useNoticias();
+    const { noticias, loading, error, refetch } = useNoticias();
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('es-AR', {
@@ -35,7 +35,16 @@ export const Noticias = () => {
                         Novedades del club
                     </p>
 
-                    {noticias.length === 0 ? (
+                    {loading ? (
+                        <p className={styles.emptyState}>Cargando noticias…</p>
+                    ) : error ? (
+                        <div className={styles.emptyState}>
+                            <p>{error}</p>
+                            <button type="button" onClick={() => refetch()} className={styles.retryButton}>
+                                Reintentar
+                            </button>
+                        </div>
+                    ) : noticias.length === 0 ? (
                         <p className={styles.emptyState}>No hay noticias publicadas.</p>
                     ) : (
                         <ul className={styles.noticiasList}>

@@ -31,6 +31,15 @@ export const errorHandler = (
   // Errores de Prisma
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
+      case 'P1001':
+      case 'P1002':
+      case 'P1008':
+        // P1001: Can't reach DB | P1002: Timeout | P1008: Timeout
+        res.status(503).json({
+          success: false,
+          error: 'El servicio no está disponible. Revisá tu conexión o intentá más tarde.',
+        });
+        return;
       case 'P2002': {
         const target = (err.meta?.target as string[]) || [];
         let message = 'El registro ya existe';

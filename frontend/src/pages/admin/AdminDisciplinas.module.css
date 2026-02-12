@@ -43,3 +43,21 @@
 
 .tableWrap + .form { margin-top: 1.5rem; }
 .table td { padding: 0.65rem var(--spacing-md); }
+
+@media (max-width: 768px) {
+  .page { padding: var(--spacing-sm); }
+  .title { font-size: 1.2rem; }
+  .form, .section { padding: var(--spacing-md); max-width: 100%; }
+  .formActions { flex-direction: column; }
+  .btnGuardar, .btnCancelar { width: 100%; min-height: var(--touch-min); justify-content: center; }
+  .tableWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table th, .table td { padding: var(--spacing-xs) var(--spacing-sm); font-size: 0.875rem; }
+  .addRow { flex-direction: column; align-items: stretch; }
+  .addRow input, .addRow select { min-width: 0; }
+  .btnEdit, .btnBaja, .btnAlta { min-height: var(--touch-min); }
+}
+
+@media (max-width: 480px) {
+  .title { font-size: 1.1rem; }
+  .btnPrimary { width: 100%; min-height: var(--touch-min); justify-content: center; }
+}

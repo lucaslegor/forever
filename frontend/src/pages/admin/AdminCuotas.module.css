@@ -47,3 +47,19 @@
 .btnBorrar:disabled { opacity: 0.7; cursor: not-allowed; }
 .fechaPago { font-size: 0.875rem; color: #555; }
 .empty { color: #666; padding: var(--spacing-md) 0; }
+
+@media (max-width: 768px) {
+  .page { padding: var(--spacing-sm); }
+  .title { font-size: 1.2rem; }
+  .sectionGenerar { padding: var(--spacing-md); }
+  .formGenerar { flex-direction: column; align-items: stretch; }
+  .filtersRow { flex-direction: column; align-items: stretch; }
+  .tableWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table th, .table td { padding: var(--spacing-xs) var(--spacing-sm); font-size: 0.875rem; }
+  .btnPagar, .btnBorrar { min-height: var(--touch-min); }
+}
+
+@media (max-width: 480px) {
+  .title { font-size: 1.1rem; }
+  .table th, .table td { font-size: 0.8rem; }
+}

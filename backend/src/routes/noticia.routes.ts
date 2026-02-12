@@ -17,6 +17,7 @@ router.get('/', async (req: Request, res: Response) => {
       data: noticias,
     });
   } catch (error) {
+    console.error('GET /api/noticias error:', error);
     res.status(500).json({ success: false, message: 'Error al obtener noticias' });
   }
 });

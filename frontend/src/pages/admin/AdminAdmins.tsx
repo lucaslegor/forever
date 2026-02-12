@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Pencil } from 'lucide-react';
+import { UserPlus, Pencil, Eye, EyeOff } from 'lucide-react';
 import type { AdminUser } from '../../types/admin';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth.service';
@@ -14,6 +14,7 @@ export const AdminAdmins = () => {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [form, setForm] = useState({ documento: '', contraseña: '', nombre: '' });
     const [saving, setSaving] = useState(false);
+    const [showContraseña, setShowContraseña] = useState(false);
 
     const fetchAdmins = async () => {
         setLoading(true);
@@ -139,15 +140,26 @@ export const AdminAdmins = () => {
                     {editingId === null && (
                         <div className={styles.field}>
                             <label>Contraseña *</label>
-                            <input
-                                type="password"
-                                placeholder="Mín. 8 caracteres y una mayúscula"
-                                value={form.contraseña}
-                                onChange={(e) => setForm((f) => ({ ...f, contraseña: e.target.value }))}
-                                required
-                                className={styles.input}
-                                minLength={8}
-                            />
+                            <div className={styles.inputPasswordWrap}>
+                                <input
+                                    type={showContraseña ? 'text' : 'password'}
+                                    placeholder="Mín. 8 caracteres y una mayúscula"
+                                    value={form.contraseña}
+                                    onChange={(e) => setForm((f) => ({ ...f, contraseña: e.target.value }))}
+                                    required
+                                    className={styles.input}
+                                    minLength={8}
+                                />
+                                <button
+                                    type="button"
+                                    className={styles.passwordToggle}
+                                    onClick={() => setShowContraseña((v) => !v)}
+                                    aria-label={showContraseña ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                    tabIndex={-1}
+                                >
+                                    {showContraseña ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
                         </div>
                     )}
                     <div className={styles.field}>

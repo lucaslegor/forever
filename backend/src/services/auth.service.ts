@@ -97,8 +97,10 @@ export class AuthService {
         id: cuenta.id,
         email: cuenta.email,
         rol: cuenta.rol,
+        activo: cuenta.activo,
         nombre: perfil?.nombre,
         apellido: perfil?.apellido,
+        deportistaId: cuenta.deportista?.id,
       },
     };
   }
@@ -159,6 +161,7 @@ export class AuthService {
         id: cuenta.id,
         email: cuenta.email,
         rol: cuenta.rol,
+        activo: true,
         nombre: data.nombre,
         apellido: data.apellido,
       },

@@ -29,7 +29,7 @@ export class AuthController {
     try {
       const data = req.body as RegisterInput;
       const result = await authService.register(data);
-      res.cookie(env.AUTH_COOKIE_NAME, result.token, cookieOptions);
+      // No establecer cookie: quien llama es el admin principal ya logueado; no reemplazar su sesión
       sendCreated(res, { user: result.user }, 'Usuario registrado exitosamente');
     } catch (error) {
       next(error);

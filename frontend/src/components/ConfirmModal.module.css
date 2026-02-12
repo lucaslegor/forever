@@ -111,3 +111,27 @@
 .btnConfirmDanger:focus-visible {
   box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(198, 40, 40, 0.5);
 }
+
+@media (max-width: 480px) {
+  .overlay {
+    padding: var(--spacing-sm);
+    align-items: flex-end;
+  }
+
+  .dialog {
+    max-width: none;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .btnCancel,
+  .btnConfirm {
+    width: 100%;
+    min-height: var(--touch-min);
+    justify-content: center;
+  }
+}

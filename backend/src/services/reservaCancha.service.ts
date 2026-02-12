@@ -121,6 +121,9 @@ export class ReservaCanchaService {
 
     const metodoPago = data.metodoPago ?? 'mercadopago';
     const esTransferencia = metodoPago === 'transferencia';
+    if (!esTransferencia && !(data.email?.trim())) {
+      throw new BadRequestError('El email es obligatorio para pagar la seña con Mercado Pago.');
+    }
     const expiraAt = esTransferencia
       ? new Date(Date.now() + MINUTOS_TRANSFERENCIA * 60 * 1000)
       : null;

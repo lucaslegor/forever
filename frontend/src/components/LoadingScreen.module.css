@@ -62,3 +62,22 @@
         opacity: 1;
     }
 }
+
+@media (max-width: 480px) {
+    .wrapperFull {
+        min-height: 50vh;
+        padding: var(--spacing-md);
+    }
+
+    .card {
+        padding: var(--spacing-lg);
+    }
+
+    .logo {
+        width: 80px;
+    }
+
+    .text {
+        font-size: 1rem;
+    }
+}

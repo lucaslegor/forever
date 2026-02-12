@@ -213,6 +213,27 @@
     margin: 0;
 }
 
+.retryButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: var(--spacing-md);
+    padding: 0.6rem 1.25rem;
+    background-color: var(--color-blue);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+}
+
+.retryButton:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
 /* Acciones */
 .actions {
     margin-top: var(--spacing-xl);
@@ -290,5 +311,61 @@
     .noticiaResumen,
     .noticiaContenido {
         font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: var(--spacing-sm) var(--spacing-md);
+        flex-wrap: wrap;
+    }
+
+    .headerLeft,
+    .headerRight {
+        min-width: 0;
+    }
+
+    .headerLogo {
+        height: 48px;
+        width: 48px;
+    }
+
+    .headerClubName {
+        font-size: 0.75rem;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .title {
+        font-size: 1.15rem;
+        transform: none;
+        width: 100%;
+        order: 3;
+        margin-top: var(--spacing-xs);
+    }
+
+    .mainContent {
+        padding: var(--spacing-sm);
+    }
+
+    .contentCard {
+        padding: var(--spacing-md);
+    }
+
+    .noticiaTitulo {
+        font-size: 1rem;
+    }
+
+    .noticiaCard {
+        border-left-width: 3px;
+    }
+
+    .retryButton,
+    .backButton {
+        min-height: var(--touch-min);
+        width: 100%;
+        justify-content: center;
     }
 }

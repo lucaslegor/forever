@@ -161,3 +161,17 @@
     border-color: #b0b8c0;
 }
 
+@media (max-width: 768px) {
+    .pageHeader { margin-bottom: var(--spacing-lg); padding-bottom: var(--spacing-md); }
+    .title { font-size: 1.35rem; }
+    .form { max-width: 100%; }
+    .section { padding: var(--spacing-md); }
+    .actions { flex-direction: column; }
+    .btnPrimary, .btnSecondary { width: 100%; min-height: var(--touch-min); justify-content: center; }
+}
+
+@media (max-width: 480px) {
+    .title { font-size: 1.15rem; flex-wrap: wrap; }
+    .subtitle { font-size: 0.9rem; }
+}
+

@@ -133,6 +133,32 @@
     box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.12);
 }
 
+.inputPasswordWrap {
+    position: relative;
+    display: block;
+}
+.inputPasswordWrap .input {
+    padding-right: 2.75rem;
+}
+.passwordToggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+.passwordToggle:hover {
+    color: var(--color-blue);
+}
+
 .modalActions {
     display: flex;
     gap: var(--spacing-md);
@@ -219,8 +245,16 @@
     }
 }
 
-@media (max-width: 600px) {
-    .formGrid {
-        grid-template-columns: 1fr;
-    }
+@media (max-width: 768px) {
+    .wrap { max-width: 100%; }
+    .card { padding: var(--spacing-md); }
+    .formGrid { grid-template-columns: 1fr; }
+    .modalContraseña { width: 95%; padding: var(--spacing-md); }
+    .modalActions { flex-direction: column; }
+    .buttonPrimary, .buttonCancelar { width: 100%; min-height: var(--touch-min); justify-content: center; }
+}
+
+@media (max-width: 480px) {
+    .pageTitle { font-size: 1.2rem; }
+    .buttonSecondary { width: 100%; min-height: var(--touch-min); justify-content: center; }
 }

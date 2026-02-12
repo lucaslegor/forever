@@ -11,9 +11,7 @@ export const AdminDisciplinas = () => {
     const {
         disciplinas,
         setDisciplinas,
-        generos,
         generosNombres,
-        setGeneros,
         categorias,
         categoriasNombres,
         setCategorias,
@@ -28,7 +26,6 @@ export const AdminDisciplinas = () => {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [form, setForm] = useState({ nombre: '', valorMensual: 10000 });
 
-    const [nuevoGenero, setNuevoGenero] = useState('');
     const [nuevaCategoria, setNuevaCategoria] = useState('');
     const [nuevaSubcat, setNuevaSubcat] = useState({ disciplina: '', categoria: '', genero: '', nombre: '' });
 
@@ -83,19 +80,6 @@ export const AdminDisciplinas = () => {
 
     const reactivar = (id: number) => {
         setDisciplinas((prev) => prev.map((d) => (d.id === id ? { ...d, activo: true } : d)));
-    };
-
-    const agregarGenero = (e: React.FormEvent) => {
-        e.preventDefault();
-        const v = nuevoGenero.trim();
-        if (v && !generos.includes(v)) {
-            setGeneros((prev) => [...prev, v]);
-            setNuevoGenero('');
-        }
-    };
-
-    const quitarGenero = (g: string) => {
-        setGeneros((prev) => prev.filter((x) => x !== g));
     };
 
     const agregarCategoria = (e: React.FormEvent) => {
@@ -236,30 +220,15 @@ export const AdminDisciplinas = () => {
                 </div>
             </section>
 
-            {/* Géneros */}
+            {/* Géneros (fijos: Masculino, Femenino; no se agregan ni quitan desde la app) */}
             <section className={styles.section}>
                 <h3 className={styles.sectionTitle}>Géneros</h3>
-                <p className={styles.sectionHint}>Lista de géneros para deportistas. Agregar otros si es necesario.</p>
+                <p className={styles.sectionHint}>Géneros disponibles para clasificación (Masculino, Femenino).</p>
                 <div className={styles.listInline}>
                     {generosNombres.map((g) => (
-                        <span key={g} className={styles.tag}>
-                            {g}
-                            <button type="button" onClick={() => quitarGenero(g)} aria-label={`Quitar ${g}`}>×</button>
-                        </span>
+                        <span key={g} className={styles.tag}>{g}</span>
                     ))}
                 </div>
-                <form onSubmit={agregarGenero} className={styles.addRow}>
-                    <div className={styles.field}>
-                        <label>Nuevo género</label>
-                        <input
-                            className={styles.input}
-                            value={nuevoGenero}
-                            onChange={(e) => setNuevoGenero(e.target.value)}
-                            placeholder="Ej: Masculino, Femenino, Otro"
-                        />
-                    </div>
-                    <button type="submit" className={styles.btnGuardar}>Agregar</button>
-                </form>
             </section>
 
             {/* Categorías */}

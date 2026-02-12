@@ -27,6 +27,13 @@ export class NoticiaService {
     return noticia;
   }
 
+  /** Formatea fecha a YYYY-MM-DD (Prisma puede devolver Date o string según driver/DB) */
+  private formatFecha(fecha: Date | string): string {
+    if (typeof fecha === 'string') return fecha.slice(0, 10);
+    if (fecha instanceof Date && !Number.isNaN(fecha.getTime())) return fecha.toISOString().split('T')[0];
+    return '';
+  }
+
   async getAll() {
     const noticias = await prisma.noticia.findMany({
       include: {
@@ -36,14 +43,13 @@ export class NoticiaService {
       orderBy: { fecha: 'desc' },
     });
 
-    // Transformar para que coincida con el tipo del frontend
     return noticias.map((n) => ({
       id: n.id,
       titulo: n.titulo,
-      fecha: n.fecha.toISOString().split('T')[0], // YYYY-MM-DD
+      fecha: this.formatFecha(n.fecha),
       resumen: n.resumen,
       contenido: n.contenido,
-      imagenes: n.imagenes.map((img) => img.url),
+      imagenes: (n.imagenes || []).map((img) => img.url),
       autor: n.autor
         ? `${n.autor.nombre} ${n.autor.apellido}`
         : undefined,
@@ -66,10 +72,10 @@ export class NoticiaService {
     return {
       id: noticia.id,
       titulo: noticia.titulo,
-      fecha: noticia.fecha.toISOString().split('T')[0],
+      fecha: this.formatFecha(noticia.fecha),
       resumen: noticia.resumen,
       contenido: noticia.contenido,
-      imagenes: noticia.imagenes.map((img) => img.url),
+      imagenes: (noticia.imagenes || []).map((img) => img.url),
       autor: noticia.autor
         ? `${noticia.autor.nombre} ${noticia.autor.apellido}`
         : undefined,

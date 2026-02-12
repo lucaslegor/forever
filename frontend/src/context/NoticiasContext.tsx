@@ -5,6 +5,7 @@ import { noticiaService } from '../services/noticia.service';
 interface NoticiasContextValue {
   noticias: Noticia[];
   loading: boolean;
+  error: string | null;
   addNoticia: (n: Omit<Noticia, 'id'>) => Promise<boolean>;
   getNoticiaById: (id: number) => Noticia | undefined;
   refetch: () => Promise<void>;
@@ -15,16 +16,19 @@ const NoticiasContext = createContext<NoticiasContextValue | null>(null);
 export function NoticiasProvider({ children }: { children: ReactNode }) {
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchNoticias = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await noticiaService.getAll();
       if (response.success && response.data) {
         setNoticias(response.data);
       }
-    } catch (error) {
-      console.error('Error al cargar noticias:', error);
+    } catch (err) {
+      console.error('Error al cargar noticias:', err);
+      setError('No se pudieron cargar las noticias.');
     } finally {
       setLoading(false);
     }
@@ -63,6 +67,7 @@ export function NoticiasProvider({ children }: { children: ReactNode }) {
   const value: NoticiasContextValue = {
     noticias,
     loading,
+    error,
     addNoticia,
     getNoticiaById,
     refetch: fetchNoticias,

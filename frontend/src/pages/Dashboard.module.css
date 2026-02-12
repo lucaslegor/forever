@@ -127,3 +127,31 @@
         margin-top: calc(var(--spacing-xl) * -2);
     }
 }
+
+@media (max-width: 480px) {
+    .imageHeader {
+        height: 120px;
+    }
+
+    .dashboardContent {
+        padding: var(--spacing-md) var(--spacing-sm);
+    }
+
+    .logo {
+        width: 48px;
+        height: 48px;
+    }
+
+    .brandText {
+        font-size: 0.9rem;
+    }
+
+    .menuCardWrapper {
+        margin-top: calc(var(--spacing-lg) * -1.5);
+    }
+
+    .logoutButton {
+        min-height: var(--touch-min);
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+}

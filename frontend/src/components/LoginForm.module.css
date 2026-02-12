@@ -231,3 +231,30 @@
         align-items: center;
     }
 }
+
+@media (max-width: 480px) {
+    .loginFormContainer {
+        padding: var(--spacing-md);
+    }
+
+    .formWrapper {
+        padding: var(--spacing-lg);
+    }
+
+    .formTitle {
+        font-size: 1.25rem;
+    }
+
+    .input {
+        padding: 0.875rem 3.5rem 0.875rem 2.75rem;
+    }
+
+    .submitButton {
+        min-height: var(--touch-min);
+    }
+
+    .canchaLink {
+        min-height: var(--touch-min);
+        justify-content: center;
+    }
+}

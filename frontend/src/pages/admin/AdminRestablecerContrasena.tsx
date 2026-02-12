@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { KeyRound, User, Shield } from 'lucide-react';
+import { KeyRound, User, Shield, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { deportistaService } from '../../services/deportista.service';
 import { authService } from '../../services/auth.service';
@@ -19,6 +19,8 @@ export const AdminRestablecerContrasena = () => {
     const [confirmarContrasena, setConfirmarContrasena] = useState('');
     const [loading, setLoading] = useState(false);
     const [mensaje, setMensaje] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
+    const [showNuevaContrasena, setShowNuevaContrasena] = useState(false);
+    const [showConfirmarContrasena, setShowConfirmarContrasena] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -156,28 +158,38 @@ export const AdminRestablecerContrasena = () => {
 
                 <div className={styles.field}>
                     <label>Nueva contraseña *</label>
-                    <input
-                        type="password"
-                        placeholder="Mínimo 6 caracteres"
-                        value={nuevaContrasena}
-                        onChange={(e) => setNuevaContrasena(e.target.value)}
-                        required
-                        className={styles.input}
-                        minLength={6}
-                    />
+                    <div className={styles.inputPasswordWrap}>
+                        <input
+                            type={showNuevaContrasena ? 'text' : 'password'}
+                            placeholder="Mínimo 6 caracteres"
+                            value={nuevaContrasena}
+                            onChange={(e) => setNuevaContrasena(e.target.value)}
+                            required
+                            className={styles.input}
+                            minLength={6}
+                        />
+                        <button type="button" className={styles.passwordToggle} onClick={() => setShowNuevaContrasena((v) => !v)} aria-label={showNuevaContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'} tabIndex={-1}>
+                            {showNuevaContrasena ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    </div>
                 </div>
 
                 <div className={styles.field}>
                     <label>Confirmar nueva contraseña *</label>
-                    <input
-                        type="password"
-                        placeholder="Repetir contraseña"
-                        value={confirmarContrasena}
-                        onChange={(e) => setConfirmarContrasena(e.target.value)}
-                        required
-                        className={styles.input}
-                        minLength={6}
-                    />
+                    <div className={styles.inputPasswordWrap}>
+                        <input
+                            type={showConfirmarContrasena ? 'text' : 'password'}
+                            placeholder="Repetir contraseña"
+                            value={confirmarContrasena}
+                            onChange={(e) => setConfirmarContrasena(e.target.value)}
+                            required
+                            className={styles.input}
+                            minLength={6}
+                        />
+                        <button type="button" className={styles.passwordToggle} onClick={() => setShowConfirmarContrasena((v) => !v)} aria-label={showConfirmarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'} tabIndex={-1}>
+                            {showConfirmarContrasena ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    </div>
                 </div>
 
                 {mensaje && (

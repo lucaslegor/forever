@@ -122,30 +122,31 @@ export class CuotaService {
   async getEstadoCuenta(deportistaId: number) {
     await this.actualizarVencidas();
 
-    const deportista = await prisma.deportista.findUnique({
-      where: { id: deportistaId },
-    });
+    const [deportista, cuotas, integranteGrupo] = await Promise.all([
+      prisma.deportista.findUnique({
+        where: { id: deportistaId },
+        select: { id: true, nombre: true, apellido: true, dni: true },
+      }),
+      prisma.cuota.findMany({
+        where: { deportistaId },
+        include: {
+          disciplina: { select: { nombre: true } },
+          pagos: {
+            where: { estadoPago: 'APROBADO' },
+          },
+        },
+        orderBy: { nroCuota: 'asc' },
+      }),
+      prisma.grupoFamiliarIntegrante.findFirst({
+        where: { deportistaId, esPrincipal: false },
+        include: { grupo: { select: { cuotaHermano: true, titularDni: true } } },
+      }),
+    ]);
 
     if (!deportista) {
       throw new NotFoundError(ErrorMessages.DEPORTISTA_NOT_FOUND);
     }
 
-    const cuotas = await prisma.cuota.findMany({
-      where: { deportistaId },
-      include: {
-        disciplina: { select: { nombre: true } },
-        pagos: {
-          where: { estadoPago: 'APROBADO' },
-        },
-      },
-      orderBy: { nroCuota: 'asc' },
-    });
-
-    // Monto correcto para cuotas pendientes: si es integrante no principal con cuotaHermano, usar ese valor
-    const integranteGrupo = await prisma.grupoFamiliarIntegrante.findFirst({
-      where: { deportistaId, esPrincipal: false },
-      include: { grupo: true },
-    });
     const montoGrupoFamiliar =
       integranteGrupo?.grupo?.cuotaHermano != null
         ? Number(integranteGrupo.grupo.cuotaHermano)
@@ -163,27 +164,26 @@ export class CuotaService {
       }));
 
     const pendientesRaw = cuotas.filter((c) => c.estadoCuota !== EstadoCuota.PAGADA);
-    const cuotasPendientes: Array<{
-      id: number;
-      nroCuota: number;
-      anio: number;
-      monto: unknown;
-      fechaVencimiento: Date;
-      estadoCuota: string;
-      disciplina: string | null;
-    }> = [];
 
-    for (const c of pendientesRaw) {
-      let monto = c.monto;
-      if (montoGrupoFamiliar != null && Number(c.monto) !== montoGrupoFamiliar) {
-        const montoDecimal = new Prisma.Decimal(montoGrupoFamiliar);
-        await prisma.cuota.update({
-          where: { id: c.id },
-          data: { monto: montoDecimal },
-        });
-        monto = montoDecimal;
-      }
-      cuotasPendientes.push({
+    const cuotasAActualizar = pendientesRaw.filter(
+      (c) => montoGrupoFamiliar != null && Number(c.monto) !== montoGrupoFamiliar
+    );
+    if (cuotasAActualizar.length > 0) {
+      await prisma.$transaction(
+        cuotasAActualizar.map((c) =>
+          prisma.cuota.update({
+            where: { id: c.id },
+            data: { monto: new Prisma.Decimal(montoGrupoFamiliar!) },
+          })
+        )
+      );
+    }
+
+    const cuotasPendientes = pendientesRaw.map((c) => {
+      const monto = montoGrupoFamiliar != null && Number(c.monto) !== montoGrupoFamiliar
+        ? montoGrupoFamiliar
+        : c.monto;
+      return {
         id: c.id,
         nroCuota: c.nroCuota,
         anio: c.anio,
@@ -191,13 +191,16 @@ export class CuotaService {
         fechaVencimiento: c.fechaVencimiento,
         estadoCuota: c.estadoCuota,
         disciplina: c.disciplina?.nombre ?? null,
-      });
-    }
+      };
+    });
 
     const totalAdeudado = cuotasPendientes.reduce(
       (sum, c) => sum + Number(c.monto),
       0
     );
+
+    const titularDni = integranteGrupo?.grupo?.titularDni ?? null;
+    const esTitularGrupoFamiliar = titularDni == null || titularDni === deportista.dni;
 
     return {
       deportista: {
@@ -208,6 +211,7 @@ export class CuotaService {
       cuotasPagadas,
       cuotasPendientes,
       totalAdeudado,
+      esTitularGrupoFamiliar,
     };
   }
 
