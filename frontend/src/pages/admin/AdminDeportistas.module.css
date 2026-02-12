@@ -39,6 +39,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
+  margin-bottom: var(--spacing-lg);
 }
 
 .btnNew:hover {

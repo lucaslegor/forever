@@ -53,7 +53,7 @@ export const MenuCard = () => {
                     {saludo}
                     <span className={styles.waveEmoji} role="img" aria-label="Saludo">👋</span>
                 </h2>
-                <p className={styles.menuSubtitle}>Sistema de Gestión</p>
+                <p className={styles.menuSubtitle}>Autogestion</p>
             </div>
 
             <nav className={styles.menuList}>
