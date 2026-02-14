@@ -1,7 +1,9 @@
 import { Response, NextFunction } from 'express';
 import { cuotaService } from '../services/cuota.service';
 import { deportistaService } from '../services/deportista.service';
+import { auditoriaService, ACCIONES } from '../services/auditoria.service';
 import { sendSuccess, sendCreated, sendForbidden } from '../utils/response';
+import { getClientIp, getUserAgent } from '../utils/request';
 import { AuthenticatedRequest } from '../types';
 import { AsignarCuotaInput, UpdateCuotaInput, CuotasQuery, ListCuotasQuery, GenerarCuotasInput } from '../validators/cuota.validator';
 import { Rol } from '@prisma/client';
@@ -157,6 +159,15 @@ export class CuotaController {
     try {
       const id = parseInt(req.params.id as string, 10);
       const result = await cuotaService.marcarPagadaEfectivo(id);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.CUOTA_MARCAR_PAGADA,
+        entidad: 'cuota',
+        entidadId: id,
+        detalles: JSON.stringify({ cuotaId: id }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result, 'Cuota marcada como pagada en efectivo');
     } catch (error) {
       next(error);

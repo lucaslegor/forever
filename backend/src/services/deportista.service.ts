@@ -82,9 +82,8 @@ export class DeportistaService {
     // Si ya existe generación del mes actual, asignar automáticamente la cuota al nuevo deportista
     try {
       await cuotaService.asignarCuotaDelMesActual(deportista.id);
-    } catch (err) {
+    } catch (_err) {
       // No fallar la creación del deportista si falla la asignación de cuota
-      console.error('Error al asignar cuota del mes al nuevo deportista:', err);
     }
 
     return this.getById(deportista.id);
@@ -128,12 +127,20 @@ export class DeportistaService {
 
     const where: any = {};
 
-    if (query.estado) {
-      where.estado = query.estado as EstadoDeportista;
+    if (query.disciplinaId != null) {
+      where.disciplinaId = Number(query.disciplinaId);
     }
 
-    if (query.disciplinaId) {
-      where.disciplinaId = query.disciplinaId;
+    if (query.generoId != null) {
+      where.generoId = Number(query.generoId);
+    }
+
+    if (query.categoriaId != null) {
+      where.categoriaId = Number(query.categoriaId);
+    }
+
+    if (query.subcategoriaId != null) {
+      where.subcategoriaId = Number(query.subcategoriaId);
     }
 
     if (query.search) {

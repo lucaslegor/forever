@@ -94,8 +94,15 @@ export const AdminAdmins = () => {
         }
     };
 
-    const toggleActivo = (id: number) => {
-        setAdmins((prev) => prev.map((a) => (a.id === id ? { ...a, activo: !a.activo } : a)));
+    const toggleActivo = async (a: AdminUser) => {
+        const nuevoActivo = !a.activo;
+        try {
+            const res = await authService.setAdminActivo(a.id, nuevoActivo);
+            if (res.success) await fetchAdmins();
+            else alert(res.error || 'Error al actualizar el estado');
+        } catch (err: any) {
+            alert(err.response?.data?.error || err.message || 'Error al actualizar el estado');
+        }
     };
 
     if (loading) return <LoadingScreen fullPage />;
@@ -204,11 +211,11 @@ export const AdminAdmins = () => {
                                         <Pencil size={18} />
                                         Editar
                                     </button>
-                                    {a.cuentaId !== undefined && a.cuentaId === user?.id && (
+                                    {a.cuentaId != null && a.cuentaId !== user?.id && (
                                         <button
                                             type="button"
                                             className={a.activo ? styles.btnDesactivar : styles.btnToggle}
-                                            onClick={() => toggleActivo(a.id)}
+                                            onClick={() => toggleActivo(a)}
                                         >
                                             {a.activo ? 'Desactivar' : 'Activar'}
                                         </button>

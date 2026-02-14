@@ -87,7 +87,6 @@ export const AdminRestablecerContrasena = () => {
                 }
             }
         } catch (error: any) {
-            console.error('Error al restablecer contraseña:', error);
             setMensaje({
                 tipo: 'error',
                 texto: error.response?.data?.message || 'Error al restablecer contraseña.',

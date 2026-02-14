@@ -8,6 +8,7 @@ import {
 import { validateBody, validateParams } from '../middlewares/validation.middleware';
 import { createPagoSchema, syncPagoSchema } from '../validators/pago.validator';
 import { idParamSchema } from '../validators/user.validator';
+import { deportistaIdParamSchema } from '../validators/beca.validator';
 import { webhookRateLimiter } from '../middlewares/rateLimit.middleware';
 
 const router = Router();
@@ -46,6 +47,7 @@ router.get(
   '/deportista/:deportistaId',
   authenticateToken,
   requireAdministrativo,
+  validateParams(deportistaIdParamSchema),
   pagoController.getByDeportista.bind(pagoController)
 );
 

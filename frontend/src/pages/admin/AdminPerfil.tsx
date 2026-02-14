@@ -40,7 +40,6 @@ export const AdminPerfil = () => {
           setProfile(response.data as ProfileData);
         }
       } catch (error) {
-        console.error('Error cargando perfil:', error);
       } finally {
         setLoading(false);
       }

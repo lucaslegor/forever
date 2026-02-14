@@ -105,6 +105,62 @@
   box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
 }
 
+.filtersGrid input[type="text"] {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.filtersGrid input:focus {
+  outline: none;
+  border-color: var(--color-blue);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+}
+
+.paginationButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.paginationInfo {
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.btnPagination {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btnPagination:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: var(--color-blue);
+}
+
+.btnPagination:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Table */
 .tableContainer {
   overflow-x: auto;

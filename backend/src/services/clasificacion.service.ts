@@ -56,19 +56,18 @@ export class ClasificacionService {
       },
     });
 
-    // Agrupar subcategorías por clave (como en OpcionesAdminContext)
-    const subcategoriasPorKey: Record<string, string[]> = {};
+    // Agrupar subcategorías por clave con id para poder borrar desde el frontend
+    const subcategoriasPorKey: Record<string, Array<{ id: number; nombre: string }>> = {};
     subcategorias.forEach((sub) => {
       const keyTriple = `${sub.disciplina.nombre}|${sub.categoria.nombre}|${sub.genero?.nombre || ''}`;
       const keyDoble = `${sub.disciplina.nombre}|${sub.categoria.nombre}`;
-      
+      const item = { id: sub.id, nombre: sub.nombre };
       if (sub.genero) {
         if (!subcategoriasPorKey[keyTriple]) subcategoriasPorKey[keyTriple] = [];
-        subcategoriasPorKey[keyTriple].push(sub.nombre);
+        subcategoriasPorKey[keyTriple].push(item);
       } else {
-        // Sin género específico (aplica a ambos)
         if (!subcategoriasPorKey[keyDoble]) subcategoriasPorKey[keyDoble] = [];
-        subcategoriasPorKey[keyDoble].push(sub.nombre);
+        subcategoriasPorKey[keyDoble].push(item);
       }
     });
 

@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env';
+import prisma from './config/prisma';
 import routes from './routes';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import { globalApiRateLimiter } from './middlewares/rateLimit.middleware';
@@ -26,13 +27,31 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health check (sin rate limit)
+// Health check (sin rate limit): solo indica que el proceso está vivo
 app.get('/health', (_req, res) => {
   res.status(200).json({
     success: true,
     message: 'Server is running',
     timestamp: new Date().toISOString(),
   });
+});
+
+// Readiness: comprueba que la base de datos responde (para probes en GCloud/Kubernetes)
+app.get('/health/ready', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({
+      success: true,
+      message: 'ready',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(503).json({
+      success: false,
+      message: 'Database unavailable',
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Rate limit global para /api

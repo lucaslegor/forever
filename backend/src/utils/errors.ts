@@ -90,6 +90,7 @@ export const ErrorMessages = {
   // Grupo Familiar
   GRUPO_FAMILIAR_NOT_FOUND: 'Grupo familiar no encontrado',
   GRUPO_FAMILIAR_DUPLICATE: 'Ya existe un grupo familiar con la misma composicion',
+  GRUPO_FAMILIAR_DEPORTISTA_EN_OTRO: 'Uno o mas deportistas ya pertenecen a otro grupo familiar. Elimine el grupo anterior para poder agregarlos.',
 
   // Disciplina
   DISCIPLINA_NOT_FOUND: 'Disciplina no encontrada',

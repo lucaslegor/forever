@@ -7,8 +7,8 @@ import { env, authCookieMaxAgeSeconds } from '../config/env';
 
 const cookieOptions = {
   httpOnly: true,
-  secure: env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  secure: env.COOKIE_SECURE,
+  sameSite: env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none',
   path: '/',
   maxAge: authCookieMaxAgeSeconds * 1000, // Express espera milisegundos
 };
@@ -41,8 +41,8 @@ export class AuthController {
       res.clearCookie(env.AUTH_COOKIE_NAME, {
         path: '/',
         httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: env.COOKIE_SECURE,
+        sameSite: env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none',
       });
       sendSuccess(res, { ok: true }, 'Sesion cerrada');
     } catch (error) {

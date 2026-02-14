@@ -56,10 +56,6 @@ export async function crearPreferenciaPago(params: CrearPreferenciaParams): Prom
     body.notification_url = env.MERCADOPAGO_WEBHOOK_URL;
   }
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[MercadoPago] Creando preferencia con back_urls:', body.back_urls);
-  }
-
   const res = await fetch('https://api.mercadopago.com/checkout/preferences', {
     method: 'POST',
     headers: {

@@ -20,6 +20,7 @@ export const AdminDisciplinas = () => {
         disciplinasNombres,
         refetch,
     } = useOpcionesAdmin();
+    const [borrandoSubcatId, setBorrandoSubcatId] = useState<number | null>(null);
     const confirm = useConfirm();
 
     const [showForm, setShowForm] = useState(false);
@@ -60,7 +61,6 @@ export const AdminDisciplinas = () => {
             await refetch();
             setShowForm(false);
         } catch (err: any) {
-            console.error('Error al guardar disciplina:', err);
             alert(err.response?.data?.message || 'Error al guardar la disciplina');
         } finally {
             setGuardando(false);
@@ -114,22 +114,22 @@ export const AdminDisciplinas = () => {
             
             setNuevaSubcat({ disciplina: '', categoria: '', genero: '', nombre: '' });
         } catch (error: any) {
-            console.error('Error al crear subcategoría:', error);
             const msg = error.response?.data?.message || error.message || 'Error al crear la subcategoría';
             alert(msg);
         }
     };
 
-    const quitarSubcategoria = (key: string, valor: string) => {
-        setSubcategoriasPorKey((prev) => {
-            const list = prev[key]?.filter((x) => x !== valor) ?? [];
-            if (list.length === 0) {
-                const next = { ...prev };
-                delete next[key];
-                return next;
-            }
-            return { ...prev, [key]: list };
-        });
+    const quitarSubcategoria = async (key: string, item: { id: number; nombre: string }) => {
+        if (borrandoSubcatId !== null) return;
+        setBorrandoSubcatId(item.id);
+        try {
+            await clasificacionService.deleteSubcategoria(item.id);
+            await refetch();
+        } catch (err: any) {
+            alert(err.response?.data?.message || err.message || 'Error al borrar la subcategoría');
+        } finally {
+            setBorrandoSubcatId(null);
+        }
     };
 
     return (
@@ -276,9 +276,16 @@ export const AdminDisciplinas = () => {
                                     <td>
                                         <div className={styles.listInline}>
                                             {vals.map((v) => (
-                                                <span key={v} className={styles.tag}>
-                                                    {v}
-                                                    <button type="button" onClick={() => quitarSubcategoria(key, v)} aria-label={`Quitar ${v}`}>×</button>
+                                                <span key={v.id} className={styles.tag}>
+                                                    {v.nombre}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => quitarSubcategoria(key, v)}
+                                                        aria-label={`Quitar ${v.nombre}`}
+                                                        disabled={borrandoSubcatId === v.id}
+                                                    >
+                                                        ×
+                                                    </button>
                                                 </span>
                                             ))}
                                         </div>

@@ -177,17 +177,6 @@ describe('Tests de API con datos del Seed', () => {
             console.log('✅ Búsqueda por DNI funciona');
         });
 
-        it('deberia filtrar deportistas por estado', async () => {
-            const response = await request(app)
-                .get('/api/deportistas?estado=EN_DEUDA')
-                .set('Authorization', `Bearer ${adminToken}`);
-
-            expect(response.status).toBe(200);
-            // Pedro González está EN_DEUDA según el seed
-            const enDeuda = response.body.data.data.find((d: any) => d.dni === '39876543');
-            expect(enDeuda).toBeDefined();
-            console.log('✅ Filtro por estado funciona');
-        });
     });
 
     // ============================================================

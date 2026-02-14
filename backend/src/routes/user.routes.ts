@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { userController } from '../controllers/user.controller';
 import { authenticateToken, requireAdministrativo, requirePrincipalAdmin } from '../middlewares/auth.middleware';
 import { validateBody, validateParams } from '../middlewares/validation.middleware';
-import { assignRoleSchema, updateProfileSchema, idParamSchema } from '../validators/user.validator';
+import { assignRoleSchema, updateProfileSchema, idParamSchema, setAdminActivoSchema, resetAdminPasswordSchema } from '../validators/user.validator';
 
 const router = Router();
 
@@ -38,7 +38,19 @@ router.put(
   requireAdministrativo,
   requirePrincipalAdmin,
   validateParams(idParamSchema),
+  validateBody(resetAdminPasswordSchema),
   userController.resetAdminPassword.bind(userController)
+);
+
+// PATCH /api/users/admin/:id/activo - Activar/desactivar cuenta de admin (solo admin principal, no la propia)
+router.patch(
+  '/admin/:id/activo',
+  authenticateToken,
+  requireAdministrativo,
+  requirePrincipalAdmin,
+  validateParams(idParamSchema),
+  validateBody(setAdminActivoSchema),
+  userController.setAdminActivo.bind(userController)
 );
 
 export default router;

@@ -4,8 +4,8 @@ import { clasificacionService } from '../services/clasificacion.service';
 
 /** Categorías por disciplina|genero (excepción). Ej: "Hockey|Masculino" -> ['Mayores'] */
 type CategoriasExcepcion = Record<string, string[]>;
-/** Subcategorías por key: "Disciplina|Categoria|Genero" o "Disciplina|Categoria" para Hockey */
-type SubcategoriasPorKey = Record<string, string[]>;
+/** Subcategorías por key: "Disciplina|Categoria|Genero" o "Disciplina|Categoria"; cada valor tiene id (para borrar) y nombre */
+type SubcategoriasPorKey = Record<string, Array<{ id: number; nombre: string }>>;
 
 type OpcionesAdminState = {
   disciplinas: Disciplina[];
@@ -65,7 +65,6 @@ export const OpcionesAdminProvider = ({ children }: { children: ReactNode }) => 
         setSubcategoriasPorKey(data.subcategoriasPorKey);
       }
     } catch (error) {
-      console.error('Error cargando opciones de clasificación:', error);
       // Valores por defecto en caso de error
       setGeneros([
         { id: 1, nombre: 'Masculino' },
@@ -111,12 +110,11 @@ export const OpcionesAdminProvider = ({ children }: { children: ReactNode }) => 
   );
 
   const getSubcategoriaOptions = useMemo(
-    () => (disciplina: string, genero: string, categoria: string) => {
+    () => (disciplina: string, genero: string, categoria: string): string[] => {
       const keyTriple = `${disciplina}|${categoria}|${genero}`;
       const keyDoble = `${disciplina}|${categoria}`;
-      if (subcategoriasPorKey[keyTriple]) return subcategoriasPorKey[keyTriple];
-      if (subcategoriasPorKey[keyDoble]) return subcategoriasPorKey[keyDoble];
-      return [];
+      const arr = subcategoriasPorKey[keyTriple] ?? subcategoriasPorKey[keyDoble] ?? [];
+      return arr.map((s) => (typeof s === 'string' ? s : s.nombre));
     },
     [subcategoriasPorKey]
   );

@@ -1,6 +1,7 @@
 import prisma from '../config/prisma';
 import { CreateDisciplinaDTO, UpdateDisciplinaDTO } from '../types/requests';
 import { NotFoundError, ConflictError, ErrorMessages } from '../utils/errors';
+import { cuotaService } from './cuota.service';
 
 export class DisciplinaService {
   async create(data: CreateDisciplinaDTO) {
@@ -93,6 +94,11 @@ export class DisciplinaService {
         activa: data.activa,
       },
     });
+
+    // Si se actualizó el valor mensual, recalcular montos de cuotas pendientes/vencidas de esta disciplina
+    if (data.precioMensual !== undefined) {
+      await cuotaService.actualizarMontosPorCambioPrecioDisciplina(id, Number(updated.precioMensual));
+    }
 
     return updated;
   }

@@ -27,11 +27,16 @@ export const AdminCuotas = () => {
     const [mostrarListadoGeneradas, setMostrarListadoGeneradas] = useState(true);
     const [filtroAnio, setFiltroAnio] = useState(ANIO_ACTUAL);
     const [filtroMes, setFiltroMes] = useState<number | ''>(MES_ACTUAL);
+    const [filtroEstado, setFiltroEstado] = useState<string>('');
     const [filtroEfectivo, setFiltroEfectivo] = useState<boolean | 'todos'>('todos');
     const [filtroDisciplina, setFiltroDisciplina] = useState('');
     const [filtroGenero, setFiltroGenero] = useState('');
     const [filtroCategoria, setFiltroCategoria] = useState('');
     const [filtroSubcategoria, setFiltroSubcategoria] = useState('');
+    const [page, setPage] = useState(1);
+    const [limit] = useState(50);
+    const [total, setTotal] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
 
     const disciplinaId = useMemo(() => disciplinas.find((d) => d.nombre === filtroDisciplina)?.id, [disciplinas, filtroDisciplina]);
 
@@ -59,10 +64,15 @@ export const AdminCuotas = () => {
                 anio: filtroAnio,
                 mes: filtroMes === '' ? undefined : filtroMes,
                 disciplinaId: disciplinaId ?? undefined,
-                limit: 500,
+                estado: filtroEstado || undefined,
+                page,
+                limit,
             });
-            if (res.success && res.data?.data) {
-                const raw = res.data.data as any[];
+            if (res.success && res.data) {
+                const paginated = res.data as { data: any[]; total: number; page: number; limit: number; totalPages: number };
+                const raw = paginated.data ?? [];
+                setTotal(paginated.total ?? 0);
+                setTotalPages(paginated.totalPages ?? 0);
                 setCuotas(raw.map((c) => ({
                     id: c.id,
                     deportistaId: c.deportistaId ?? 0,
@@ -84,7 +94,7 @@ export const AdminCuotas = () => {
         } finally {
             setLoadingGestion(false);
         }
-    }, [filtroAnio, filtroMes, disciplinaId]);
+    }, [filtroAnio, filtroMes, disciplinaId, filtroEstado, page, limit]);
 
     useEffect(() => {
         cargarCuotasGestion();
@@ -329,7 +339,7 @@ export const AdminCuotas = () => {
                     <div className={styles.filters}>
                         <label>
                             <span className={styles.filterLabel}>Año</span>
-                            <select value={filtroAnio} onChange={(e) => setFiltroAnio(Number(e.target.value))}>
+                            <select value={filtroAnio} onChange={(e) => { setFiltroAnio(Number(e.target.value)); setPage(1); }}>
                                 {[ANIO_ACTUAL - 1, ANIO_ACTUAL, ANIO_ACTUAL + 1].map((a) => (
                                     <option key={a} value={a}>{a}</option>
                                 ))}
@@ -337,7 +347,7 @@ export const AdminCuotas = () => {
                         </label>
                         <label>
                             <span className={styles.filterLabel}>Mes</span>
-                            <select value={filtroMes} onChange={(e) => setFiltroMes(e.target.value === '' ? '' : Number(e.target.value))}>
+                            <select value={filtroMes} onChange={(e) => { setFiltroMes(e.target.value === '' ? '' : Number(e.target.value)); setPage(1); }}>
                                 <option value="">Todos</option>
                                 {MESES.map((nombre, i) => (
                                     <option key={nombre} value={i + 1}>{nombre}</option>
@@ -346,9 +356,18 @@ export const AdminCuotas = () => {
                         </label>
                         <label>
                             <span className={styles.filterLabel}>Disciplina</span>
-                            <select value={filtroDisciplina} onChange={(e) => { setFiltroDisciplina(e.target.value); setFiltroCategoria(''); setFiltroSubcategoria(''); }}>
+                            <select value={filtroDisciplina} onChange={(e) => { setFiltroDisciplina(e.target.value); setFiltroCategoria(''); setFiltroSubcategoria(''); setPage(1); }}>
                                 <option value="">Todas</option>
                                 {disciplinasNombres.map((d) => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                        </label>
+                        <label>
+                            <span className={styles.filterLabel}>Estado</span>
+                            <select value={filtroEstado} onChange={(e) => { setFiltroEstado(e.target.value); setPage(1); }}>
+                                <option value="">Todos</option>
+                                <option value="PAGADA">Pagada</option>
+                                <option value="PENDIENTE">Pendiente</option>
+                                <option value="VENCIDA">Vencida</option>
                             </select>
                         </label>
                     <label>
@@ -409,7 +428,10 @@ export const AdminCuotas = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {listado.map((c) => (
+                        {listado.length === 0 && !loadingGestion ? (
+                            <tr><td colSpan={6} className={styles.empty}>No hay cuotas para los filtros seleccionados.</td></tr>
+                        ) : (
+                        listado.map((c) => (
                             <tr key={c.id}>
                                 <td>{c.deportistaNombre}</td>
                                 <td>{MESES[c.mes - 1]} {c.anio}</td>
@@ -437,11 +459,22 @@ export const AdminCuotas = () => {
                                     )}
                                 </td>
                             </tr>
-                        ))}
+                        ))
+                        )}
                     </tbody>
                 </table>
             </div>
             )}
+                {total > 0 && !loadingGestion && (
+                    <div className={styles.pagination}>
+                        <span>Mostrando {(page - 1) * limit + 1}-{Math.min(page * limit, total)} de {total}</span>
+                        <div className={styles.paginationButtons}>
+                            <button type="button" className={styles.btnPagination} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Anterior</button>
+                            <span className={styles.paginationInfo}>Página {page} de {totalPages || 1}</span>
+                            <button type="button" className={styles.btnPagination} disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Siguiente</button>
+                        </div>
+                    </div>
+                )}
                 {!loadingGestion && pendientesEfectivo.length === 0 && listado.length > 0 && filtroEfectivo === true && (
                     <p className={styles.empty}>No hay cuotas en efectivo pendientes.</p>
                 )}

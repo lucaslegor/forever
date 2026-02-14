@@ -36,8 +36,10 @@ export interface UpdateDeportistaDTO {
 export interface DeportistasQuery {
   page?: number;
   limit?: number;
-  estado?: string;
   disciplinaId?: number;
+  generoId?: number;
+  categoriaId?: number;
+  subcategoriaId?: number;
   search?: string;
 }
 
@@ -46,8 +48,10 @@ export const deportistaService = {
     const params = new URLSearchParams();
     if (query?.page) params.append('page', query.page.toString());
     if (query?.limit) params.append('limit', query.limit.toString());
-    if (query?.estado) params.append('estado', query.estado);
     if (query?.disciplinaId) params.append('disciplinaId', query.disciplinaId.toString());
+    if (query?.generoId) params.append('generoId', query.generoId.toString());
+    if (query?.categoriaId) params.append('categoriaId', query.categoriaId.toString());
+    if (query?.subcategoriaId) params.append('subcategoriaId', query.subcategoriaId.toString());
     if (query?.search) params.append('search', query.search);
     
     const response = await api.get(`/deportistas?${params}`);

@@ -40,6 +40,18 @@ export const webhookRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+/**
+ * Rate limit para crear reserva de cancha (ruta pública).
+ * Por IP: 15 reservas cada 15 min en prod; más alto en dev/test.
+ */
+export const reservaPublicRateLimiter = rateLimit({
+  windowMs: WINDOW_MS,
+  max: env.NODE_ENV === 'test' ? 1000 : env.NODE_ENV === 'development' ? 50 : 15,
+  message: limitResponse,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 /** Rutas de solo lectura que no consumen cupo del rate limit (evitan 429 en carga inicial). */
 function skipReadOnlyPaths(req: { method: string; originalUrl?: string; path?: string; url?: string }): boolean {
   if (req.method !== 'GET') return false;

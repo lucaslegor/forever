@@ -154,6 +154,28 @@ export class UserService {
 
     return { message: 'Contraseña restablecida correctamente' };
   }
+
+  async setAdminActivo(principalUserId: number, adminId: number, activo: boolean) {
+    const admin = await prisma.administrativo.findUnique({
+      where: { id: adminId },
+      include: { cuenta: true },
+    });
+
+    if (!admin) {
+      throw new NotFoundError('Administrativo no encontrado');
+    }
+
+    if (admin.cuentaId === principalUserId) {
+      throw new BadRequestError('No podés desactivar tu propia cuenta');
+    }
+
+    await prisma.cuentaUsuario.update({
+      where: { id: admin.cuentaId },
+      data: { activo },
+    });
+
+    return { activo };
+  }
 }
 
 export const userService = new UserService();

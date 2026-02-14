@@ -1,5 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { clasificacionService } from '../services/clasificacion.service';
+import { authenticateToken, requireAdministrativo } from '../middlewares/auth.middleware';
+import { validateBody, validateParams } from '../middlewares/validation.middleware';
+import { createSubcategoriaSchema, subcategoriaIdParamSchema } from '../validators/clasificacion.validator';
 
 const router = Router();
 
@@ -90,16 +93,14 @@ router.get('/opciones', async (req: Request, res: Response) => {
  * @desc    Crear una nueva subcategoría
  * @access  Admin
  */
-router.post('/subcategorias', async (req: Request, res: Response) => {
+router.post(
+  '/subcategorias',
+  authenticateToken,
+  requireAdministrativo,
+  validateBody(createSubcategoriaSchema),
+  async (req: Request, res: Response) => {
   try {
     const { nombre, disciplinaNombre, categoriaNombre, generoNombre } = req.body;
-    
-    if (!nombre || !disciplinaNombre || !categoriaNombre) {
-      return res.status(400).json({
-        success: false,
-        message: 'Faltan datos requeridos: nombre, disciplinaNombre, categoriaNombre',
-      });
-    }
 
     const subcategoria = await clasificacionService.createSubcategoria({
       nombre,
@@ -119,23 +120,22 @@ router.post('/subcategorias', async (req: Request, res: Response) => {
       message: error.message || 'Error al crear subcategoría',
     });
   }
-});
+  }
+);
 
 /**
  * @route   DELETE /api/clasificacion/subcategorias/:id
  * @desc    Eliminar una subcategoría
  * @access  Admin
  */
-router.delete('/subcategorias/:id', async (req: Request, res: Response) => {
+router.delete(
+  '/subcategorias/:id',
+  authenticateToken,
+  requireAdministrativo,
+  validateParams(subcategoriaIdParamSchema),
+  async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
-    
-    if (isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'ID inválido',
-      });
-    }
+    const id = req.params.id as unknown as number;
 
     await clasificacionService.deleteSubcategoria(id);
 
@@ -149,6 +149,7 @@ router.delete('/subcategorias/:id', async (req: Request, res: Response) => {
       message: error.message || 'Error al eliminar subcategoría',
     });
   }
-});
+  }
+);
 
 export default router;

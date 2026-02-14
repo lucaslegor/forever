@@ -123,6 +123,16 @@ export const AdminGruposFamiliares = () => {
     const opcionesCategoria = useMemo(() => getCategoriasOptions(filtroDisciplina, filtroGenero), [filtroDisciplina, filtroGenero, getCategoriasOptions]);
     const opcionesSubcategoria = useMemo(() => getSubcategoriaOptions(filtroDisciplina, filtroGenero, filtroCategoria), [filtroDisciplina, filtroGenero, filtroCategoria, getSubcategoriaOptions]);
 
+    /** IDs de deportistas que ya están en algún grupo (al editar, excluimos el grupo actual para permitir mantener sus miembros) */
+    const idsEnOtroGrupo = useMemo(() => {
+        const set = new Set<number>();
+        grupos.forEach((g) => {
+            if (modal === 'editar' && g.id === editingId) return;
+            g.miembros.forEach((m) => set.add(m.id));
+        });
+        return set;
+    }, [grupos, modal, editingId]);
+
     const deportistasFiltrados = useMemo(() => {
         let list = deportistas.filter((d) => d.activo);
         if (filtroDisciplina) list = list.filter((d) => d.disciplina === filtroDisciplina);
@@ -143,6 +153,7 @@ export const AdminGruposFamiliares = () => {
 
     const agregarMiembro = (d: Deportista) => {
         if (form.miembros.some((m) => m.dni === d.dni)) return;
+        if (idsEnOtroGrupo.has(d.id)) return;
         setForm((f) => ({
             ...f,
             miembros: [...f.miembros, { deportistaId: d.id, nombre: d.nombre, apellido: d.apellido, dni: d.dni }],
@@ -174,9 +185,8 @@ export const AdminGruposFamiliares = () => {
             setModal(null);
             await fetchGrupos();
         } catch (err: any) {
-            console.error(err);
             const msg = err.response?.status === 409
-                ? (err.response?.data?.error || 'Ya existe un grupo familiar con los mismos miembros. No se pueden crear grupos duplicados.')
+                ? (err.response?.data?.error || 'No se pudo guardar el grupo familiar.')
                 : 'Error al guardar el grupo familiar';
             alert(msg);
         }
@@ -195,7 +205,6 @@ export const AdminGruposFamiliares = () => {
             await grupoFamiliarService.delete(id);
             await fetchGrupos();
         } catch (err) {
-            console.error(err);
             alert('Error al borrar el grupo familiar');
         }
     };
@@ -217,7 +226,6 @@ export const AdminGruposFamiliares = () => {
             await grupoFamiliarService.update(modalCuotaHermano.grupoId, { cuotaHermano: valor });
             await fetchGrupos();
         } catch (err) {
-            console.error(err);
         }
         setModalCuotaHermano(null);
     };
@@ -240,7 +248,7 @@ export const AdminGruposFamiliares = () => {
                         <tr>
                             <th>Titular</th>
                             <th>Miembros</th>
-                            <th>Cuota hermano</th>
+                            <th>Cuota familiar</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -271,7 +279,7 @@ export const AdminGruposFamiliares = () => {
                                 <td>
                                     <button type="button" className={styles.btnCuotaHermano} onClick={() => abrirModalCuotaHermano(g)}>
                                         <DollarSign size={18} />
-                                        Actualizar cuota hermano
+                                        Actualizar cuota familiar
                                     </button>
                                     <button type="button" className={styles.btnEdit} onClick={() => openEditar(g)}>
                                         <Pencil size={18} />
@@ -340,6 +348,8 @@ export const AdminGruposFamiliares = () => {
                             <ul className={styles.lista}>
                                 {deportistasFiltrados.map((d) => {
                                     const yaAgregado = form.miembros.some((m) => m.dni === d.dni);
+                                    const yaEnOtroGrupo = idsEnOtroGrupo.has(d.id);
+                                    const noSePuedeAgregar = yaAgregado || yaEnOtroGrupo;
                                     return (
                                         <li key={d.id} className={styles.listaItem}>
                                             <span>{d.nombre} {d.apellido} — DNI {d.dni} — {d.disciplina}, {d.subcategoria}, {d.genero}</span>
@@ -347,9 +357,10 @@ export const AdminGruposFamiliares = () => {
                                                 type="button"
                                                 className={styles.btnAddSmall}
                                                 onClick={() => agregarMiembro(d)}
-                                                disabled={yaAgregado}
+                                                disabled={noSePuedeAgregar}
+                                                title={yaEnOtroGrupo ? 'Ya pertenece a otro grupo familiar' : undefined}
                                             >
-                                                {yaAgregado ? 'En grupo' : '+ Agregar'}
+                                                {yaAgregado ? 'En grupo' : yaEnOtroGrupo ? 'Ya en otro grupo' : '+ Agregar'}
                                             </button>
                                         </li>
                                     );
@@ -407,7 +418,7 @@ export const AdminGruposFamiliares = () => {
             {modalCuotaHermano !== null && (
                 <div className={styles.overlay} onClick={() => setModalCuotaHermano(null)}>
                     <div className={styles.modalSmall} onClick={(e) => e.stopPropagation()}>
-                        <h3>Actualizar monto cuota hermano</h3>
+                        <h3>Actualizar monto cuota familiar</h3>
                         <form onSubmit={guardarCuotaHermano}>
                             <div className={styles.field}>
                                 <label>Monto (ARS)</label>

@@ -181,10 +181,7 @@ export class ReservaCanchaService {
         initPoint: pref.initPoint,
         preferenceId: pref.preferenceId,
       };
-    } catch (err) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('[ReservaCancha] Error creando preferencia MP para seña:', err);
-      }
+    } catch (_err) {
       return { reserva: reservaPayload, metodoPago: 'mercadopago' as const };
     }
   }
@@ -244,10 +241,11 @@ export class ReservaCanchaService {
   }
 
   /** Eliminar/cancelar reserva (admin) */
-  /** Cancela la reserva (soft-delete: set canceladaAt). El turno queda libre para nuevas reservas. */
+  /** Cancela la reserva (soft-delete: set canceladaAt). El turno queda libre para nuevas reservas. No se puede cancelar si el resto ya está pagado. */
   async delete(id: number) {
     const reserva = await prisma.reservaCancha.findUnique({ where: { id } });
     if (!reserva) throw new NotFoundError('Reserva no encontrada');
+    if (reserva.restoPagado) throw new BadRequestError('No se puede cancelar una reserva cuyo resto ya está pagado.');
     if (reserva.canceladaAt) return { ok: true };
     await prisma.reservaCancha.update({
       where: { id },

@@ -5,11 +5,34 @@ import dotenv from 'dotenv';
 dotenv.config();
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const isProduction = NODE_ENV === 'production';
+
+/** En producción JWT_SECRET es obligatorio y debe ser fuerte (32+ caracteres). */
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (isProduction) {
+    if (!secret || secret === 'default-secret-change-me' || secret.length < 32) {
+      throw new Error(
+        'En producción JWT_SECRET es obligatorio en .env y debe tener al menos 32 caracteres aleatorios. ' +
+          'Generá uno con: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
+      );
+    }
+    return secret;
+  }
+  return secret || 'default-secret-change-me';
+}
+
+/** sameSite: "lax" para mismo dominio; "none" solo si front y API están en dominios distintos (requiere secure: true). */
+const COOKIE_SAME_SITE = (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax';
+/** secure: true en producción; si front y API son cross-origin, usar COOKIE_SAME_SITE=none y esta en true. */
+const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true' || (process.env.COOKIE_SECURE !== 'false' && isProduction);
+
 export const env = {
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  NODE_ENV: NODE_ENV,
   PORT: parseInt(process.env.PORT || '3000', 10),
   DATABASE_URL: process.env.DATABASE_URL || '',
-  JWT_SECRET: process.env.JWT_SECRET || 'default-secret-change-me',
+  JWT_SECRET: getJwtSecret(),
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   MERCADOPAGO_ACCESS_TOKEN: process.env.MERCADOPAGO_ACCESS_TOKEN || '',
@@ -29,6 +52,10 @@ export const env = {
   PRINCIPAL_ADMIN_EMAIL: (process.env.PRINCIPAL_ADMIN_EMAIL || 'admin@foreverclub.com').toLowerCase(),
   /** WhatsApp del club para transferencia de seña (código país + número sin +). Ej: 5492211234567 */
   CLUB_WHATSAPP_NUMBER: process.env.CLUB_WHATSAPP_NUMBER || '5492211234567',
+  /** Cookie: sameSite ("lax" por defecto; "none" si front y API en dominios distintos). */
+  COOKIE_SAME_SITE,
+  /** Cookie: secure (true en producción; obligatorio si COOKIE_SAME_SITE=none). */
+  COOKIE_SECURE,
 };
 
 /** Convierte JWT_EXPIRES_IN (ej: '7d', '24h') a segundos para maxAge de cookie */

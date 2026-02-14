@@ -1,6 +1,8 @@
 import { Response, NextFunction } from 'express';
 import { disciplinaService } from '../services/disciplina.service';
+import { auditoriaService, ACCIONES } from '../services/auditoria.service';
 import { sendSuccess, sendCreated } from '../utils/response';
+import { getClientIp, getUserAgent } from '../utils/request';
 import { AuthenticatedRequest } from '../types';
 import { CreateDisciplinaInput, UpdateDisciplinaInput } from '../validators/disciplina.validator';
 
@@ -9,6 +11,15 @@ export class DisciplinaController {
     try {
       const data = req.body as CreateDisciplinaInput;
       const result = await disciplinaService.create(data);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DISCIPLINA_ALTA,
+        entidad: 'disciplina',
+        entidadId: result.id,
+        detalles: JSON.stringify({ nombre: result.nombre }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendCreated(res, result, 'Disciplina creada exitosamente');
     } catch (error) {
       next(error);
@@ -40,6 +51,15 @@ export class DisciplinaController {
       const id = parseInt(req.params.id as string, 10);
       const data = req.body as UpdateDisciplinaInput;
       const result = await disciplinaService.update(id, data);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DISCIPLINA_ACTUALIZACION,
+        entidad: 'disciplina',
+        entidadId: id,
+        detalles: JSON.stringify({ cambios: Object.keys(data) }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result, 'Disciplina actualizada correctamente');
     } catch (error) {
       next(error);

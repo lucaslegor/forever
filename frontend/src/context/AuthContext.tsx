@@ -18,6 +18,8 @@ export interface AuthUser {
   deportistaId?: number;
   /** Nombre para saludar (deportista o administrativo) */
   nombre?: string;
+  /** Disciplina del deportista (para menú condicional: fixture LAPF / hockey / ocultar) */
+  disciplinaNombre?: string;
 }
 
 const AUTH_KEY = 'forever_auth';
@@ -67,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: mapRoleToUserRole(userData.rol),
             deportistaId: userData.deportista?.id,
             nombre: perfil?.nombre,
+            disciplinaNombre: userData.deportista?.disciplina?.nombre,
           };
           setUser(authUser);
           localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
@@ -96,16 +99,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { user: userData } = response.data;
         // El token va en cookie HttpOnly (no se guarda en el frontend)
         // deportistaId viene en la respuesta del login para evitar una segunda llamada a getMiPerfil
-        const authUser: AuthUser = {
-          id: userData.id,
-          email: userData.email,
-          rol: userData.rol,
-          activo: userData.activo ?? true,
-          loginId: dni,
-          role: mapRoleToUserRole(userData.rol),
-          deportistaId: userData.deportistaId,
-          nombre: userData.nombre,
-        };
+const authUser: AuthUser = {
+            id: userData.id,
+            email: userData.email,
+            rol: userData.rol,
+            activo: userData.activo ?? true,
+            loginId: dni,
+            role: mapRoleToUserRole(userData.rol),
+            deportistaId: userData.deportistaId,
+            nombre: userData.nombre,
+            disciplinaNombre: userData.disciplinaNombre,
+          };
 
         setUser(authUser);
         localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
@@ -117,8 +121,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Credenciales incorrectas' };
     } catch (error: any) {
       setLoading(false);
-      console.error('Error completo en login:', error);
-      console.error('Respuesta del servidor:', error.response?.data);
       const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Error al iniciar sesión';
       return { success: false, error: errorMsg };
     }
@@ -135,7 +137,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await deportistaService.resetPassword(deportistaId, newPassword);
       return response.success;
     } catch (error) {
-      console.error('Error al restablecer contraseña de deportista:', error);
       return false;
     }
   }, []);
@@ -145,7 +146,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authService.resetAdminPassword(adminId, newPassword);
       return response.success;
     } catch (error) {
-      console.error('Error al restablecer contraseña de admin:', error);
       return false;
     }
   }, []);

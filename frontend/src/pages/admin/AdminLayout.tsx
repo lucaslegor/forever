@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Users, DollarSign, UserCircle, Shield, Trophy, FileText, Home, KeyRound, User, CalendarDays } from 'lucide-react';
+import { LogOut, Users, DollarSign, UserCircle, Shield, Trophy, FileText, Home, KeyRound, User, CalendarDays, Award, BarChart3, ClipboardList } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Footer } from '../../components/Footer';
 import styles from './AdminLayout.module.css';
@@ -10,11 +10,14 @@ const menuItems = [
     { to: '/admin/deportistas', label: 'Gestión deportistas', icon: Users },
     { to: '/admin/cuotas', label: 'Gestión cuotas', icon: DollarSign },
     { to: '/admin/grupos-familiares', label: 'Gestión grupo familiar', icon: UserCircle },
+    { to: '/admin/becas', label: 'Gestión de becas', icon: Award },
     { to: '/admin/admins', label: 'Gestión admin', icon: Shield },
     { to: '/admin/restablecer-contrasena', label: 'Restablecer contraseña', icon: KeyRound },
     { to: '/admin/disciplinas', label: 'Gestión disciplinas', icon: Trophy },
     { to: '/admin/cancha', label: 'Alquiler cancha', icon: CalendarDays },
-    { to: '/admin/noticias/crear', label: 'Crear noticias', icon: FileText },
+    { to: '/admin/noticias', label: 'Gestión noticias', icon: FileText },
+    { to: '/admin/reportes', label: 'Reportes', icon: BarChart3 },
+    { to: '/admin/auditoria', label: 'Auditoría', icon: ClipboardList },
 ];
 
 export const AdminLayout = () => {
@@ -22,7 +25,7 @@ export const AdminLayout = () => {
     const { logout, user, isPrincipalAdmin } = useAuth();
 
     const visibleMenuItems = menuItems.filter((item) => {
-        if (item.to === '/admin/admins') return isPrincipalAdmin;
+        if (item.to === '/admin/admins' || item.to === '/admin/auditoria') return isPrincipalAdmin;
         return true;
     });
 

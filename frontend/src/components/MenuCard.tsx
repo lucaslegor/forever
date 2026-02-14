@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +9,7 @@ const NOTICIAS_PATH = '/noticias';
 const DIAS_NOTICIA_NUEVA = 7;
 
 const LAPF_FIXTURE_URL = 'https://lapf.com.ar/fixture/';
+const LIGA_PLATENSE_HOCKEY_URL = 'https://www.instagram.com/ligaplatensedehockey/?hl=es';
 
 interface MenuItem {
     label: string;
@@ -16,14 +18,24 @@ interface MenuItem {
     externalUrl?: string;
 }
 
-const menuItems: MenuItem[] = [
+const menuItemsBase: MenuItem[] = [
     { label: 'Mi Perfil', path: '/perfil' },
     { label: 'Pagar Cuota', path: '/estado-deuda' },
     { label: 'Historial de Pagos', path: '/historial-pagos' },
     { label: 'Grupo Familiar', path: '/grupo-familiar' },
     { label: 'Noticias', path: NOTICIAS_PATH },
-    { label: 'Fixture y tablas LAPF', path: '/fixture-lapf', externalUrl: LAPF_FIXTURE_URL },
 ];
+
+function disciplinaNormalizada(nombre: string | undefined): string {
+    return (nombre ?? '').trim().toLowerCase().normalize('NFD').replace(/\u0300/g, '');
+}
+
+function getMenuItemFixture(disciplinaNombre: string | undefined): MenuItem | null {
+    const d = disciplinaNormalizada(disciplinaNombre);
+    if (d === 'futbol') return { label: 'Fixture y tablas LAPF', path: '/fixture-lapf', externalUrl: LAPF_FIXTURE_URL };
+    if (d === 'hockey') return { label: 'Liga Platense de Hockey', path: '/fixture-hockey', externalUrl: LIGA_PLATENSE_HOCKEY_URL };
+    return null;
+}
 
 function isNoticiaReciente(fecha: string): boolean {
     const hoy = new Date();
@@ -41,6 +53,15 @@ export const MenuCard = () => {
     const { noticias } = useNoticias();
     const hayNoticiasNuevas = noticias.some((n) => isNoticiaReciente(n.fecha));
     const saludo = user?.nombre?.trim() ? `Hola, ${user.nombre}` : 'Hola';
+
+    const menuItems = useMemo(() => {
+        const items = [...menuItemsBase];
+        if (user?.role === 'deportista') {
+            const fixtureItem = getMenuItemFixture(user.disciplinaNombre);
+            if (fixtureItem) items.push(fixtureItem);
+        }
+        return items;
+    }, [user?.role, user?.disciplinaNombre]);
 
     const handleMenuClick = (path: string) => {
         navigate(path);

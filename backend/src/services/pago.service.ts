@@ -79,9 +79,7 @@ export class PagoService {
         initPoint: preferencia.initPoint,
         preferenceId: preferencia.preferenceId,
       };
-    } catch (err: any) {
-      console.error('Error creando preferencia Mercado Pago:', err?.message || err);
-      if (err?.cause) console.error('Causa:', err.cause);
+    } catch (_err) {
       return { pago, initPoint: null, preferenceId: null };
     }
   }

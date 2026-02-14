@@ -3,7 +3,9 @@ import { pagoService } from '../services/pago.service';
 import { reservaCanchaService } from '../services/reservaCancha.service';
 import { getPaymentById } from '../services/mercadopago.service';
 import { deportistaService } from '../services/deportista.service';
+import { auditoriaService, ACCIONES } from '../services/auditoria.service';
 import { sendSuccess, sendCreated, sendUnauthorized, sendForbidden, sendError } from '../utils/response';
+import { getClientIp, getUserAgent } from '../utils/request';
 import { validateMercadoPagoWebhookSignature } from '../utils/webhookSignature';
 import { AuthenticatedRequest } from '../types';
 import { CreatePagoInput, SyncPagoInput } from '../validators/pago.validator';
@@ -32,9 +34,6 @@ export class PagoController {
       }
 
       const { type, data } = req.body;
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[Webhook MP]', type, data?.id ? `payment_id=${data.id}` : '');
-      }
 
       if (type === 'payment' && data?.id) {
         const paymentId = String(data.id);
@@ -111,6 +110,15 @@ export class PagoController {
       const id = parseInt(req.params.id as string, 10);
       const { mercadoPagoId, status } = req.body;
       const result = await pagoService.confirmarPago(id, mercadoPagoId, status);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.PAGO_CONFIRMAR,
+        entidad: 'pago',
+        entidadId: id,
+        detalles: JSON.stringify({ status, mercadoPagoId }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result, 'Pago confirmado correctamente');
     } catch (error) {
       next(error);

@@ -109,8 +109,8 @@ export const AdminNoticiasCrear = () => {
                         <Save size={20} />
                         Crear noticia
                     </button>
-                    <button type="button" className={styles.btnSecondary} onClick={() => navigate('/admin')}>
-                        Volver al panel
+                    <button type="button" className={styles.btnSecondary} onClick={() => navigate('/admin/noticias')}>
+                        Volver al listado
                     </button>
                 </div>
             </form>

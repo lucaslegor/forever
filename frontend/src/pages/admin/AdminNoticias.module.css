@@ -1,0 +1,28 @@
+.page { max-width: 100%; }
+.title { font-size: 1.35rem; font-weight: 700; color: var(--color-blue); margin: 0 0 0.25rem 0; }
+.subtitle { color: #555; margin: 0 0 var(--spacing-lg) 0; }
+
+.btnPrimary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; background: var(--color-blue); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: var(--spacing-lg); }
+.btnPrimary:hover { background: #002244; }
+
+.tableWrap { overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid #e8e8e8; }
+.table { width: 100%; border-collapse: collapse; color: #1a1a1a; }
+.table th, .table td { padding: var(--spacing-sm) var(--spacing-md); text-align: left; border-bottom: 1px solid #eee; }
+.table th { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--color-blue); }
+.cellTitulo { max-width: 280px; }
+.emptyCell { color: #666; font-size: 0.875rem; padding: var(--spacing-lg); text-align: center; }
+
+.badgePublicada { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; background: rgba(46, 125, 50, 0.12); color: #2e7d32; }
+.badgeNoPublicada { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; background: rgba(158, 158, 158, 0.2); color: #616161; }
+
+.btnEdit { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; margin-right: 0.5rem; background: var(--color-blue); color: #fff; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
+.btnEdit:hover { background: #002244; }
+.btnToggle { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; margin-right: 0.5rem; background: #2e7d32; color: #fff; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
+.btnToggle:hover { background: #1b5e20; }
+.btnDelete { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: transparent; color: #c62828; border: 1px solid #c62828; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
+.btnDelete:hover { background: rgba(198, 40, 40, 0.08); }
+
+@media (max-width: 768px) {
+  .tableWrap { overflow-x: auto; }
+  .btnEdit, .btnToggle, .btnDelete { min-height: 36px; }
+}

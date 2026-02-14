@@ -28,7 +28,7 @@ export const authenticateToken = async (
       return;
     }
 
-    const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
 
     const cuenta = await prisma.cuentaUsuario.findUnique({
       where: { id: decoded.id },

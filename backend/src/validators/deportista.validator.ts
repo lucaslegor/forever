@@ -77,8 +77,10 @@ const optionalPosIntQuery = z.preprocess(
 export const deportistasQuerySchema = z.object({
   page: optionalPosIntQuery,
   limit: optionalPosIntQuery,
-  estado: z.enum(['EN_DEUDA', 'AL_DIA', 'MOROSA', 'INACTIVA']).optional(),
   disciplinaId: optionalPosIntQuery,
+  generoId: optionalPosIntQuery,
+  categoriaId: optionalPosIntQuery,
+  subcategoriaId: optionalPosIntQuery,
   search: z.preprocess((v) => (v === '' || v === undefined ? undefined : v), z.string().optional()),
 });
 

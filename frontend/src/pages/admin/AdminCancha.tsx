@@ -239,7 +239,7 @@ export const AdminCancha = () => {
                                         )}
                                     </td>
                                     <td>
-                                        {!r.canceladaAt && (
+                                        {!r.canceladaAt && !r.restoPagado && (
                                             <button
                                                 type="button"
                                                 className={styles.btnCancelarReserva}
@@ -249,6 +249,9 @@ export const AdminCancha = () => {
                                                 <Trash2 size={16} />
                                                 Cancelar reserva
                                             </button>
+                                        )}
+                                        {!r.canceladaAt && r.restoPagado && (
+                                            <span className={styles.noCancelable} title="No se puede cancelar: el resto ya está pagado">—</span>
                                         )}
                                     </td>
                                 </tr>

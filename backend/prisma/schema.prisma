@@ -114,8 +114,28 @@ model CuentaUsuario {
   updatedAt       DateTime        @updatedAt @map("updated_at")
   deportista      Deportista?
   administrativo  Administrativo?
+  auditoriaLogs   AuditoriaLog[]
 
   @@map("cuentas_usuario")
+}
+
+model AuditoriaLog {
+  id        Int       @id @default(autoincrement()) @map("id_auditoria")
+  cuentaId  Int?      @map("id_cuenta")
+  accion    String    @map("accion")
+  entidad   String    @map("entidad")
+  entidadId Int?      @map("id_entidad")
+  detalles  String?   @map("detalles")
+  ip        String?   @map("ip")
+  userAgent String?   @map("user_agent")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  cuenta CuentaUsuario? @relation(fields: [cuentaId], references: [id], onDelete: SetNull)
+
+  @@index([cuentaId])
+  @@index([entidad, entidadId])
+  @@index([createdAt])
+  @@map("auditoria_log")
 }
 
 model Administrativo {
@@ -157,8 +177,10 @@ model Deportista {
   pagos              Pago[]
   cuotas             Cuota[]
   grupoFamiliar      GrupoFamiliarIntegrante[]
-  createdAt          DateTime                  @default(now()) @map("created_at")
-  updatedAt          DateTime                  @updatedAt @map("updated_at")
+  becado             Boolean                  @default(false)
+  cuotaBeca          Decimal?                 @map("cuota_beca") @db.Decimal(10, 2)
+  createdAt          DateTime                 @default(now()) @map("created_at")
+  updatedAt          DateTime                 @updatedAt @map("updated_at")
 
   @@map("deportistas")
 }
@@ -260,6 +282,8 @@ model Noticia {
   contenido    String           @db.Text
   autorId      Int?             @map("id_autor")
   autor        Administrativo?  @relation(fields: [autorId], references: [id], onDelete: SetNull)
+  publicada    Boolean          @default(true)
+  deletedAt    DateTime?        @map("deleted_at")
   imagenes     NoticiaImagen[]
   createdAt    DateTime         @default(now()) @map("created_at")
   updatedAt    DateTime         @updatedAt @map("updated_at")

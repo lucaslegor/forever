@@ -27,7 +27,6 @@ export function NoticiasProvider({ children }: { children: ReactNode }) {
         setNoticias(response.data);
       }
     } catch (err) {
-      console.error('Error al cargar noticias:', err);
       setError('No se pudieron cargar las noticias.');
     } finally {
       setLoading(false);
@@ -54,7 +53,6 @@ export function NoticiasProvider({ children }: { children: ReactNode }) {
       }
       return false;
     } catch (error) {
-      console.error('Error al crear noticia:', error);
       return false;
     }
   }, [fetchNoticias]);

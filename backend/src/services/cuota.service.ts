@@ -8,6 +8,12 @@ import {
 } from '../utils/errors';
 import { Prisma, EstadoCuota, EstadoPago, Periodicidad } from '@prisma/client';
 
+const FACTOR_BECA = 0.7;
+function montoBeca(precioMensual: number, cuotaBeca: number | null | undefined): number {
+  if (cuotaBeca != null && !Number.isNaN(cuotaBeca)) return Math.round(cuotaBeca * 100) / 100;
+  return Math.round(precioMensual * FACTOR_BECA * 100) / 100;
+}
+
 export class CuotaService {
   async asignar(data: AsignarCuotaDTO) {
     // Verificar que el deportista existe
@@ -125,7 +131,15 @@ export class CuotaService {
     const [deportista, cuotas, integranteGrupo] = await Promise.all([
       prisma.deportista.findUnique({
         where: { id: deportistaId },
-        select: { id: true, nombre: true, apellido: true, dni: true },
+        select: {
+          id: true,
+          nombre: true,
+          apellido: true,
+          dni: true,
+          becado: true,
+          cuotaBeca: true,
+          disciplina: { select: { precioMensual: true } },
+        },
       }),
       prisma.cuota.findMany({
         where: { deportistaId },
@@ -152,6 +166,13 @@ export class CuotaService {
         ? Number(integranteGrupo.grupo.cuotaHermano)
         : null;
 
+    const precioDisciplina = deportista.disciplina ? Number(deportista.disciplina.precioMensual) : 0;
+    const montoBecaDeportista =
+      deportista.becado && precioDisciplina > 0
+        ? montoBeca(precioDisciplina, deportista.cuotaBeca != null ? Number(deportista.cuotaBeca) : null)
+        : null;
+    const montoObjetivoPendientes = montoGrupoFamiliar ?? montoBecaDeportista;
+
     const cuotasPagadas = cuotas
       .filter((c) => c.estadoCuota === EstadoCuota.PAGADA)
       .map((c) => ({
@@ -166,22 +187,22 @@ export class CuotaService {
     const pendientesRaw = cuotas.filter((c) => c.estadoCuota !== EstadoCuota.PAGADA);
 
     const cuotasAActualizar = pendientesRaw.filter(
-      (c) => montoGrupoFamiliar != null && Number(c.monto) !== montoGrupoFamiliar
+      (c) => montoObjetivoPendientes != null && Number(c.monto) !== montoObjetivoPendientes
     );
     if (cuotasAActualizar.length > 0) {
       await prisma.$transaction(
         cuotasAActualizar.map((c) =>
           prisma.cuota.update({
             where: { id: c.id },
-            data: { monto: new Prisma.Decimal(montoGrupoFamiliar!) },
+            data: { monto: new Prisma.Decimal(montoObjetivoPendientes!) },
           })
         )
       );
     }
 
     const cuotasPendientes = pendientesRaw.map((c) => {
-      const monto = montoGrupoFamiliar != null && Number(c.monto) !== montoGrupoFamiliar
-        ? montoGrupoFamiliar
+      const monto = montoObjetivoPendientes != null && Number(c.monto) !== montoObjetivoPendientes
+        ? montoObjetivoPendientes
         : c.monto;
       return {
         id: c.id,
@@ -524,9 +545,12 @@ export class CuotaService {
       const cuotaHermano = integranteGrupo?.grupo?.cuotaHermano != null
         ? Number(integranteGrupo.grupo.cuotaHermano)
         : null;
-      const monto = (integranteGrupo && cuotaHermano != null)
-        ? cuotaHermano
-        : precioDisciplina;
+      const monto =
+        integranteGrupo && cuotaHermano != null
+          ? cuotaHermano
+          : deportista.becado
+            ? montoBeca(precioDisciplina, deportista.cuotaBeca != null ? Number(deportista.cuotaBeca) : null)
+            : precioDisciplina;
 
       await prisma.cuota.create({
         data: {
@@ -597,7 +621,12 @@ export class CuotaService {
     const cuotaHermano = integranteGrupo?.grupo?.cuotaHermano != null
       ? Number(integranteGrupo.grupo.cuotaHermano)
       : null;
-    const monto = (integranteGrupo && cuotaHermano != null) ? cuotaHermano : precioDisciplina;
+    const monto =
+      integranteGrupo && cuotaHermano != null
+        ? cuotaHermano
+        : deportista.becado
+          ? montoBeca(precioDisciplina, deportista.cuotaBeca != null ? Number(deportista.cuotaBeca) : null)
+          : precioDisciplina;
 
     const fechaEmision = new Date(anio, mes - 1, 1);
     const fechaVencimiento = new Date(fechaEmision);
@@ -615,6 +644,52 @@ export class CuotaService {
         periodicidad: Periodicidad.MENSUAL,
       },
     });
+  }
+
+  /**
+   * Actualiza el monto de todas las cuotas pendientes/vencidas de una disciplina
+   * cuando cambia el precio mensual de la disciplina. Respeta grupo familiar y beca.
+   */
+  async actualizarMontosPorCambioPrecioDisciplina(disciplinaId: number, nuevoPrecio: number): Promise<number> {
+    const cuotas = await prisma.cuota.findMany({
+      where: {
+        disciplinaId,
+        estadoCuota: { in: [EstadoCuota.PENDIENTE, EstadoCuota.VENCIDA] },
+      },
+      include: {
+        deportista: {
+          include: {
+            grupoFamiliar: { include: { grupo: true } },
+          },
+        },
+      },
+    });
+
+    if (cuotas.length === 0) return 0;
+
+    const redondeado = Math.round(nuevoPrecio * 100) / 100;
+
+    await prisma.$transaction(
+      cuotas.map((c) => {
+        const d = c.deportista;
+        const integranteGrupo = d.grupoFamiliar?.[0];
+        const cuotaHermano = integranteGrupo?.grupo?.cuotaHermano != null
+          ? Number(integranteGrupo.grupo.cuotaHermano)
+          : null;
+        const monto =
+          integranteGrupo && cuotaHermano != null
+            ? cuotaHermano
+            : d.becado
+              ? montoBeca(redondeado, d.cuotaBeca != null ? Number(d.cuotaBeca) : null)
+              : redondeado;
+        return prisma.cuota.update({
+          where: { id: c.id },
+          data: { monto: new Prisma.Decimal(monto) },
+        });
+      })
+    );
+
+    return cuotas.length;
   }
 }
 

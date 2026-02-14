@@ -149,11 +149,18 @@ export const ProfileEdit = () => {
                     const opc = opcionesRes.data as {
                         categorias?: Array<{ nombre: string }>;
                         categoriasExcepcion?: Record<string, string[]>;
-                        subcategoriasPorKey?: Record<string, string[]>;
+                        subcategoriasPorKey?: Record<string, string[] | Array<{ id: number; nombre: string }>>;
                     };
                     categoriasList = (opc.categorias ?? []).map((c) => c.nombre);
                     excepcion = opc.categoriasExcepcion ?? {};
-                    subcatPorKey = opc.subcategoriasPorKey ?? {};
+                    const raw = opc.subcategoriasPorKey ?? {};
+                    // Normalizar: el backend puede enviar { id, nombre }[]; el perfil usa solo nombres (string[])
+                    subcatPorKey = Object.fromEntries(
+                        Object.entries(raw).map(([k, arr]) => [
+                            k,
+                            Array.isArray(arr) ? arr.map((x: string | { id: number; nombre: string }) => (typeof x === 'string' ? x : x.nombre)) : [],
+                        ])
+                    );
                 }
                 if (perfilRes.success && perfilRes.data) {
                     const data = perfilRes.data as unknown as {
@@ -229,7 +236,6 @@ export const ProfileEdit = () => {
                 setSubcategoriasPorKey(subcatPorKey);
                 setProfileLoaded(true);
             } catch (error) {
-                console.error('Error cargando perfil:', error);
                 setProfileLoaded(true);
             }
         };
@@ -298,7 +304,6 @@ export const ProfileEdit = () => {
             setAdultoModo('ver');
             setTimeout(() => setNotification(null), 3000);
         } catch (error: any) {
-            console.error('Error saving profile:', error);
             const msg = error?.response?.data?.error || error?.message || 'Error al guardar los datos';
             setNotification({ type: 'error', message: msg });
             setTimeout(() => setNotification(null), 3000);

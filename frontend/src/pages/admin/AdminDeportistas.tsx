@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { UserPlus, UserMinus, Pencil, Plus, Filter, Users } from 'lucide-react';
 import type { Deportista, AdultoResponsable } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
@@ -17,7 +17,7 @@ const initialAdulto = (): AdultoResponsable => ({
 });
 
 export const AdminDeportistas = () => {
-    const { disciplinas, disciplinasNombres, generos, generosNombres, categorias, categoriasNombres, getCategoriasOptions, getSubcategoriaOptions } = useOpcionesAdmin();
+    const { disciplinas, disciplinasNombres, generos, generosNombres, categorias, categoriasNombres, getCategoriasOptions, getSubcategoriaOptions, subcategoriasPorKey } = useOpcionesAdmin();
     const confirm = useConfirm();
     const [deportistas, setDeportistas] = useState<Deportista[]>([]);
     const [loading, setLoading] = useState(true);
@@ -46,18 +46,48 @@ export const AdminDeportistas = () => {
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [verAdultosDeportista, setVerAdultosDeportista] = useState<Deportista | null>(null);
     const [modalAdultosData, setModalAdultosData] = useState<Deportista | null>(null);
+    const [filtroSearch, setFiltroSearch] = useState<string>('');
     const [filtroDisciplina, setFiltroDisciplina] = useState<string>('');
     const [filtroGenero, setFiltroGenero] = useState<string>('');
     const [filtroCategoria, setFiltroCategoria] = useState<string>('');
     const [filtroSubcategoria, setFiltroSubcategoria] = useState<string>('');
+    const [page, setPage] = useState(1);
+    const [limit] = useState(20);
+    const [total, setTotal] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
 
-    const fetchDeportistas = async () => {
+    const disciplinaIdFiltro = useMemo(() => disciplinas.find((d) => d.nombre === filtroDisciplina)?.id, [disciplinas, filtroDisciplina]);
+    const generoIdFiltro = useMemo(() => generos.find((g) => g.nombre === filtroGenero)?.id, [generos, filtroGenero]);
+    const categoriaIdFiltro = useMemo(() => categorias.find((c) => c.nombre === filtroCategoria)?.id, [categorias, filtroCategoria]);
+    const subcategoriaIdFiltro = useMemo(() => {
+        const keyTriple = `${filtroDisciplina}|${filtroCategoria}|${filtroGenero}`;
+        const keyDoble = `${filtroDisciplina}|${filtroCategoria}`;
+        const arr = subcategoriasPorKey[keyTriple] ?? subcategoriasPorKey[keyDoble] ?? [];
+        const sub = Array.isArray(arr) ? arr.find((s: { id: number; nombre: string }) => s?.nombre === filtroSubcategoria) : null;
+        return sub?.id;
+    }, [subcategoriasPorKey, filtroDisciplina, filtroCategoria, filtroGenero, filtroSubcategoria]);
+
+    const categoriasFiltroOptions = useMemo(() => getCategoriasOptions(filtroDisciplina || primeraDisciplina, filtroGenero || primerGenero), [filtroDisciplina, filtroGenero, getCategoriasOptions, primeraDisciplina, primerGenero]);
+    const subcategoriasFiltroOptions = useMemo(() => getSubcategoriaOptions(filtroDisciplina, filtroGenero, filtroCategoria), [filtroDisciplina, filtroGenero, filtroCategoria, getSubcategoriaOptions]);
+
+    const fetchDeportistas = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await deportistaService.getAll();
+            const response = await deportistaService.getAll({
+                page,
+                limit,
+                search: filtroSearch.trim() || undefined,
+                disciplinaId: disciplinaIdFiltro ?? undefined,
+                generoId: generoIdFiltro ?? undefined,
+                categoriaId: categoriaIdFiltro ?? undefined,
+                subcategoriaId: subcategoriaIdFiltro ?? undefined,
+            });
             if (response.success && response.data) {
-                // Mapear datos del backend al formato del frontend
-                const deportistasMap = response.data.data.map((d: any) => {
+                const paginated = response.data as { data: any[]; total: number; page: number; limit: number; totalPages: number };
+                const list = paginated.data ?? [];
+                setTotal(paginated.total ?? 0);
+                setTotalPages(paginated.totalPages ?? 0);
+                const deportistasMap = list.map((d: any) => {
                     const fechaNac = d.fechaNac
                         ? (typeof d.fechaNac === 'string' ? d.fechaNac.split('T')[0] : new Date(d.fechaNac).toISOString().split('T')[0])
                         : '';
@@ -89,16 +119,15 @@ export const AdminDeportistas = () => {
                 setDeportistas(deportistasMap);
             }
         } catch (error) {
-            console.error('Error cargando deportistas:', error);
             setFormError('Error al cargar deportistas');
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, limit, filtroSearch, disciplinaIdFiltro, generoIdFiltro, categoriaIdFiltro, subcategoriaIdFiltro]);
 
     useEffect(() => {
         fetchDeportistas();
-    }, []);
+    }, [fetchDeportistas]);
 
     useEffect(() => {
         if (!verAdultosDeportista) {
@@ -124,19 +153,6 @@ export const AdminDeportistas = () => {
         });
         return () => { cancelled = true; };
     }, [verAdultosDeportista]);
-
-    const categoriasFiltroOptions = getCategoriasOptions(filtroDisciplina || primeraDisciplina, filtroGenero || primerGenero);
-    const subcategoriasFiltroOptions = getSubcategoriaOptions(filtroDisciplina || '', filtroGenero || '', filtroCategoria);
-
-    const deportistasFiltrados = useMemo(() => {
-        return deportistas.filter((d) => {
-            const cumpleDisciplina = !filtroDisciplina || d.disciplina === filtroDisciplina;
-            const cumpleGenero = !filtroGenero || d.genero === filtroGenero;
-            const cumpleCategoria = !filtroCategoria || d.categoria === filtroCategoria;
-            const cumpleSubcategoria = !filtroSubcategoria || d.subcategoria === filtroSubcategoria;
-            return cumpleDisciplina && cumpleGenero && cumpleCategoria && cumpleSubcategoria;
-        });
-    }, [deportistas, filtroDisciplina, filtroGenero, filtroCategoria, filtroSubcategoria]);
 
     const categoriasOptions = getCategoriasOptions(form.disciplina, form.genero);
     const subcategoriaOptions = getSubcategoriaOptions(form.disciplina, form.genero, form.categoria);
@@ -202,7 +218,6 @@ export const AdminDeportistas = () => {
             await deportistaService.delete(id);
             await fetchDeportistas();
         } catch (error) {
-            console.error('Error al dar de baja:', error);
             alert('Error al dar de baja al deportista');
         }
     };
@@ -474,7 +489,6 @@ export const AdminDeportistas = () => {
                 }
             }
         } catch (error: any) {
-            console.error('Error en submit:', error);
             const data = error.response?.data;
             let message = '';
             if (data?.errors && typeof data.errors === 'object' && !Array.isArray(data.errors)) {
@@ -517,46 +531,47 @@ export const AdminDeportistas = () => {
                         </p>
                         <div className={styles.filtersGrid}>
                             <div>
+                                <label>Buscar (nombre, apellido, DNI)</label>
+                                <input
+                                    type="text"
+                                    placeholder="Buscar..."
+                                    value={filtroSearch}
+                                    onChange={(e) => { setFiltroSearch(e.target.value); setPage(1); }}
+                                />
+                            </div>
+                            <div>
                                 <label>Disciplina</label>
-                                <select value={filtroDisciplina} onChange={(e) => setFiltroDisciplina(e.target.value)}>
+                                <select value={filtroDisciplina} onChange={(e) => { setFiltroDisciplina(e.target.value); setFiltroCategoria(''); setFiltroSubcategoria(''); setPage(1); }}>
                                     <option value="">Todas</option>
                                     {disciplinasNombres.map((d) => (
-                                        <option key={d} value={d}>
-                                            {d}
-                                        </option>
+                                        <option key={d} value={d}>{d}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
                                 <label>Género</label>
-                                <select value={filtroGenero} onChange={(e) => setFiltroGenero(e.target.value)}>
+                                <select value={filtroGenero} onChange={(e) => { setFiltroGenero(e.target.value); setFiltroCategoria(''); setFiltroSubcategoria(''); setPage(1); }}>
                                     <option value="">Todos</option>
                                     {generosNombres.map((g) => (
-                                        <option key={g} value={g}>
-                                            {g}
-                                        </option>
+                                        <option key={g} value={g}>{g}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
                                 <label>Categoría</label>
-                                <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}>
+                                <select value={filtroCategoria} onChange={(e) => { setFiltroCategoria(e.target.value); setFiltroSubcategoria(''); setPage(1); }}>
                                     <option value="">Todas</option>
                                     {categoriasFiltroOptions.map((c) => (
-                                        <option key={c} value={c}>
-                                            {c}
-                                        </option>
+                                        <option key={c} value={c}>{c}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
                                 <label>Subcategoría</label>
-                                <select value={filtroSubcategoria} onChange={(e) => setFiltroSubcategoria(e.target.value)}>
+                                <select value={filtroSubcategoria} onChange={(e) => { setFiltroSubcategoria(e.target.value); setPage(1); }}>
                                     <option value="">Todas</option>
                                     {subcategoriasFiltroOptions.map((s) => (
-                                        <option key={s} value={s}>
-                                            {s}
-                                        </option>
+                                        <option key={s} value={s}>{s}</option>
                                     ))}
                                 </select>
                             </div>
@@ -579,7 +594,7 @@ export const AdminDeportistas = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {deportistasFiltrados.map((d) => (
+                                {deportistas.map((d) => (
                                     <tr key={d.id}>
                                         <td>{d.dni}</td>
                                         <td>{d.nombre}</td>
@@ -623,10 +638,26 @@ export const AdminDeportistas = () => {
                                 ))}
                             </tbody>
                         </table>
-                        {deportistasFiltrados.length === 0 && (
+                        {deportistas.length === 0 && !loading && (
                             <p className={styles.emptyState}>No hay deportistas que coincidan con los filtros.</p>
                         )}
                     </div>
+                    {total > 0 && (
+                        <div className={styles.pagination}>
+                            <span>
+                                Mostrando {(page - 1) * limit + 1}-{Math.min(page * limit, total)} de {total}
+                            </span>
+                            <div className={styles.paginationButtons}>
+                                <button type="button" className={styles.btnPagination} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+                                    Anterior
+                                </button>
+                                <span className={styles.paginationInfo}>Página {page} de {totalPages || 1}</span>
+                                <button type="button" className={styles.btnPagination} disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+                                    Siguiente
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {verAdultosDeportista !== null && (
                         <div className={styles.overlay} onClick={() => { setVerAdultosDeportista(null); setModalAdultosData(null); }} role="dialog" aria-modal="true" aria-label="Adultos responsables">

@@ -1,6 +1,7 @@
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { Seo } from '../components/Seo';
 import { useNoticias } from '../context/NoticiasContext';
 import { sanitizeHtml, wrapImageGalleries } from '../utils/sanitize';
 import styles from './NoticiaDetalle.module.css';
@@ -8,6 +9,7 @@ import styles from './NoticiaDetalle.module.css';
 export const NoticiaDetalle = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const { getNoticiaById } = useNoticias();
     const noticia = id ? getNoticiaById(Number(id)) : undefined;
 
@@ -38,6 +40,7 @@ export const NoticiaDetalle = () => {
 
     return (
         <div className={styles.page}>
+            <Seo articleTitle={noticia.titulo} description={noticia.resumen?.slice(0, 160) || undefined} path={location.pathname} />
             <header className={styles.header}>
                 <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
