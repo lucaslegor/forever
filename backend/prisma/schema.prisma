@@ -330,3 +330,16 @@ model ReservaCancha {
   @@index([senaMetodoPago, senaExpiraAt])
   @@map("reservas_cancha")
 }
+
+// =============================================================================
+// CONFIG (clave-valor para jobs: pase de categoría último año, etc.)
+// =============================================================================
+
+model Config {
+  id        Int      @id @default(autoincrement()) @map("id_config")
+  clave     String   @unique @map("clave")
+  valor     String   @map("valor")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("config")
+}

@@ -1,6 +1,7 @@
 import app from './app';
 import { env } from './config/env';
 import prisma from './config/prisma';
+import { iniciarJobPaseCategoria } from './jobs/paseCategoria.job';
 
 const PORT = env.PORT;
 
@@ -26,6 +27,7 @@ async function main() {
     await ensureNoticiaColumns();
 
     // Generación de cuotas solo manual desde el panel admin (crontab desactivado)
+    iniciarJobPaseCategoria(); // Pase de categoría anual (1 ene ~00:10, cuando el año cambió)
 
     // Iniciar servidor
     app.listen(PORT);

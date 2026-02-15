@@ -5,3 +5,4 @@ export * from './cuota.service';
 export * from './pago.service';
 export * from './disciplina.service';
 export * from './grupoFamiliar.service';
+export * from './paseCategoria.service';

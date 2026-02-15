@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { clasificacionService } from '../services/clasificacion.service';
+import { ejecutarPaseCategoriaFutbolMasculino } from '../services/paseCategoria.service';
 import { authenticateToken, requireAdministrativo } from '../middlewares/auth.middleware';
 import { validateBody, validateParams } from '../middlewares/validation.middleware';
 import { createSubcategoriaSchema, subcategoriaIdParamSchema } from '../validators/clasificacion.validator';
@@ -149,6 +150,32 @@ router.delete(
       message: error.message || 'Error al eliminar subcategoría',
     });
   }
+  }
+);
+
+/**
+ * @route   POST /api/clasificacion/pase-categoria
+ * @desc    Ejecutar pase de categoría anual (solo Fútbol masculino: Infantiles y Juveniles)
+ * @access  Admin
+ */
+router.post(
+  '/pase-categoria',
+  authenticateToken,
+  requireAdministrativo,
+  async (req: Request, res: Response) => {
+    try {
+      const result = await ejecutarPaseCategoriaFutbolMasculino();
+      res.json({
+        success: true,
+        data: result,
+        message: `Pase de categoría ejecutado: ${result.actualizados} deportistas actualizados.`,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Error al ejecutar pase de categoría',
+      });
+    }
   }
 );
 
