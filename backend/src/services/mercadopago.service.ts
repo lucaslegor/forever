@@ -11,6 +11,8 @@ export interface CrearPreferenciaParams {
   pagoId: number;
   title: string;
   unitPrice: number;
+  /** Email del pagador. Mercado Pago lo exige para tickets Rapipago/PagoFácil. Si no se pasa, MP puede pedirlo en checkout. */
+  payerEmail?: string;
 }
 
 export interface CrearPreferenciaResult {
@@ -20,7 +22,7 @@ export interface CrearPreferenciaResult {
 }
 
 export async function crearPreferenciaPago(params: CrearPreferenciaParams): Promise<CrearPreferenciaResult> {
-  const { pagoId, title, unitPrice } = params;
+  const { pagoId, title, unitPrice, payerEmail } = params;
 
   // Siempre usar FRONTEND_URL para back_urls (la redirección post-pago es al frontend)
   const base = (env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -50,6 +52,9 @@ export async function crearPreferenciaPago(params: CrearPreferenciaParams): Prom
       excluded_payment_types: [{ id: 'consumer_credits' }],
     },
   };
+  if (payerEmail && payerEmail.trim().length > 0) {
+    body.payer = { email: payerEmail.trim() };
+  }
   // Sin auto_return: el usuario vuelve con el botón "Volver al sitio" (evita error de la API)
   // body.auto_return = 'approved';
   if (env.MERCADOPAGO_WEBHOOK_URL) {

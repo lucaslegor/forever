@@ -69,9 +69,10 @@ export const HistorialPagos = () => {
 
     const anioDeCuota = (op: Operacion) => op.anioCuota ?? new Date(op.fecha).getFullYear();
 
+    const ANIO_MINIMO = 2026;
     const aniosDisponibles = useMemo(() => {
         const anios = new Set(operaciones.map((o) => anioDeCuota(o)));
-        return Array.from(anios).sort((a, b) => b - a);
+        return Array.from(anios).filter((y) => y >= ANIO_MINIMO).sort((a, b) => b - a);
     }, [operaciones]);
 
     const operacionesFiltradas = useMemo(() => {

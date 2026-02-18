@@ -8,6 +8,7 @@ const ACCIONES_LABEL: Record<string, string> = {
   DEPORTISTA_ALTA: 'Alta deportista',
   DEPORTISTA_BAJA: 'Baja deportista',
   DEPORTISTA_ACTUALIZACION: 'Actualización deportista',
+  DEPORTISTA_RESET_PASSWORD: 'Restablecer contraseña deportista',
   PAGO_CONFIRMAR: 'Confirmar pago',
   CUOTA_MARCAR_PAGADA: 'Cuota marcada pagada',
   DISCIPLINA_ALTA: 'Alta disciplina',
@@ -15,6 +16,7 @@ const ACCIONES_LABEL: Record<string, string> = {
   ADMIN_DESACTIVAR: 'Admin desactivado',
   ADMIN_ACTIVAR: 'Admin activado',
   ADMIN_RESET_PASSWORD: 'Restablecer contraseña admin',
+  CUENTA_CAMBIO_CONTRASEÑA: 'Cambio de contraseña (usuario)',
   GRUPO_FAMILIAR_CREAR: 'Crear grupo familiar',
   GRUPO_FAMILIAR_ACTUALIZACION: 'Actualización grupo familiar',
   GRUPO_FAMILIAR_BAJA: 'Baja grupo familiar',
@@ -93,6 +95,7 @@ export const AdminAuditoria = () => {
               <option value="cuota">Cuota</option>
               <option value="disciplina">Disciplina</option>
               <option value="administrativo">Administrativo</option>
+              <option value="cuenta">Cuenta</option>
               <option value="grupo_familiar">Grupo familiar</option>
             </select>
           </label>

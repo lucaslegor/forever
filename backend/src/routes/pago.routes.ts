@@ -13,6 +13,9 @@ import { webhookRateLimiter } from '../middlewares/rateLimit.middleware';
 
 const router = Router();
 
+// GET /api/pagos/webhook/test - Prueba de accesibilidad del webhook
+router.get('/webhook/test', pagoController.webhookTest.bind(pagoController));
+
 // POST /api/pagos/webhook - Webhook de Mercado Pago (rate limit anti abuso)
 router.post('/webhook', webhookRateLimiter, pagoController.webhook.bind(pagoController));
 

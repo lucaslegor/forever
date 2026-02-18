@@ -239,6 +239,33 @@ export class GrupoFamiliarService {
 
     return { message: 'Grupo familiar eliminado correctamente' };
   }
+
+  /**
+   * Recalcula cuotaHermano para todos los grupos cuyo titular (esPrincipal) está en la disciplina dada.
+   * Se usa cuando se actualiza el precio de una disciplina (misma fórmula: precio × 1.6).
+   */
+  async actualizarCuotaHermanoPorCambioPrecioDisciplina(
+    disciplinaId: number,
+    nuevoPrecioMensual: number
+  ): Promise<void> {
+    const cuotaFamiliar = Math.round(nuevoPrecioMensual * 1.6 * 100) / 100;
+
+    const integrantesPrincipal = await prisma.grupoFamiliarIntegrante.findMany({
+      where: {
+        esPrincipal: true,
+        deportista: { disciplinaId },
+      },
+      select: { grupoId: true },
+    });
+
+    const grupoIds = [...new Set(integrantesPrincipal.map((i) => i.grupoId))];
+    if (grupoIds.length === 0) return;
+
+    await prisma.grupoFamiliar.updateMany({
+      where: { id: { in: grupoIds } },
+      data: { cuotaHermano: cuotaFamiliar },
+    });
+  }
 }
 
 export const grupoFamiliarService = new GrupoFamiliarService();

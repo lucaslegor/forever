@@ -311,9 +311,6 @@ export class CuotaService {
     const data = cuotas.map((c) => {
       const pago = c.pagos[0];
       const formaPago = !pago ? '' : (pago.medioPago?.toLowerCase().includes('efectivo') ? 'efectivo' : 'sistema');
-      const integranteGrupo = (c.deportista as any).grupoFamiliar?.[0];
-      const cuotaHermano = integranteGrupo?.grupo?.cuotaHermano != null ? Number(integranteGrupo.grupo.cuotaHermano) : null;
-      const monto = cuotaHermano != null ? cuotaHermano : Number(c.monto);
       return {
         id: c.id,
         deportistaId: c.deportistaId,
@@ -325,7 +322,7 @@ export class CuotaService {
         subcategoria: c.deportista.subcategoria?.nombre ?? '',
         mes: c.nroCuota,
         anio: c.anio,
-        monto,
+        monto: Number(c.monto),
         formaPago,
         estadoCuota: c.estadoCuota,
         fechaPago: pago?.fechaPago,
@@ -647,8 +644,9 @@ export class CuotaService {
   }
 
   /**
-   * Actualiza el monto de todas las cuotas pendientes/vencidas de una disciplina
-   * cuando cambia el precio mensual de la disciplina. Respeta grupo familiar y beca.
+   * Actualiza el monto solo de cuotas PENDIENTES y VENCIDAS cuando cambia el precio de la disciplina.
+   * No toca cuotas PAGADAS: lo ya cobrado queda con el valor histórico (reportes correctos).
+   * Respeta grupo familiar (cuotaHermano) y beca.
    */
   async actualizarMontosPorCambioPrecioDisciplina(disciplinaId: number, nuevoPrecio: number): Promise<number> {
     const cuotas = await prisma.cuota.findMany({

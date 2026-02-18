@@ -23,6 +23,8 @@ export interface CuotasPendientesVencidas {
   pendientes: number;
   vencidas: number;
   total: number;
+  montoPendientes: number;
+  montoVencidas: number;
 }
 
 export interface PagosPorMedioRow {

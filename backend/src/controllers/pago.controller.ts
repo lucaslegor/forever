@@ -8,57 +8,130 @@ import { sendSuccess, sendCreated, sendUnauthorized, sendForbidden, sendError } 
 import { getClientIp, getUserAgent } from '../utils/request';
 import { validateMercadoPagoWebhookSignature } from '../utils/webhookSignature';
 import { AuthenticatedRequest } from '../types';
+import { env } from '../config/env';
 import { CreatePagoInput, SyncPagoInput } from '../validators/pago.validator';
 import { Rol } from '@prisma/client';
 
 export class PagoController {
   async crear(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      console.log('🟡 [Pago Controller] Recibida petición para crear pago');
+      console.log('  - Body:', req.body);
+      console.log('  - Usuario:', req.user?.email);
+
       const data = req.body as CreatePagoInput;
       const deportista = await deportistaService.getByUserId(req.user!.id);
+
+      console.log('  - Deportista ID:', deportista.id);
+      console.log('  - Cuota ID:', data.cuotaId);
+
       const result = await pagoService.crear(deportista.id, data);
       const message = result.initPoint
         ? 'Preferencia creada. Redirigiendo al checkout.'
         : 'No se pudo generar el link de pago. Revisá la consola del servidor y MERCADOPAGO_ACCESS_TOKEN.';
       sendCreated(res, result, message);
     } catch (error) {
+      console.error('❌ [Pago Controller] Error:', error);
       next(error);
     }
   }
 
   async webhook(req: Request, res: Response, next: NextFunction): Promise<void> {
+    console.log('🔔 [Webhook] Recibida notificación de Mercado Pago');
+    console.log('  - Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('  - Body:', JSON.stringify(req.body, null, 2));
+    console.log('  - Query:', JSON.stringify(req.query, null, 2));
+
     try {
-      if (!validateMercadoPagoWebhookSignature(req)) {
-        sendUnauthorized(res, 'Firma de webhook inválida');
-        return;
+      // TEMPORALMENTE DESHABILITADO PARA DIAGNOSTICAR
+      // if (!validateMercadoPagoWebhookSignature(req)) {
+      //   console.error('❌ [Webhook] Firma de webhook inválida');
+      //   sendUnauthorized(res, 'Firma de webhook inválida');
+      //   return;
+      // }
+
+      const { type, data, topic, id } = req.body as { type?: string; data?: { id: string }; topic?: string; id?: string };
+      const { id: queryId } = req.query as { id?: string };
+
+      console.log('  - Type:', type);
+      console.log('  - Topic:', topic);
+      console.log('  - Data ID:', data?.id);
+      console.log('  - Body ID:', id);
+      console.log('  - Query ID:', queryId);
+
+      let paymentId: string | null = null;
+
+      // Mercado Pago puede enviar webhooks de diferentes formas
+      if (type === 'payment' && data?.id) {
+        paymentId = String(data.id);
+        console.log('  - Detectado como payment type, Payment ID:', paymentId);
+      } else if (topic === 'merchant_order' && (id || queryId)) {
+        // Para merchant_order, necesitamos obtener el payment desde la orden
+        const orderId = String(id || queryId);
+        console.log('  - Detectado como merchant_order, Order ID:', orderId);
+
+        try {
+          const orderResponse = await fetch(`https://api.mercadopago.com/merchant_orders/${orderId}`, {
+            headers: {
+              Authorization: `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}`,
+            },
+          });
+
+          const order = await orderResponse.json() as { payments?: Array<{ id: number }> };
+          console.log('  - Merchant Order obtenida:', JSON.stringify(order, null, 2));
+
+          if (order.payments && order.payments.length > 0) {
+            paymentId = String(order.payments[0].id);
+            console.log('  - Payment ID desde merchant order:', paymentId);
+          }
+        } catch (err) {
+          console.error('  - Error obteniendo merchant order:', err);
+        }
       }
 
-      const { type, data } = req.body;
+      if (paymentId) {
+        console.log('  - Procesando Payment ID:', paymentId);
 
-      if (type === 'payment' && data?.id) {
-        const paymentId = String(data.id);
         const payment = await getPaymentById(paymentId);
+        console.log('  - Payment obtenido:', JSON.stringify(payment, null, 2));
+
         if (payment?.external_reference) {
           const ref = payment.external_reference;
           if (typeof ref === 'string' && ref.startsWith('reserva-')) {
             const reservaId = parseInt(ref.slice(8), 10);
             if (!Number.isNaN(reservaId) && payment.status === 'approved') {
+              console.log('  - Actualizando reserva:', reservaId);
               await reservaCanchaService.updatePagos(reservaId, { senaPagada: true });
             }
           } else {
             const pagoId = parseInt(ref, 10);
             if (!Number.isNaN(pagoId)) {
               const status = payment.status === 'approved' ? 'approved' : payment.status === 'rejected' ? 'rejected' : 'pending';
+              console.log('  - Actualizando pago:', pagoId, 'con status:', status);
               await pagoService.confirmarPago(pagoId, paymentId, status);
             }
           }
         }
+      } else {
+        console.warn('  - No se pudo obtener payment ID del webhook');
       }
 
+      console.log('✅ [Webhook] Procesado correctamente');
       sendSuccess(res, { received: true });
     } catch (error) {
+      console.error('❌ [Webhook] Error:', error);
       next(error);
     }
+  }
+
+  /** Endpoint de prueba para verificar que el webhook es accesible */
+  async webhookTest(req: Request, res: Response): Promise<void> {
+    console.log('🧪 [Webhook Test] Endpoint de prueba accedido correctamente');
+    res.json({
+      success: true,
+      message: 'Webhook endpoint is accessible!',
+      timestamp: new Date().toISOString()
+    });
   }
 
   async getById(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {

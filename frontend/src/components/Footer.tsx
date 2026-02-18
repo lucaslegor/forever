@@ -1,8 +1,6 @@
 import { Instagram, Facebook, Mail, Phone, MapPin } from 'lucide-react';
 import styles from './Footer.module.css';
 
-const INSTAGRAM_URL = 'https://instagram.com';
-const FACEBOOK_URL = 'https://facebook.com';
 
 export const Footer = () => {
     return (
@@ -46,25 +44,25 @@ export const Footer = () => {
                             <div className={styles.addressItem}>
                                 <span className={styles.addressLabel}>Predio Entrenamiento y Localía:</span>
                                 <a
-                                    href="https://maps.google.com/?q=Calle+485+25+La+Plata"
+                                    href="https://share.google/9Zxscd6FY6iV3Me53"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={styles.footerLink}
                                 >
                                     <MapPin size={16} />
-                                    <span>Calle 485 esq. 25, La Plata</span>
+                                    <span>Avenida 7, B1923, La Plata</span>
                                 </a>
                             </div>
                             <div className={styles.addressItem}>
                                 <span className={styles.addressLabel}>Predio Oficial del Club:</span>
                                 <a
-                                    href="https://maps.google.com/?q=Calle+483+La+Plata"
+                                    href="https://maps.app.goo.gl/qELaNh7ELQyMemUr9"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={styles.footerLink}
                                 >
                                     <MapPin size={16} />
-                                    <span>Calle 483, La Plata</span>
+                                    <span>Calle 135 y 602, La Plata</span>
                                 </a>
                             </div>
                         </div>

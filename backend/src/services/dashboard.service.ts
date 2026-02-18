@@ -24,6 +24,10 @@ export interface CuotasPendientesVencidas {
   pendientes: number;
   vencidas: number;
   total: number;
+  /** Monto total por cobrar de cuotas pendientes */
+  montoPendientes: number;
+  /** Monto total por cobrar de cuotas vencidas */
+  montoVencidas: number;
 }
 
 export interface PagosPorMedioRow {
@@ -58,14 +62,15 @@ export interface DeudorRow {
 
 export class DashboardService {
   async getStats(anio?: number, mes?: number): Promise<DashboardStats> {
-    const wherePago: { estadoPago: EstadoPago; fechaPago?: { gte: Date; lt: Date } } = {
+    // Filtrar por período de la cuota (mes/año que se paga), no por fecha del pago
+    const wherePago: { estadoPago: EstadoPago; cuota?: { anio: number; nroCuota?: number } } = {
       estadoPago: EstadoPago.APROBADO,
     };
-    if (anio != null && mes != null) {
-      wherePago.fechaPago = {
-        gte: new Date(anio, mes - 1, 1),
-        lt: new Date(anio, mes, 1),
-      };
+    if (anio != null) {
+      wherePago.cuota = { anio: anio };
+      if (mes != null) {
+        wherePago.cuota.nroCuota = mes;
+      }
     }
 
     const pagos = await prisma.pago.findMany({
@@ -165,13 +170,33 @@ export class DashboardService {
       cantidad: d._count.id,
     }));
 
-    const cuotasPendientes = await prisma.cuota.count({ where: { estadoCuota: EstadoCuota.PENDIENTE } });
-    const cuotasVencidas = await prisma.cuota.count({ where: { estadoCuota: EstadoCuota.VENCIDA } });
+    const [aggPendientes, aggVencidas] = await Promise.all([
+      prisma.cuota.aggregate({
+        where: { estadoCuota: EstadoCuota.PENDIENTE },
+        _count: { id: true },
+        _sum: { monto: true },
+      }),
+      prisma.cuota.aggregate({
+        where: { estadoCuota: EstadoCuota.VENCIDA },
+        _count: { id: true },
+        _sum: { monto: true },
+      }),
+    ]);
+    const cuotasPendientes = aggPendientes._count.id;
+    const cuotasVencidas = aggVencidas._count.id;
+    const montoPendientes = Number(aggPendientes._sum.monto ?? 0);
+    const montoVencidas = Number(aggVencidas._sum.monto ?? 0);
 
     return {
       recaudacionPorClasificacion: recaudacionDeduped.sort((a, b) => b.totalRecaudado - a.totalRecaudado),
       deportistasPorDisciplina: deportistasPorDisciplinaRows.sort((a, b) => b.cantidad - a.cantidad),
-      cuotasPendientesVencidas: { pendientes: cuotasPendientes, vencidas: cuotasVencidas, total: cuotasPendientes + cuotasVencidas },
+      cuotasPendientesVencidas: {
+        pendientes: cuotasPendientes,
+        vencidas: cuotasVencidas,
+        total: cuotasPendientes + cuotasVencidas,
+        montoPendientes,
+        montoVencidas,
+      },
       pagosPorMedio,
       totalRecaudado,
     };

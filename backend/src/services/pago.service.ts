@@ -6,13 +6,41 @@ import {
   ErrorMessages,
 } from '../utils/errors';
 import { EstadoPago, EstadoCuota, EstadoDeportista } from '@prisma/client';
+import { env } from '../config/env';
 import { crearPreferenciaPago } from './mercadopago.service';
+
+const DOMINIO_EMAIL_FANTASMA = 'forever-club.com';
+
+/**
+ * Genera un email válido para el payer de Mercado Pago.
+ * 1) Usa el email del deportista si existe y no es el del vendedor (evita auto-compra en Sandbox).
+ * 2) Fallback: email fantasma usuario_[DNI_o_ID]@forever-club.com para DNI/ID sin caracteres problemáticos.
+ */
+function resolverPayerEmail(
+  emailCuenta: string | null | undefined,
+  dni: string,
+  deportistaId: number,
+  sellerEmail?: string
+): string {
+  const email = (emailCuenta ?? '').trim();
+  if (email.length > 0) {
+    const emailNorm = email.toLowerCase();
+    if (!sellerEmail || emailNorm !== sellerEmail) {
+      return email;
+    }
+  }
+  const local = (dni ?? '').replace(/\D/g, '') || String(deportistaId);
+  return `usuario_${local}@${DOMINIO_EMAIL_FANTASMA}`;
+}
 
 export class PagoService {
   async crear(deportistaId: number, data: CreatePagoDTO) {
     const cuota = await prisma.cuota.findUnique({
       where: { id: data.cuotaId },
-      include: { deportista: true, disciplina: true },
+      include: {
+        deportista: { include: { cuenta: { select: { email: true } } } },
+        disciplina: true,
+      },
     });
 
     if (!cuota) {
@@ -67,12 +95,19 @@ export class PagoService {
 
     const disciplinaNombre = cuota.disciplina?.nombre ?? 'Cuota';
     const tituloPreferencia = `Cuota For Ever - ${disciplinaNombre} ${cuota.nroCuota}/${cuota.anio}`;
+    const payerEmail = resolverPayerEmail(
+      cuota.deportista.cuenta?.email,
+      cuota.deportista.dni,
+      cuota.deportista.id,
+      env.MERCADOPAGO_SELLER_EMAIL
+    );
 
     try {
       const preferencia = await crearPreferenciaPago({
         pagoId: pago.id,
         title: tituloPreferencia,
         unitPrice: Number(cuota.monto),
+        payerEmail,
       });
       return {
         pago,
@@ -144,6 +179,61 @@ export class PagoService {
             where: { id: pago.deportistaId },
             data: { estado: EstadoDeportista.AL_DIA },
           });
+        }
+
+        // Manejo de Grupo Familiar (si aplica)
+        const integrante = await tx.grupoFamiliarIntegrante.findFirst({
+          where: { deportistaId: pago.deportistaId },
+          select: { grupoId: true },
+        });
+
+        if (integrante) {
+          const otrosIntegrantes = await tx.grupoFamiliarIntegrante.findMany({
+            where: {
+              grupoId: integrante.grupoId,
+              deportistaId: { not: pago.deportistaId },
+            },
+            select: { deportistaId: true },
+          });
+          const otrosIds = otrosIntegrantes.map((o) => o.deportistaId);
+          const cuotasGrupo = await tx.cuota.findMany({
+            where: {
+              deportistaId: { in: otrosIds },
+              anio: pago.cuota.anio,
+              nroCuota: pago.cuota.nroCuota,
+              disciplinaId: pago.cuota.disciplinaId,
+              estadoCuota: { in: [EstadoCuota.PENDIENTE, EstadoCuota.VENCIDA] },
+            },
+          });
+          const fechaPago = new Date();
+          for (const c of cuotasGrupo) {
+            await tx.pago.create({
+              data: {
+                cuotaId: c.id,
+                deportistaId: c.deportistaId,
+                monto: c.monto,
+                fechaPago,
+                medioPago: 'sistema',
+                estadoPago: EstadoPago.APROBADO,
+              },
+            });
+            await tx.cuota.update({
+              where: { id: c.id },
+              data: { estadoCuota: EstadoCuota.PAGADA },
+            });
+            const pendientesOtro = await tx.cuota.count({
+              where: {
+                deportistaId: c.deportistaId,
+                estadoCuota: { in: [EstadoCuota.PENDIENTE, EstadoCuota.VENCIDA] },
+              },
+            });
+            if (pendientesOtro === 0) {
+              await tx.deportista.update({
+                where: { id: c.deportistaId },
+                data: { estado: EstadoDeportista.AL_DIA },
+              });
+            }
+          }
         }
       }
     });

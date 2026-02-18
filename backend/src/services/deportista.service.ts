@@ -12,6 +12,15 @@ import { cuotaService } from './cuota.service';
 
 export class DeportistaService {
   async create(data: CreateDeportistaDTO) {
+    // Verificar DNI único primero (es el identificador principal del deportista en el formulario)
+    const existingDni = await prisma.deportista.findUnique({
+      where: { dni: data.dni },
+    });
+
+    if (existingDni) {
+      throw new ConflictError(ErrorMessages.DEPORTISTA_DNI_EXISTS);
+    }
+
     // Verificar email único
     const existingEmail = await prisma.cuentaUsuario.findUnique({
       where: { email: data.email },
@@ -19,15 +28,6 @@ export class DeportistaService {
 
     if (existingEmail) {
       throw new ConflictError(ErrorMessages.EMAIL_EXISTS);
-    }
-
-    // Verificar DNI único
-    const existingDni = await prisma.deportista.findUnique({
-      where: { dni: data.dni },
-    });
-
-    if (existingDni) {
-      throw new ConflictError(ErrorMessages.DEPORTISTA_DNI_EXISTS);
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -404,7 +404,7 @@ export class DeportistaService {
       data: { password: hashedPassword },
     });
 
-    return { message: 'Contraseña restablecida correctamente' };
+    return { message: 'Contraseña restablecida correctamente', deportistaId: id };
   }
 
   async resetPasswordByDni(dni: string, newPassword: string) {
@@ -423,7 +423,7 @@ export class DeportistaService {
       data: { password: hashedPassword },
     });
 
-    return { message: 'Contraseña restablecida correctamente' };
+    return { message: 'Contraseña restablecida correctamente', deportistaId: deportista.id };
   }
 }
 

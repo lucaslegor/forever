@@ -10,22 +10,27 @@ const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', '
 const now = new Date();
 const MES_ACTUAL = now.getMonth() + 1;
 const ANIO_ACTUAL = now.getFullYear();
+const ANIO_MINIMO = 2026;
+const ANIOS_OPCIONES = Array.from(
+  { length: (ANIO_ACTUAL + 1) - ANIO_MINIMO + 1 },
+  (_, i) => ANIO_MINIMO + i
+);
 
 export const AdminCuotas = () => {
     const { disciplinas, disciplinasNombres, generosNombres, getCategoriasOptions, getSubcategoriaOptions } = useOpcionesAdmin();
     const [cuotas, setCuotas] = useState<CuotaAdmin[]>([]);
     const [loadingGestion, setLoadingGestion] = useState(false);
     const [mesGenerar, setMesGenerar] = useState(MES_ACTUAL);
-    const [anioGenerar, setAnioGenerar] = useState(ANIO_ACTUAL);
+    const [anioGenerar, setAnioGenerar] = useState(Math.max(ANIO_ACTUAL, ANIO_MINIMO));
     const [generando, setGenerando] = useState(false);
     const [mensajeGenerar, setMensajeGenerar] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
-    const [anioListado, setAnioListado] = useState(ANIO_ACTUAL);
+    const [anioListado, setAnioListado] = useState(Math.max(ANIO_ACTUAL, ANIO_MINIMO));
     const [mesListado, setMesListado] = useState<number | ''>(MES_ACTUAL);
     const [listadoGeneradas, setListadoGeneradas] = useState<any[]>([]);
     const [loadingListado, setLoadingListado] = useState(false);
     const [borrandoGeneracion, setBorrandoGeneracion] = useState<string | null>(null);
     const [mostrarListadoGeneradas, setMostrarListadoGeneradas] = useState(true);
-    const [filtroAnio, setFiltroAnio] = useState(ANIO_ACTUAL);
+    const [filtroAnio, setFiltroAnio] = useState(Math.max(ANIO_ACTUAL, ANIO_MINIMO));
     const [filtroMes, setFiltroMes] = useState<number | ''>(MES_ACTUAL);
     const [filtroEstado, setFiltroEstado] = useState<string>('');
     const [filtroEfectivo, setFiltroEfectivo] = useState<boolean | 'todos'>('todos');
@@ -220,7 +225,7 @@ export const AdminCuotas = () => {
                             className={styles.selectGenerar}
                             disabled={generando}
                         >
-                            {[ANIO_ACTUAL - 1, ANIO_ACTUAL, ANIO_ACTUAL + 1].map((a) => (
+                            {ANIOS_OPCIONES.map((a) => (
                                 <option key={a} value={a}>{a}</option>
                             ))}
                         </select>
@@ -266,7 +271,7 @@ export const AdminCuotas = () => {
                         <label className={styles.labelGenerar}>
                             <span>Año</span>
                             <select value={anioListado} onChange={(e) => setAnioListado(Number(e.target.value))} className={styles.selectGenerar}>
-                                {[ANIO_ACTUAL - 1, ANIO_ACTUAL, ANIO_ACTUAL + 1].map((a) => (
+                                {ANIOS_OPCIONES.map((a) => (
                                     <option key={a} value={a}>{a}</option>
                                 ))}
                             </select>
@@ -340,7 +345,7 @@ export const AdminCuotas = () => {
                         <label>
                             <span className={styles.filterLabel}>Año</span>
                             <select value={filtroAnio} onChange={(e) => { setFiltroAnio(Number(e.target.value)); setPage(1); }}>
-                                {[ANIO_ACTUAL - 1, ANIO_ACTUAL, ANIO_ACTUAL + 1].map((a) => (
+                                {ANIOS_OPCIONES.map((a) => (
                                     <option key={a} value={a}>{a}</option>
                                 ))}
                             </select>

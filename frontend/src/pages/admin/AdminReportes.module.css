@@ -43,6 +43,7 @@
 }
 .cardStatValue { font-size: 1.5rem; font-weight: 700; color: var(--color-blue); }
 .cardStatLabel { font-size: 0.8rem; color: #555; margin-top: 0.25rem; }
+.cardStatSub { font-size: 0.75rem; color: #666; margin-top: 0.2rem; }
 .cardRecaudacionLabel { font-size: 0.8rem; color: #555; margin-bottom: 0.35rem; line-height: 1.3; }
 .cardsRowEmpty { width: 100%; }
 

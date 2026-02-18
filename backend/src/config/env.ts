@@ -43,6 +43,8 @@ export const env = {
   MERCADOPAGO_WEBHOOK_URL: process.env.MERCADOPAGO_WEBHOOK_URL || '',
   /** Clave secreta de Webhooks (Tus integraciones > Webhooks). Opcional; si está definida se valida x-signature. */
   MERCADOPAGO_WEBHOOK_SECRET: process.env.MERCADOPAGO_WEBHOOK_SECRET || '',
+  /** Email del vendedor (cuenta MP). Si el pagador usa el mismo email (ej. en Sandbox), se fuerza email fantasma para evitar auto-compra. Opcional. */
+  MERCADOPAGO_SELLER_EMAIL: (process.env.MERCADOPAGO_SELLER_EMAIL || '').trim().toLowerCase() || undefined,
   MAX_LOGIN_ATTEMPTS: parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10),
   LOGIN_BLOCK_TIME: parseInt(process.env.LOGIN_BLOCK_TIME || '15', 10),
   CLUB_NAME: process.env.CLUB_NAME || 'Club Deportivo Forever',

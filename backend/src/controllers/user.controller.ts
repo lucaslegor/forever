@@ -22,6 +22,17 @@ export class UserController {
       const userId = req.user!.id;
       const data = req.body as UpdateProfileInput;
       const result = await userService.updateProfile(userId, data);
+      if (data.password != null && data.password.trim() !== '') {
+        await auditoriaService.registrar({
+          cuentaId: userId,
+          accion: ACCIONES.CUENTA_CAMBIO_CONTRASEÑA,
+          entidad: 'cuenta',
+          entidadId: userId,
+          detalles: JSON.stringify({ cambioContraseña: true }),
+          ip: getClientIp(req),
+          userAgent: getUserAgent(req),
+        });
+      }
       sendSuccess(res, result, 'Perfil actualizado correctamente');
     } catch (error) {
       next(error);

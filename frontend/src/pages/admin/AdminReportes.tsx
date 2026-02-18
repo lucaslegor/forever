@@ -9,6 +9,11 @@ import styles from './AdminReportes.module.css';
 const MESES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const now = new Date();
 const ANIO_ACTUAL = now.getFullYear();
+const ANIO_MINIMO = 2026;
+const ANIOS_OPCIONES = Array.from(
+  { length: Math.max(1, ANIO_ACTUAL - ANIO_MINIMO + 1) },
+  (_, i) => ANIO_MINIMO + i
+);
 
 function formatMoney(n: number): string {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(n);
@@ -20,7 +25,7 @@ export const AdminReportes = () => {
   const [deudores, setDeudores] = useState<DeudorRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingDeudores, setLoadingDeudores] = useState(true);
-  const [anio, setAnio] = useState<number | ''>(ANIO_ACTUAL);
+  const [anio, setAnio] = useState<number | ''>(Math.max(ANIO_ACTUAL, ANIO_MINIMO));
   const [mes, setMes] = useState<number | ''>('');
   const [filtroDisciplinaId, setFiltroDisciplinaId] = useState<number | ''>('');
   const [filtroGeneroId, setFiltroGeneroId] = useState<number | ''>('');
@@ -222,7 +227,7 @@ export const AdminReportes = () => {
             Año
             <select value={anio} onChange={(e) => setAnio(e.target.value === '' ? '' : Number(e.target.value))}>
               <option value="">Todos</option>
-              {[ANIO_ACTUAL, ANIO_ACTUAL - 1, ANIO_ACTUAL - 2].map((y) => (
+              {ANIOS_OPCIONES.map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
@@ -257,10 +262,12 @@ export const AdminReportes = () => {
               <div className={styles.cardStat}>
                 <div className={styles.cardStatValue}>{stats.cuotasPendientesVencidas.pendientes}</div>
                 <div className={styles.cardStatLabel}>Cuotas pendientes</div>
+                <div className={styles.cardStatSub}>{formatMoney(stats.cuotasPendientesVencidas.montoPendientes)} por cobrar</div>
               </div>
               <div className={styles.cardStat}>
                 <div className={styles.cardStatValue}>{stats.cuotasPendientesVencidas.vencidas}</div>
                 <div className={styles.cardStatLabel}>Cuotas vencidas</div>
+                <div className={styles.cardStatSub}>{formatMoney(stats.cuotasPendientesVencidas.montoVencidas)} por cobrar</div>
               </div>
             </div>
             <div className={styles.filtersRow}>
@@ -454,7 +461,7 @@ export const AdminReportes = () => {
               onChange={(e) => setFiltroAnioDeudores(e.target.value === '' ? '' : Number(e.target.value))}
             >
               <option value="">Todos</option>
-              {[ANIO_ACTUAL, ANIO_ACTUAL - 1, ANIO_ACTUAL - 2].map((y) => (
+              {ANIOS_OPCIONES.map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>

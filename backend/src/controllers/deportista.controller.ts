@@ -142,6 +142,15 @@ export class DeportistaController {
       const id = parseInt(req.params.id as string, 10);
       const { newPassword } = req.body;
       const result = await deportistaService.resetPassword(id, newPassword);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DEPORTISTA_RESET_PASSWORD,
+        entidad: 'deportista',
+        entidadId: result.deportistaId ?? id,
+        detalles: JSON.stringify({ deportistaId: result.deportistaId ?? id }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result);
     } catch (error) {
       next(error);
@@ -152,6 +161,15 @@ export class DeportistaController {
     try {
       const { dni, newPassword } = req.body;
       const result = await deportistaService.resetPasswordByDni(dni, newPassword);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DEPORTISTA_RESET_PASSWORD,
+        entidad: 'deportista',
+        entidadId: result.deportistaId ?? null,
+        detalles: JSON.stringify({ dni }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result);
     } catch (error) {
       next(error);
