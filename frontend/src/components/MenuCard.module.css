@@ -1,7 +1,8 @@
 .menuCard {
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(0, 51, 102, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+    border: 1px solid rgba(0, 51, 102, 0.1);
     padding: var(--spacing-xl);
     width: 100%;
     max-width: 700px;
@@ -15,16 +16,33 @@
 .menuTitle {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--color-black);
+    color: var(--color-dark-gray);
     margin-bottom: var(--spacing-xs);
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.waveEmoji {
+    display: inline-block;
+    animation: wave 1.2s ease-in-out infinite;
+    transform-origin: 70% 70%;
+}
+
+@keyframes wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(20deg); }
+    75% { transform: rotate(-10deg); }
 }
 
 .menuSubtitle {
-    font-size: 0.875rem;
-    color: var(--color-gray);
-    font-weight: 500;
+    font-size: 0.8125rem;
+    color: var(--color-blue);
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.08em;
 }
 
 .menuList {
@@ -43,12 +61,15 @@
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
-    color: var(--color-black);
+    color: var(--color-dark-gray);
     text-align: left;
     transition: var(--transition);
-    border-bottom: 1px solid #E5E5E5;
+    border-bottom: 1px solid rgba(0, 51, 102, 0.08);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .menuItem:last-child {
@@ -56,12 +77,13 @@
 }
 
 .menuItem:hover {
-    background-color: #F5F5F5;
+    background: rgba(0, 51, 102, 0.06);
     padding-left: calc(var(--spacing-lg) + 0.5rem);
+    color: var(--color-dark-gray);
 }
 
 .menuItem:active {
-    background-color: #EBEBEB;
+    background: rgba(0, 51, 102, 0.1);
 }
 
 .menuItemIcon {
@@ -72,6 +94,29 @@
 .menuItem:hover .menuItemIcon {
     color: var(--color-blue);
     transform: translateX(4px);
+}
+
+.menuItemLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: inherit;
+}
+
+.newBadge {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    min-height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-blue);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
 @media (max-width: 768px) {
@@ -91,5 +136,34 @@
 
     .menuItem:hover {
         padding-left: calc(var(--spacing-md) + 0.5rem);
+    }
+}
+
+@media (max-width: 480px) {
+    .menuCard {
+        margin: 0 var(--spacing-xs);
+        padding: var(--spacing-md);
+    }
+
+    .menuHeader {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .menuTitle {
+        font-size: 1.1rem;
+    }
+
+    .menuSubtitle {
+        font-size: 0.75rem;
+    }
+
+    .menuItem {
+        font-size: 0.875rem;
+        padding: var(--touch-min) var(--spacing-md);
+        min-height: var(--touch-min);
+    }
+
+    .menuItem:hover {
+        padding-left: var(--spacing-md);
     }
 }

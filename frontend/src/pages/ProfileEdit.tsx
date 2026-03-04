@@ -1,56 +1,20 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { ArrowLeft, Save, CheckCircle, XCircle, Pencil, Trash2, Lock } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { LoadingScreen } from '../components/LoadingScreen';
+import { useAuth } from '../context/AuthContext';
 import { deportistaService } from '../services/deportista.service';
 import { authService } from '../services/auth.service';
+import { disciplinaService } from '../services/disciplina.service';
+import { clasificacionService } from '../services/clasificacion.service';
 import styles from './ProfileEdit.module.css';
 
-// Opciones fijas
-const DISCIPLINAS = ['Futbol', 'Hockey'] as const;
+/** Género fijo: solo Masculino y Femenino (no se agregan desde la app). */
 const GENEROS = ['Masculino', 'Femenino'] as const;
-const CATEGORIAS_GENERALES = ['Mayores', 'Juveniles', 'Infantiles'] as const;
-
-// Subcategorías Fútbol: según género y categoría general
-const SUBCATEGORIAS_FUTBOL: Record<string, string[]> = {
-    'Mayores-Masculino': ['Cuarta', 'Reserva', 'Senior', 'Primera'],
-    'Mayores-Femenino': ['Cuarta', 'Tercera', '+35', 'Primera'],
-    'Juveniles-Masculino': ['Pre-novena', 'Novena', 'Octava', 'Séptima', 'Sexta', 'Quinta'],
-    'Infantiles-Masculino': ['6 años', '7 años', '8 años', '9 años', '10 años', '11 años'],
-    'Juveniles-Femenino': ['Sub 10', 'Sub 11', 'Sub 12', 'Sub 13', 'Sub 14'],
-    'Infantiles-Femenino': ['Sub 10', 'Sub 11', 'Sub 12', 'Sub 13', 'Sub 14'],
-};
-
-// Subcategorías Hockey: por categoría general (Infantiles, Juveniles, Mayores)
-const SUBCATEGORIAS_HOCKEY: Record<string, string[]> = {
-    Infantiles: ['10ma', '9na', '8va'],
-    Juveniles: ['Sub 14', 'Sub 17'],
-    Mayores: ['Intermedia', 'Primera'],
-};
-
-// Hockey femenino: Infantiles, Juveniles, Mayores. Hockey masculino: solo Mayores.
-function getCategoriasGeneralesOptions(disciplina: string, genero: string): readonly string[] {
-    if (disciplina === 'Hockey' && genero === 'Masculino') {
-        return ['Mayores'];
-    }
-    return CATEGORIAS_GENERALES;
-}
-
-function getSubcategoriaOptions(disciplina: string, genero: string, categoriaGeneral: string): string[] {
-    if (!disciplina || !categoriaGeneral) return [];
-    if (disciplina === 'Hockey') {
-        if (genero === 'Masculino') return SUBCATEGORIAS_HOCKEY['Mayores'] ?? [];
-        return SUBCATEGORIAS_HOCKEY[categoriaGeneral] ?? [];
-    }
-    if (disciplina === 'Futbol' && genero) {
-        const key = `${categoriaGeneral}-${genero}`;
-        return SUBCATEGORIAS_FUTBOL[key] ?? [];
-    }
-    return [];
-}
 
 // Schema base + validación condicional
 const profileSchema = yup.object({
@@ -58,19 +22,10 @@ const profileSchema = yup.object({
     apellido: yup.string().required('El apellido es requerido'),
     dni: yup.string().required('El DNI es requerido'),
     fechaNac: yup.string().required('La fecha de nacimiento es requerida'),
-    disciplina: yup.string().oneOf([...DISCIPLINAS]).required('Seleccioná una disciplina'),
+    disciplina: yup.string().required('Seleccioná una disciplina'),
     genero: yup.string().oneOf([...GENEROS]).required('Seleccioná un género'),
-    categoriaGeneral: yup.string().when(['disciplina', 'genero'], {
-        is: (disciplina: string, g: string) => disciplina === 'Hockey' && g === 'Masculino',
-        then: (s) => s.oneOf(['Mayores']).required('Seleccioná una categoría'),
-        otherwise: (s) => s.oneOf([...CATEGORIAS_GENERALES]).required('Seleccioná una categoría'),
-    }),
-    subcategoria: yup.string().when(['disciplina', 'genero', 'categoriaGeneral'], {
-        is: (disciplina: string, genero: string, categoriaGeneral: string) =>
-            Boolean(disciplina && categoriaGeneral && getSubcategoriaOptions(disciplina, genero || '', categoriaGeneral).length > 0),
-        then: (schema) => schema.required('Seleccioná una subcategoría'),
-        otherwise: (schema) => schema.optional(),
-    }),
+    categoriaGeneral: yup.string().required('Seleccioná una categoría'),
+    subcategoria: yup.string().optional(),
     email: yup.string().optional().email('Ingresá un email válido'),
     adultoNombre: yup.string().when('categoriaGeneral', {
         is: (val: string) => val === 'Juveniles' || val === 'Infantiles',
@@ -140,6 +95,10 @@ export const ProfileEdit = () => {
     const navigate = useNavigate();
     const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [profileLoaded, setProfileLoaded] = useState(false);
+    const [disciplinasNombres, setDisciplinasNombres] = useState<string[]>([]);
+    const [categoriasNombres, setCategoriasNombres] = useState<string[]>([]);
+    const [categoriasExcepcion, setCategoriasExcepcion] = useState<Record<string, string[]>>({});
+    const [subcategoriasPorKey, setSubcategoriasPorKey] = useState<Record<string, string[]>>({});
     const [adultoModo, setAdultoModo] = useState<AdultoModo>('agregar');
     const [adultosList, setAdultosList] = useState<AdultoResponsable[]>([]);
     const [adultoEditIndex, setAdultoEditIndex] = useState<number | null>(null);
@@ -164,64 +123,143 @@ export const ProfileEdit = () => {
         resolver: yupResolver(profileSchema) as any,
     });
 
-    // Carga del perfil desde el backend
+    const { user } = useAuth();
+
+    // Carga disciplinas (para el selector de perfil) y perfil (solo deportistas)
     useEffect(() => {
-        const loadProfile = async () => {
+        const load = async () => {
+            if (user?.role !== 'deportista') {
+                setProfileLoaded(true);
+                return;
+            }
             try {
-                const response = await deportistaService.getMiPerfil();
-                if (response.success && response.data) {
-                    const data = response.data;
+                const [perfilRes, disciplinasRes, opcionesRes] = await Promise.all([
+                    deportistaService.getMiPerfil(),
+                    disciplinaService.getAll(false),
+                    clasificacionService.getOpcionesCompletas(),
+                ]);
+                let nombres: string[] = [];
+                if (disciplinasRes.success && Array.isArray(disciplinasRes.data)) {
+                    nombres = (disciplinasRes.data as { nombre: string }[]).map((d) => d.nombre);
+                }
+                let categoriasList: string[] = [];
+                let excepcion: Record<string, string[]> = {};
+                let subcatPorKey: Record<string, string[]> = {};
+                if (opcionesRes.success && opcionesRes.data) {
+                    const opc = opcionesRes.data as {
+                        categorias?: Array<{ nombre: string }>;
+                        categoriasExcepcion?: Record<string, string[]>;
+                        subcategoriasPorKey?: Record<string, string[] | Array<{ id: number; nombre: string }>>;
+                    };
+                    categoriasList = (opc.categorias ?? []).map((c) => c.nombre);
+                    excepcion = opc.categoriasExcepcion ?? {};
+                    const raw = opc.subcategoriasPorKey ?? {};
+                    // Normalizar: el backend puede enviar { id, nombre }[]; el perfil usa solo nombres (string[])
+                    subcatPorKey = Object.fromEntries(
+                        Object.entries(raw).map(([k, arr]) => [
+                            k,
+                            Array.isArray(arr) ? arr.map((x: string | { id: number; nombre: string }) => (typeof x === 'string' ? x : x.nombre)) : [],
+                        ])
+                    );
+                }
+                if (perfilRes.success && perfilRes.data) {
+                    const data = perfilRes.data as unknown as {
+                        nombre: string;
+                        apellido: string;
+                        dni: string;
+                        fechaNac?: string;
+                        disciplina?: { nombre: string };
+                        genero?: { nombre: string };
+                        categoria?: { nombre: string };
+                        subcategoria?: { nombre: string };
+                        cuenta?: { email?: string };
+                        adultosResponsables?: Array<{ nombre: string; apellido: string; dni: string; email?: string; telefono?: string }>;
+                        adultoResponsable?: { nombre: string; apellido: string; dni: string; email?: string; telefono?: string };
+                    };
+                    const disciplinaNombre = data.disciplina?.nombre || '';
+                    const categoriaNombre = data.categoria?.nombre || '';
+                    const subcategoriaNombre = data.subcategoria?.nombre || '';
+                    if (disciplinaNombre && !nombres.includes(disciplinaNombre)) {
+                        nombres = [...nombres, disciplinaNombre].sort();
+                    }
+                    if (categoriaNombre && !categoriasList.includes(categoriaNombre)) {
+                        categoriasList = [...categoriasList, categoriaNombre].sort();
+                    }
+                    if (subcategoriaNombre && disciplinaNombre && categoriaNombre) {
+                        const keyTriple = `${disciplinaNombre}|${categoriaNombre}|${data.genero?.nombre || ''}`;
+                        const keyDoble = `${disciplinaNombre}|${categoriaNombre}`;
+                        if (!subcatPorKey[keyTriple]?.includes(subcategoriaNombre) && !subcatPorKey[keyDoble]?.includes(subcategoriaNombre)) {
+                            subcatPorKey = { ...subcatPorKey, [keyTriple]: [...(subcatPorKey[keyTriple] ?? []), subcategoriaNombre] };
+                        }
+                    }
+                    const genero = data.genero?.nombre || '';
+                    const categoriaGeneral = data.categoria?.nombre || '';
                     reset({
                         nombre: data.nombre,
                         apellido: data.apellido,
                         dni: data.dni,
                         fechaNac: data.fechaNac?.split('T')[0] || '',
-                        disciplina: data.disciplina?.nombre || '',
-                        genero: data.genero?.nombre || '',
-                        categoriaGeneral: data.categoria?.nombre || '',
-                        subcategoria: data.subcategoria?.nombre || '',
+                        disciplina: disciplinaNombre,
+                        genero: (genero === 'Masculino' || genero === 'Femenino' ? genero : '') as ProfileFormValues['genero'],
+                        categoriaGeneral: categoriaGeneral as ProfileFormValues['categoriaGeneral'],
+                        subcategoria: subcategoriaNombre,
                         email: data.cuenta?.email || '',
-                        adultoNombre: data.adultoResponsable?.nombre || '',
-                        adultoApellido: data.adultoResponsable?.apellido || '',
-                        adultoDni: data.adultoResponsable?.dni || '',
-                        adultoEmail: data.adultoResponsable?.email || '',
-                        adultoTelefono: data.adultoResponsable?.telefono || '',
+                        adultoNombre: (data.adultosResponsables?.[0] || data.adultoResponsable)?.nombre || '',
+                        adultoApellido: (data.adultosResponsables?.[0] || data.adultoResponsable)?.apellido || '',
+                        adultoDni: (data.adultosResponsables?.[0] || data.adultoResponsable)?.dni || '',
+                        adultoEmail: (data.adultosResponsables?.[0] || data.adultoResponsable)?.email || '',
+                        adultoTelefono: (data.adultosResponsables?.[0] || data.adultoResponsable)?.telefono || '',
                     });
-                    
-                    // Configurar adulto responsable solo si NO es Mayores y existe
-                    const categoria = data.categoria?.nombre || '';
-                    const esMayores = categoria === 'Mayores';
-                    
-                    if (!esMayores && data.adultoResponsable) {
-                        setAdultosList([{
-                            nombre: data.adultoResponsable.nombre,
-                            apellido: data.adultoResponsable.apellido,
-                            dni: data.adultoResponsable.dni,
-                            email: data.adultoResponsable.email,
-                            telefono: data.adultoResponsable.telefono,
-                        }]);
+                    const esMayores = categoriaGeneral === 'Mayores';
+                    const adultos = Array.isArray(data.adultosResponsables) && data.adultosResponsables.length > 0
+                        ? data.adultosResponsables
+                        : data.adultoResponsable
+                            ? [data.adultoResponsable]
+                            : [];
+                    if (!esMayores && adultos.length > 0) {
+                        setAdultosList(adultos.map((a: any) => ({
+                            nombre: a.nombre,
+                            apellido: a.apellido,
+                            dni: a.dni,
+                            email: a.email,
+                            telefono: a.telefono,
+                        })));
                         setAdultoModo('ver');
                     } else {
                         setAdultosList([]);
                         setAdultoModo('agregar');
                     }
                 }
+                setDisciplinasNombres(nombres);
+                setCategoriasNombres(categoriasList);
+                setCategoriasExcepcion(excepcion);
+                setSubcategoriasPorKey(subcatPorKey);
                 setProfileLoaded(true);
             } catch (error) {
-                console.error('Error cargando perfil:', error);
                 setProfileLoaded(true);
             }
         };
-        loadProfile();
-    }, [reset]);
+        load();
+    }, [reset, user?.role]);
 
     const disciplina = watch('disciplina');
     const genero = watch('genero');
     const categoriaGeneral = watch('categoriaGeneral');
 
-    const categoriasGeneralesOptions = getCategoriasGeneralesOptions(disciplina || '', genero || '');
-    const subcategoriaOptions = getSubcategoriaOptions(disciplina || '', genero || '', categoriaGeneral || '');
-    const isMayores = categoriaGeneral === 'Mayores';
+    const categoriasGeneralesOptions = useMemo(() => {
+        const key = `${disciplina || ''}|${genero || ''}`;
+        if (categoriasExcepcion[key]?.length) return categoriasExcepcion[key];
+        return categoriasNombres;
+    }, [disciplina, genero, categoriasExcepcion, categoriasNombres]);
+
+    const subcategoriaOptions = useMemo(() => {
+        const keyTriple = `${disciplina || ''}|${categoriaGeneral || ''}|${genero || ''}`;
+        const keyDoble = `${disciplina || ''}|${categoriaGeneral || ''}`;
+        if (subcategoriasPorKey[keyTriple]?.length) return subcategoriasPorKey[keyTriple];
+        if (subcategoriasPorKey[keyDoble]?.length) return subcategoriasPorKey[keyDoble];
+        return [];
+    }, [disciplina, genero, categoriaGeneral, subcategoriasPorKey]);
+
     const isMenor = categoriaGeneral === 'Juveniles' || categoriaGeneral === 'Infantiles';
 
     const onSubmit = async (data: ProfileFormValues) => {
@@ -233,25 +271,41 @@ export const ProfileEdit = () => {
                 email: data.adultoEmail ?? '',
                 telefono: data.adultoTelefono ?? '',
             };
+            const newList =
+                adultoModo === 'agregar'
+                    ? [...adultosList, nuevo]
+                    : adultoModo === 'editar' && adultoEditIndex !== null
+                        ? adultosList.map((a, i) => (i === adultoEditIndex ? nuevo : a))
+                        : adultosList;
+
+            setAdultosList(newList);
             if (adultoModo === 'agregar') {
-                setAdultosList((prev) => [...prev, nuevo]);
                 setValue('adultoNombre', '');
                 setValue('adultoApellido', '');
                 setValue('adultoDni', '');
                 setValue('adultoEmail', '');
                 setValue('adultoTelefono', '');
-                setNotification({ type: 'success', message: 'Adulto responsable agregado a la lista' });
-            } else if (adultoModo === 'editar' && adultoEditIndex !== null) {
-                setAdultosList((prev) => prev.map((a, i) => (i === adultoEditIndex ? nuevo : a)));
+            } else if (adultoEditIndex !== null) {
                 setAdultoEditIndex(null);
-                setNotification({ type: 'success', message: 'Datos del adulto responsable actualizados' });
+            }
+
+            const res = await deportistaService.updateMiPerfil({
+                adultosResponsables: newList,
+            });
+            if (res.success) {
+                setNotification({
+                    type: 'success',
+                    message: adultoModo === 'agregar' ? 'Adulto responsable agregado y guardado' : 'Datos del adulto responsable actualizados',
+                });
+            } else {
+                setNotification({ type: 'error', message: (res as { error?: string }).error || 'Error al guardar' });
             }
             await new Promise((r) => setTimeout(r, 400));
             setAdultoModo('ver');
             setTimeout(() => setNotification(null), 3000);
-        } catch (error) {
-            console.error('Error saving profile:', error);
-            setNotification({ type: 'error', message: 'Error al guardar los datos' });
+        } catch (error: any) {
+            const msg = error?.response?.data?.error || error?.message || 'Error al guardar los datos';
+            setNotification({ type: 'error', message: msg });
             setTimeout(() => setNotification(null), 3000);
         }
     };
@@ -288,6 +342,10 @@ export const ProfileEdit = () => {
             setContraseñaError('La nueva contraseña debe tener al menos 6 caracteres.');
             return;
         }
+        if (!/[A-Z]/.test(contraseñaForm.nuevaContraseña) || !/[0-9]/.test(contraseñaForm.nuevaContraseña)) {
+            setContraseñaError('La nueva contraseña debe tener al menos una mayúscula y un número.');
+            return;
+        }
         if (contraseñaForm.nuevaContraseña !== contraseñaForm.confirmarContraseña) {
             setContraseñaError('La nueva contraseña y la confirmación no coinciden.');
             return;
@@ -314,11 +372,20 @@ export const ProfileEdit = () => {
         }
     };
 
-    const handleEliminarAdulto = (index: number) => {
-        setAdultosList((prev) => {
-            if (prev.length <= 1) return prev; // Siempre debe haber al menos un adulto responsable (cargado por admin)
-            return prev.filter((_, i) => i !== index);
-        });
+    const handleEliminarAdulto = async (index: number) => {
+        const newList = adultosList.filter((_, i) => i !== index);
+        if (newList.length < 1) return; // Al menos uno
+        setAdultosList(newList);
+        try {
+            const res = await deportistaService.updateMiPerfil({ adultosResponsables: newList });
+            if (res.success) {
+                setNotification({ type: 'success', message: 'Adulto responsable eliminado' });
+                setTimeout(() => setNotification(null), 3000);
+            }
+        } catch (e) {
+            setNotification({ type: 'error', message: 'Error al eliminar' });
+            setTimeout(() => setNotification(null), 3000);
+        }
     };
 
     if (!profileLoaded) {
@@ -326,7 +393,35 @@ export const ProfileEdit = () => {
             <div className={styles.profilePage}>
                 <main className={styles.mainContent}>
                     <div className={styles.formCard}>
-                        <p className={styles.loadingText}>Cargando perfil...</p>
+                        <LoadingScreen message="Cargando perfil" fullPage={false} />
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        );
+    }
+
+    if (user?.role !== 'deportista') {
+        return (
+            <div className={styles.profilePage}>
+                <header className={styles.header}>
+                    <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
+                        <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
+                        <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
+                    </Link>
+                    <h1 className={styles.title}>Perfil</h1>
+                    <div className={styles.headerRight} aria-hidden />
+                </header>
+                <main className={styles.mainContent}>
+                    <div className={styles.formCard}>
+                        <p className={styles.adminNotice}>
+                            Esta página es para que los deportistas editen su perfil. Como administrador podés gestionar perfiles desde el panel de administración.
+                        </p>
+                        <div className={styles.actions}>
+                            <button type="button" className={styles.buttonSecondary} onClick={() => navigate('/dashboard')}>
+                                <ArrowLeft size={18} /> Volver al inicio
+                            </button>
+                        </div>
                     </div>
                 </main>
                 <Footer />
@@ -337,10 +432,10 @@ export const ProfileEdit = () => {
     return (
         <div className={styles.profilePage}>
             <header className={styles.header}>
-                <div className={styles.headerLeft}>
+                <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
-                </div>
+                </Link>
                 <h1 className={styles.title}>Perfil</h1>
                 <div className={styles.headerRight} aria-hidden />
             </header>
@@ -412,7 +507,7 @@ export const ProfileEdit = () => {
                                         disabled
                                     >
                                         <option value="">Seleccionar disciplina</option>
-                                        {DISCIPLINAS.map((d) => (
+                                        {disciplinasNombres.map((d) => (
                                             <option key={d} value={d}>{d}</option>
                                         ))}
                                     </select>
@@ -682,7 +777,7 @@ export const ProfileEdit = () => {
                                     className={styles.input}
                                     value={contraseñaForm.nuevaContraseña}
                                     onChange={(e) => setContraseñaForm((f) => ({ ...f, nuevaContraseña: e.target.value }))}
-                                    placeholder="Mínimo 6 caracteres"
+                                    placeholder="Mín. 6 caracteres, una mayúscula y un número"
                                     autoComplete="new-password"
                                     minLength={6}
                                     required

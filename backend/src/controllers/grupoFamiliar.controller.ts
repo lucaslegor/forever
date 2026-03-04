@@ -1,7 +1,9 @@
 import { Response, NextFunction } from 'express';
 import { grupoFamiliarService } from '../services/grupoFamiliar.service';
 import { deportistaService } from '../services/deportista.service';
+import { auditoriaService, ACCIONES } from '../services/auditoria.service';
 import { sendSuccess, sendCreated } from '../utils/response';
+import { getClientIp, getUserAgent } from '../utils/request';
 import { AuthenticatedRequest } from '../types';
 import {
   CreateGrupoFamiliarInput,
@@ -23,6 +25,15 @@ export class GrupoFamiliarController {
     try {
       const data = req.body as CreateGrupoFamiliarInput;
       const result = await grupoFamiliarService.create(data);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.GRUPO_FAMILIAR_CREAR,
+        entidad: 'grupo_familiar',
+        entidadId: result.id,
+        detalles: JSON.stringify({ nombre: result.nombre }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendCreated(res, result, 'Grupo familiar creado exitosamente');
     } catch (error) {
       next(error);
@@ -55,6 +66,15 @@ export class GrupoFamiliarController {
       const id = parseInt(req.params.id as string, 10);
       const data = req.body as UpdateGrupoFamiliarInput;
       const result = await grupoFamiliarService.update(id, data);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.GRUPO_FAMILIAR_ACTUALIZACION,
+        entidad: 'grupo_familiar',
+        entidadId: id,
+        detalles: JSON.stringify({ cambios: Object.keys(data) }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result, 'Grupo familiar actualizado correctamente');
     } catch (error) {
       next(error);
@@ -65,6 +85,15 @@ export class GrupoFamiliarController {
     try {
       const id = parseInt(req.params.id as string, 10);
       const result = await grupoFamiliarService.delete(id);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.GRUPO_FAMILIAR_BAJA,
+        entidad: 'grupo_familiar',
+        entidadId: id,
+        detalles: JSON.stringify({ grupoFamiliarId: id }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result);
     } catch (error) {
       next(error);

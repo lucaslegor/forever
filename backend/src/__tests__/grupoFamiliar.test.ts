@@ -1,7 +1,7 @@
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import app from '../app';
-import { Rol, Vinculo } from '@prisma/client';
+import { Rol } from '@prisma/client';
 
 // Mock prisma
 jest.mock('../config/prisma', () => {
@@ -75,9 +75,10 @@ describe('Grupo Familiar Module', () => {
   describe('POST /api/grupos-familiares', () => {
     const grupoData = {
       nombre: 'Familia Perez',
+      titularDni: '12345678',
       integrantes: [
-        { deportistaId: 1, vinculo: 'PADRE', esPrincipal: true },
-        { deportistaId: 2, vinculo: 'HIJO', esPrincipal: false },
+        { deportistaId: 1, esPrincipal: true },
+        { deportistaId: 2, esPrincipal: false },
       ],
     };
 
@@ -119,7 +120,7 @@ describe('Grupo Familiar Module', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           nombre: 'Familia Perez',
-          integrantes: [{ deportistaId: 1, vinculo: 'PADRE', esPrincipal: true }],
+          integrantes: [{ deportistaId: 1, esPrincipal: true }],
         });
 
       expect(response.status).toBe(400);
@@ -134,8 +135,8 @@ describe('Grupo Familiar Module', () => {
         .send({
           nombre: 'Familia Perez',
           integrantes: [
-            { deportistaId: 1, vinculo: 'PADRE', esPrincipal: false },
-            { deportistaId: 2, vinculo: 'HIJO', esPrincipal: false },
+            { deportistaId: 1, esPrincipal: false },
+            { deportistaId: 2, esPrincipal: false },
           ],
         });
 
@@ -162,8 +163,8 @@ describe('Grupo Familiar Module', () => {
         id: 1,
         nombre: 'Familia Perez',
         integrantes: [
-          { deportistaId: 1, vinculo: Vinculo.PADRE, esPrincipal: true, deportista: { nombre: 'Juan' } },
-          { deportistaId: 2, vinculo: Vinculo.HIJO, esPrincipal: false, deportista: { nombre: 'Pedro' } },
+          { deportistaId: 1, esPrincipal: true, deportista: { nombre: 'Juan' } },
+          { deportistaId: 2, esPrincipal: false, deportista: { nombre: 'Pedro' } },
         ],
       });
 
@@ -203,8 +204,8 @@ describe('Grupo Familiar Module', () => {
           id: 1,
           nombre: 'Familia Perez',
           integrantes: [
-            { deportista: { nombre: 'Juan' }, vinculo: Vinculo.PADRE },
-            { deportista: { nombre: 'Pedro' }, vinculo: Vinculo.HIJO },
+            { deportista: { nombre: 'Juan' } },
+            { deportista: { nombre: 'Pedro' } },
           ],
         },
       ]);
@@ -226,7 +227,7 @@ describe('Grupo Familiar Module', () => {
         id: 1,
         nombre: 'Familia Perez',
         integrantes: [
-          { deportista: { nombre: 'Juan', disciplina: { nombre: 'Futbol' } }, vinculo: Vinculo.PADRE },
+          { deportista: { nombre: 'Juan', disciplina: { nombre: 'Futbol' } } },
         ],
       });
 

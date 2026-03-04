@@ -1,0 +1,51 @@
+.page { max-width: 100%; }
+.title { font-size: 1.35rem; font-weight: 700; color: var(--color-blue); margin: 0 0 0.25rem 0; }
+.subtitle { color: #555; margin: 0 0 var(--spacing-lg) 0; }
+
+.section { margin-bottom: var(--spacing-xl); }
+.sectionTitle { font-size: 1.1rem; font-weight: 600; color: #333; margin: 0 0 var(--spacing-md) 0; }
+
+.filtersRow { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-bottom: var(--spacing-md); }
+.filterItem { display: flex; align-items: center; gap: 0.35rem; }
+.filterLabel { font-size: 0.8rem; font-weight: 500; color: #333; }
+.select { padding: 0.35rem 0.5rem; border-radius: 6px; border: 1px solid #ccc; font-size: 0.875rem; color: #1a1a1a; background: #fff; }
+.field { margin-bottom: var(--spacing-md); }
+.field label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; color: #1a1a1a; }
+.input { width: 100%; max-width: 320px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; color: #1a1a1a; }
+
+.listaDeportistas { margin-top: var(--spacing-sm); }
+.listaDeportistas > strong { display: block; font-size: 0.875rem; margin-bottom: 0.5rem; color: #1a1a1a; }
+.lista { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; padding: 0.25rem; }
+.listaItem { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0.4rem; border-bottom: 1px solid #eee; font-size: 0.875rem; color: #1a1a1a; }
+.listaItem:last-child { border-bottom: none; }
+.btnBecar { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.65rem; background: #2e7d32; color: #fff; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.btnBecar:hover:not(:disabled) { background: #1b5e20; }
+.btnBecar:disabled { opacity: 0.6; cursor: default; background: #666; }
+.emptyList { font-size: 0.875rem; color: #666; margin: 0.5rem 0; }
+
+.tableWrap { overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid #e8e8e8; }
+.table { width: 100%; border-collapse: collapse; color: #1a1a1a; }
+.table th, .table td { padding: var(--spacing-sm) var(--spacing-md); text-align: left; border-bottom: 1px solid #eee; }
+.table th { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--color-blue); }
+.emptyCell { color: #666; font-size: 0.875rem; padding: var(--spacing-lg); text-align: center; }
+
+.btnCuota { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; margin-right: 0.5rem; background: var(--color-blue); color: #fff; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
+.btnCuota:hover { background: #002244; }
+.btnQuitar { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: transparent; color: #c62828; border: 1px solid #c62828; border-radius: 6px; font-size: 0.875rem; cursor: pointer; }
+.btnQuitar:hover { background: rgba(198, 40, 40, 0.08); }
+
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modalSmall { background: #fff; border-radius: 12px; padding: var(--spacing-xl); max-width: 360px; width: 90%; color: #1a1a1a; }
+.modalSmall h3 { margin: 0 0 var(--spacing-sm) 0; font-size: 1.1rem; }
+.modalHint { font-size: 0.8125rem; color: #555; margin: 0 0 var(--spacing-md) 0; }
+.modalActions { display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); flex-wrap: wrap; }
+.btnGuardar { padding: 0.6rem 1.25rem; background: var(--color-blue); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btnGuardar:hover { background: #002244; }
+.btnCancelar { padding: 0.6rem 1.25rem; background: #eee; color: #333; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btnCancelar:hover { background: #e0e0e0; }
+
+@media (max-width: 768px) {
+  .page { padding: var(--spacing-sm); }
+  .tableWrap { overflow-x: auto; }
+  .btnCuota, .btnQuitar { min-height: var(--touch-min, 44px); }
+}

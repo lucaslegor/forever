@@ -35,7 +35,6 @@ export const createDeportistaSchema = z.object({
   generoId: z.coerce.number({ message: 'El género es requerido' }).int().positive(),
   categoriaId: z.coerce.number({ message: 'La categoría es requerida' }).int().positive(),
   subcategoriaId: z.coerce.number().int().positive().optional(),
-  obraSocial: z.string().optional(),
   disciplinaId: z
     .coerce
     .number({ message: 'La disciplina es requerida' })
@@ -45,8 +44,6 @@ export const createDeportistaSchema = z.object({
   password: z
     .string({ message: 'La contrasena es requerida' })
     .min(6, 'La contrasena debe tener al menos 6 caracteres'),
-  telefonos: z.string().optional(),
-  enfermedades: z.string().optional(),
   adultoResponsable: adultoResponsableSchema.optional(),
 });
 
@@ -57,26 +54,42 @@ export const updateDeportistaSchema = z.object({
   generoId: z.number().int().positive().optional(),
   categoriaId: z.number().int().positive().optional(),
   subcategoriaId: z.number().int().positive().nullable().optional(),
-  obraSocial: z.string().optional(),
   disciplinaId: z.number().int().positive().optional(),
-  telefonos: z.string().optional(),
-  enfermedades: z.string().optional(),
   adultoResponsable: adultoResponsableSchema.partial().optional(),
+  adultosResponsables: z.array(adultoResponsableSchema.partial()).optional(),
 });
 
+// Acepta string, number o array (query params a veces vienen como array); devuelve number o undefined
 const optionalPosIntQuery = z.preprocess(
-  (v) => (v === '' || v === undefined || v === null ? undefined : v),
-  z.string().regex(/^\d+$/).transform(Number).optional()
+  (v) => {
+    if (v === '' || v === undefined || v === null) return undefined;
+    if (Array.isArray(v)) v = v[0];
+    if (typeof v === 'number') return Number.isInteger(v) && v > 0 ? v : undefined;
+    if (typeof v === 'string') return v.trim() === '' ? undefined : v.trim();
+    return undefined;
+  },
+  z.union([
+    z.string().regex(/^\d+$/).transform(Number),
+    z.number().int().positive(),
+  ]).optional()
 );
 
 export const deportistasQuerySchema = z.object({
   page: optionalPosIntQuery,
   limit: optionalPosIntQuery,
-  estado: z.enum(['EN_DEUDA', 'AL_DIA', 'MOROSA', 'INACTIVA']).optional(),
   disciplinaId: optionalPosIntQuery,
+  generoId: optionalPosIntQuery,
+  categoriaId: optionalPosIntQuery,
+  subcategoriaId: optionalPosIntQuery,
   search: z.preprocess((v) => (v === '' || v === undefined ? undefined : v), z.string().optional()),
+});
+
+/** Lista de adultos responsables; el deportista sincroniza la suya (PUT mi-perfil) */
+export const updateMiPerfilSchema = z.object({
+  adultosResponsables: z.array(adultoResponsableSchema),
 });
 
 export type CreateDeportistaInput = z.infer<typeof createDeportistaSchema>;
 export type UpdateDeportistaInput = z.infer<typeof updateDeportistaSchema>;
+export type UpdateMiPerfilInput = z.infer<typeof updateMiPerfilSchema>;
 export type DeportistasQuery = z.infer<typeof deportistasQuerySchema>;

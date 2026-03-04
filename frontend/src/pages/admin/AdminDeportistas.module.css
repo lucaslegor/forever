@@ -39,6 +39,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
+  margin-bottom: var(--spacing-lg);
 }
 
 .btnNew:hover {
@@ -102,6 +103,62 @@
   outline: none;
   border-color: var(--color-blue);
   box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+}
+
+.filtersGrid input[type="text"] {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.filtersGrid input:focus {
+  outline: none;
+  border-color: var(--color-blue);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+}
+
+.paginationButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.paginationInfo {
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.btnPagination {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.btnPagination:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: var(--color-blue);
+}
+
+.btnPagination:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Table */
@@ -181,6 +238,7 @@
   gap: 0.5rem;
 }
 
+.btnVerAdultos,
 .btnEdit,
 .btnDanger,
 .btnSuccess {
@@ -192,6 +250,15 @@
   border-radius: 6px;
   cursor: pointer;
   transition: var(--transition);
+}
+
+.btnVerAdultos {
+  background: #5c6bc0;
+  color: #fff;
+}
+
+.btnVerAdultos:hover {
+  background: #3949ab;
 }
 
 .btnEdit {
@@ -262,9 +329,28 @@
   gap: var(--spacing-md);
 }
 
-.formRow > div {
+.formRow > div,
+.fieldWrap {
   display: flex;
   flex-direction: column;
+}
+
+.formRow input.inputError,
+.formRow select.inputError {
+  border-color: #c62828;
+  background: rgba(198, 40, 40, 0.04);
+}
+
+.formRow input.inputError:focus,
+.formRow select.inputError:focus {
+  border-color: #c62828;
+  box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.15);
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  color: #c62828;
+  margin-top: 0.25rem;
 }
 
 .formRow label {
@@ -364,4 +450,138 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Modal adultos responsables */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modalAdultos {
+  background: #fff;
+  border-radius: 12px;
+  padding: var(--spacing-xl);
+  max-width: 480px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.modalAdultosTitle {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 1.15rem;
+  color: var(--color-blue);
+}
+
+.modalAdultosList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.modalAdultosEmpty {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.modalAdultosCard {
+  padding: var(--spacing-md);
+  background: #f0f4f8;
+  border-radius: 8px;
+  border: 1px solid #c5d0de;
+  color: #1a1a1a;
+}
+
+.modalAdultosCard p {
+  margin: 0.35rem 0;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+}
+
+.modalAdultosCard strong {
+  color: #0d1b2a;
+}
+
+.modalAdultosActions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: var(--spacing-sm);
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+
+  .btnNew {
+    width: 100%;
+    justify-content: center;
+    min-height: var(--touch-min);
+  }
+
+  .filters {
+    padding: var(--spacing-md);
+  }
+
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--spacing-sm);
+    font-size: 0.875rem;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+  }
+
+  .btnVerAdultos,
+  .btnEdit,
+  .btnDanger,
+  .btnSuccess {
+    min-height: var(--touch-min);
+    min-width: var(--touch-min);
+  }
+
+  .formContainer {
+    padding: var(--spacing-md);
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .tableContainer {
+    border-radius: 8px;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--spacing-xs);
+    font-size: 0.8rem;
+  }
 }

@@ -70,6 +70,7 @@ export const ErrorMessages = {
   // Roles
   ADMIN_REQUIRED: 'Acceso denegado. Se requiere rol de Administrador',
   ADMINISTRATIVO_REQUIRED: 'Acceso denegado. Se requiere rol de Administrativo',
+  PRINCIPAL_ADMIN_REQUIRED: 'Solo el administrador principal puede realizar esta acción',
   LAST_ADMIN: 'No se puede cambiar el rol. Debe haber al menos un Administrador en el sistema',
 
   // Deportista
@@ -89,6 +90,7 @@ export const ErrorMessages = {
   // Grupo Familiar
   GRUPO_FAMILIAR_NOT_FOUND: 'Grupo familiar no encontrado',
   GRUPO_FAMILIAR_DUPLICATE: 'Ya existe un grupo familiar con la misma composicion',
+  GRUPO_FAMILIAR_DEPORTISTA_EN_OTRO: 'Uno o mas deportistas ya pertenecen a otro grupo familiar. Elimine el grupo anterior para poder agregarlos.',
 
   // Disciplina
   DISCIPLINA_NOT_FOUND: 'Disciplina no encontrada',

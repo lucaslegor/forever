@@ -1,6 +1,8 @@
 import prisma from '../config/prisma';
 import { CreateDisciplinaDTO, UpdateDisciplinaDTO } from '../types/requests';
 import { NotFoundError, ConflictError, ErrorMessages } from '../utils/errors';
+import { cuotaService } from './cuota.service';
+import { grupoFamiliarService } from './grupoFamiliar.service';
 
 export class DisciplinaService {
   async create(data: CreateDisciplinaDTO) {
@@ -15,7 +17,6 @@ export class DisciplinaService {
     const disciplina = await prisma.disciplina.create({
       data: {
         nombre: data.nombre,
-        descripcion: data.descripcion ?? null,
         precioMensual: data.precioMensual,
         activa: true,
       },
@@ -90,11 +91,17 @@ export class DisciplinaService {
       where: { id },
       data: {
         nombre: data.nombre,
-        descripcion: data.descripcion,
         precioMensual: data.precioMensual,
         activa: data.activa,
       },
     });
+
+    // Si se actualizó el valor mensual: primero actualizar cuota familiar de grupos (para que las cuotas pendientes tomen el nuevo valor), luego solo cuotas NO pagadas
+    if (data.precioMensual !== undefined) {
+      const nuevoPrecio = Number(updated.precioMensual);
+      await grupoFamiliarService.actualizarCuotaHermanoPorCambioPrecioDisciplina(id, nuevoPrecio);
+      await cuotaService.actualizarMontosPorCambioPrecioDisciplina(id, nuevoPrecio);
+    }
 
     return updated;
   }

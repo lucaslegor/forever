@@ -57,3 +57,19 @@
 .btnRemove:hover { background: #e0e0e0; }
 .modalSmall { background: #fff; border-radius: 12px; padding: var(--spacing-xl); max-width: 360px; width: 90%; color: #1a1a1a; }
 .modalSmall h3 { margin: 0 0 var(--spacing-md) 0; }
+
+@media (max-width: 768px) {
+  .page { padding: var(--spacing-sm); }
+  .title { font-size: 1.2rem; }
+  .btnPrimary { min-height: var(--touch-min); width: 100%; justify-content: center; }
+  .tableWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table th, .table td { padding: var(--spacing-xs) var(--spacing-sm); font-size: 0.875rem; }
+  .modal { width: 95%; max-height: 85vh; padding: var(--spacing-md); }
+  .modalActions { flex-direction: column; }
+  .btnGuardar, .btnCancelar { width: 100%; min-height: var(--touch-min); justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .title { font-size: 1.1rem; }
+  .btnEdit, .btnDelete, .btnCuotaHermano { min-height: var(--touch-min); }
+}

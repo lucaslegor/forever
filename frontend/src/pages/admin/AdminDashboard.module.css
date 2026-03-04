@@ -53,3 +53,37 @@
     color: #666;
     margin: 0;
 }
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .pageTitle {
+        font-size: 1.25rem;
+    }
+
+    .card {
+        padding: var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .pageTitle {
+        font-size: 1.1rem;
+    }
+
+    .card {
+        min-height: var(--touch-min);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+    }
+
+    .cardIcon {
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+}

@@ -17,7 +17,9 @@ export interface LoginResponse {
       email: string;
       rol: string;
       activo: boolean;
+      deportistaId?: number;
     };
-    token: string;
+    /** Ya no se envía: el token va en cookie HttpOnly */
+    token?: string;
   };
 }

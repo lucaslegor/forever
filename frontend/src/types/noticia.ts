@@ -10,4 +10,6 @@ export interface Noticia {
     resumen: string;
     contenido: string;
     imagenes: string[]; // URLs de fotos (ej: desde backend o /uploads/noticias/xxx.jpg)
+    /** Solo en listado admin */
+    publicada?: boolean;
 }

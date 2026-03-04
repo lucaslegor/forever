@@ -10,12 +10,9 @@ export interface CreateDeportistaDTO {
   generoId: number;
   categoriaId: number;
   subcategoriaId?: number;
-  obraSocial?: string;
   disciplinaId: number;
   email: string;
   password: string;
-  telefonos?: string;
-  enfermedades?: string;
   adultoResponsable?: {
     nombre: string;
     apellido: string;
@@ -32,18 +29,17 @@ export interface UpdateDeportistaDTO {
   generoId?: number;
   categoriaId?: number;
   subcategoriaId?: number | null;
-  obraSocial?: string;
   disciplinaId?: number;
-  telefonos?: string;
-  enfermedades?: string;
   adultoResponsable?: Partial<CreateDeportistaDTO['adultoResponsable']>;
 }
 
 export interface DeportistasQuery {
   page?: number;
   limit?: number;
-  estado?: string;
   disciplinaId?: number;
+  generoId?: number;
+  categoriaId?: number;
+  subcategoriaId?: number;
   search?: string;
 }
 
@@ -52,8 +48,10 @@ export const deportistaService = {
     const params = new URLSearchParams();
     if (query?.page) params.append('page', query.page.toString());
     if (query?.limit) params.append('limit', query.limit.toString());
-    if (query?.estado) params.append('estado', query.estado);
     if (query?.disciplinaId) params.append('disciplinaId', query.disciplinaId.toString());
+    if (query?.generoId) params.append('generoId', query.generoId.toString());
+    if (query?.categoriaId) params.append('categoriaId', query.categoriaId.toString());
+    if (query?.subcategoriaId) params.append('subcategoriaId', query.subcategoriaId.toString());
     if (query?.search) params.append('search', query.search);
     
     const response = await api.get(`/deportistas?${params}`);
@@ -92,6 +90,19 @@ export const deportistaService = {
 
   getMiPerfil: async (): Promise<ApiResponse<Deportista>> => {
     const response = await api.get('/deportistas/mi-perfil');
+    return response.data;
+  },
+
+  /** Sincronizar la lista de adultos responsables del deportista logueado (reemplaza toda la lista) */
+  updateMiPerfil: async (data: {
+    adultosResponsables: Array<{ nombre: string; apellido: string; dni: string; email: string; telefono: string }>;
+  }): Promise<ApiResponse<Deportista>> => {
+    const response = await api.put('/deportistas/mi-perfil', {
+      adultosResponsables: data.adultosResponsables.map((ar) => ({
+        ...ar,
+        dni: ar.dni.replace(/\D/g, '').trim(),
+      })),
+    });
     return response.data;
   },
 

@@ -17,6 +17,10 @@ export const authService = {
     return response.data;
   },
 
+  logout: async (): Promise<void> => {
+    await api.post('/auth/logout');
+  },
+
   updateProfile: async (data: { email?: string; telefono?: string; currentPassword?: string; password?: string }): Promise<ApiResponse<any>> => {
     const response = await api.put('/users/profile', data);
     return response.data;
@@ -27,6 +31,16 @@ export const authService = {
     if (page) params.append('page', page.toString());
     if (limit) params.append('limit', limit.toString());
     const response = await api.get(`/users?${params}`);
+    return response.data;
+  },
+
+  resetAdminPassword: async (adminId: number, newPassword: string): Promise<ApiResponse<{ message: string }>> => {
+    const response = await api.put(`/users/admin/${adminId}/reset-password`, { newPassword });
+    return response.data;
+  },
+
+  setAdminActivo: async (adminId: number, activo: boolean): Promise<ApiResponse<{ activo: boolean }>> => {
+    const response = await api.patch(`/users/admin/${adminId}/activo`, { activo });
     return response.data;
   },
 };

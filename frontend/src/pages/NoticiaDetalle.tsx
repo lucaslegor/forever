@@ -1,12 +1,15 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { Seo } from '../components/Seo';
 import { useNoticias } from '../context/NoticiasContext';
+import { sanitizeHtml, wrapImageGalleries } from '../utils/sanitize';
 import styles from './NoticiaDetalle.module.css';
 
 export const NoticiaDetalle = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const { getNoticiaById } = useNoticias();
     const noticia = id ? getNoticiaById(Number(id)) : undefined;
 
@@ -37,11 +40,12 @@ export const NoticiaDetalle = () => {
 
     return (
         <div className={styles.page}>
+            <Seo articleTitle={noticia.titulo} description={noticia.resumen?.slice(0, 160) || undefined} path={location.pathname} />
             <header className={styles.header}>
-                <div className={styles.headerLeft}>
+                <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
-                </div>
+                </Link>
                 <h1 className={styles.title}>Noticias</h1>
                 <div className={styles.headerRight} aria-hidden />
             </header>
@@ -56,26 +60,18 @@ export const NoticiaDetalle = () => {
                         </time>
                     </header>
 
-                    {noticia.imagenes.length > 0 && (
-                        <div className={styles.gallery}>
-                            {noticia.imagenes.map((src, index) => (
-                                <figure key={index} className={styles.galleryItem}>
-                                    <img
-                                        src={src}
-                                        alt={`${noticia.titulo} - imagen ${index + 1}`}
-                                        className={styles.galleryImage}
-                                    />
-                                </figure>
-                            ))}
-                        </div>
-                    )}
-
                     <p className={styles.resumen}>{noticia.resumen}</p>
 
                     <div className={styles.contenido}>
-                        {noticia.contenido.split('\n\n').map((parrafo, i) => (
-                            <p key={i}>{parrafo}</p>
-                        ))}
+                        {/<[a-z][\s\S]*>/i.test(noticia.contenido) ? (
+                            <div dangerouslySetInnerHTML={{ __html: wrapImageGalleries(sanitizeHtml(noticia.contenido)) }} />
+                        ) : (
+                            noticia.contenido
+                                .split(/\n\n+/)
+                                .map((parrafo, i) =>
+                                    parrafo.trim() ? <p key={i}>{parrafo}</p> : null
+                                )
+                        )}
                     </div>
 
                     <div className={styles.actions}>

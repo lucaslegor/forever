@@ -1,0 +1,115 @@
+.wrapper {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0.5rem 0.75rem;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.toolbarBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #444;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.toolbarBtn:hover {
+  background: #e8ecf0;
+  color: #003366;
+}
+
+.toolbarBtn[data-active="true"] {
+  background: rgba(0, 51, 102, 0.12);
+  color: var(--color-blue, #003366);
+}
+
+.toolbarDivider {
+  width: 1px;
+  height: 22px;
+  background: #d0d5dc;
+  margin: 0 4px;
+}
+
+.inputFile {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.editorWrapper {
+  min-height: 120px;
+  color: #1a1a1a;
+}
+
+.editorWrapper .ProseMirror,
+.editorWrapper [contenteditable="true"],
+.editorWrapper p,
+.editorWrapper span,
+.editorWrapper li {
+  color: #1a1a1a !important;
+}
+
+.editorContent {
+  padding: 0.75rem 1rem;
+  min-height: inherit;
+  outline: none;
+  color: #1a1a1a;
+}
+
+.editorContent p {
+  margin: 0 0 0.75rem 0;
+  color: inherit;
+}
+
+.editorContent p:last-child {
+  margin-bottom: 0;
+}
+
+.editorContent:empty::before {
+  content: attr(data-placeholder);
+  color: #999;
+}
+
+.editorContent strong {
+  color: inherit;
+}
+
+.editorContent em {
+  color: inherit;
+}
+
+.editorImg {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+  margin: 0.75rem 0;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: #fafafa;
+  border-top: 1px solid #eee;
+}

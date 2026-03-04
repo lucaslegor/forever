@@ -19,7 +19,7 @@ export class AuthService {
     let cuenta = await prisma.cuentaUsuario.findUnique({
       where: { email: data.email },
       include: {
-        deportista: true,
+        deportista: { include: { disciplina: true } },
         administrativo: true,
       },
     });
@@ -31,7 +31,7 @@ export class AuthService {
         include: {
           cuenta: {
             include: {
-              deportista: true,
+              deportista: { include: { disciplina: true } },
               administrativo: true,
             },
           },
@@ -97,8 +97,11 @@ export class AuthService {
         id: cuenta.id,
         email: cuenta.email,
         rol: cuenta.rol,
+        activo: cuenta.activo,
         nombre: perfil?.nombre,
         apellido: perfil?.apellido,
+        deportistaId: cuenta.deportista?.id,
+        disciplinaNombre: cuenta.deportista?.disciplina?.nombre,
       },
     };
   }
@@ -159,6 +162,7 @@ export class AuthService {
         id: cuenta.id,
         email: cuenta.email,
         rol: cuenta.rol,
+        activo: true,
         nombre: data.nombre,
         apellido: data.apellido,
       },
@@ -168,6 +172,7 @@ export class AuthService {
   private generateToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
     return jwt.sign(payload, env.JWT_SECRET, {
       expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
+      algorithm: 'HS256',
     });
   }
 

@@ -7,6 +7,10 @@
 .field { margin-bottom: var(--spacing-md); }
 .field label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; color: #1a1a1a; }
 .input { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; color: #1a1a1a; background: #fff; }
+.inputPasswordWrap { position: relative; display: block; }
+.inputPasswordWrap .input { padding-right: 2.75rem; }
+.passwordToggle { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: #666; cursor: pointer; padding: 0.25rem; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+.passwordToggle:hover { color: var(--color-blue); }
 
 .radioGroup { display: flex; flex-direction: column; gap: var(--spacing-sm); }
 .radioLabel { display: inline-flex; align-items: center; gap: var(--spacing-xs); cursor: pointer; font-weight: 500; }
@@ -18,3 +22,15 @@
 
 .mensajeOk { padding: var(--spacing-sm) var(--spacing-md); margin-bottom: var(--spacing-md); background: #e8f5e9; color: #2e7d32; border-radius: 8px; font-size: 0.9375rem; }
 .mensajeError { padding: var(--spacing-sm) var(--spacing-md); margin-bottom: var(--spacing-md); background: #ffebee; color: #c62828; border-radius: 8px; font-size: 0.9375rem; }
+
+@media (max-width: 768px) {
+  .page { padding: var(--spacing-sm); }
+  .title { font-size: 1.2rem; }
+  .form { max-width: 100%; padding: var(--spacing-md); }
+  .formActions { flex-direction: column; }
+  .btnGuardar { width: 100%; min-height: var(--touch-min); justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .title { font-size: 1.1rem; }
+}

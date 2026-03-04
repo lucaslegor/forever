@@ -6,7 +6,7 @@ import {
   requireDeportista,
 } from '../middlewares/auth.middleware';
 import { validateBody, validateParams, validateQuery } from '../middlewares/validation.middleware';
-import { asignarCuotaSchema, updateCuotaSchema, cuotasQuerySchema, generarCuotasSchema } from '../validators/cuota.validator';
+import { asignarCuotaSchema, updateCuotaSchema, cuotasQuerySchema, listCuotasQuerySchema, generarCuotasSchema, deletePorGeneracionQuerySchema, deletePorMesQuerySchema } from '../validators/cuota.validator';
 import { idParamSchema } from '../validators/user.validator';
 
 const router = Router();
@@ -62,6 +62,33 @@ router.get(
   cuotaController.getEstadoCuenta.bind(cuotaController)
 );
 
+// GET /api/cuotas - Listado admin (anio, mes, estado, page, limit)
+router.get(
+  '/',
+  authenticateToken,
+  requireAdministrativo,
+  validateQuery(listCuotasQuerySchema),
+  cuotaController.getAll.bind(cuotaController)
+);
+
+// DELETE /api/cuotas/por-generacion - Borrar toda una generación (mes + año + disciplina)
+router.delete(
+  '/por-generacion',
+  authenticateToken,
+  requireAdministrativo,
+  validateQuery(deletePorGeneracionQuerySchema),
+  cuotaController.deletePorGeneracion.bind(cuotaController)
+);
+
+// DELETE /api/cuotas/por-mes - Borrar toda la generación del mes (anio + mes)
+router.delete(
+  '/por-mes',
+  authenticateToken,
+  requireAdministrativo,
+  validateQuery(deletePorMesQuerySchema),
+  cuotaController.deletePorMes.bind(cuotaController)
+);
+
 // GET /api/cuotas/:id - Obtener cuota
 router.get(
   '/:id',
@@ -78,6 +105,24 @@ router.put(
   validateParams(idParamSchema),
   validateBody(updateCuotaSchema),
   cuotaController.update.bind(cuotaController)
+);
+
+// DELETE /api/cuotas/:id - Borrar cuota (solo si no tiene pago aprobado)
+router.delete(
+  '/:id',
+  authenticateToken,
+  requireAdministrativo,
+  validateParams(idParamSchema),
+  cuotaController.delete.bind(cuotaController)
+);
+
+// POST /api/cuotas/:id/marcar-efectivo - Marcar como pagada en efectivo
+router.post(
+  '/:id/marcar-efectivo',
+  authenticateToken,
+  requireAdministrativo,
+  validateParams(idParamSchema),
+  cuotaController.marcarPagadaEfectivo.bind(cuotaController)
 );
 
 export default router;

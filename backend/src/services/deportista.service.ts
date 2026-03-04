@@ -8,9 +8,19 @@ import {
   ErrorMessages,
 } from '../utils/errors';
 import { Rol, EstadoDeportista, EstadoCuota } from '@prisma/client';
+import { cuotaService } from './cuota.service';
 
 export class DeportistaService {
   async create(data: CreateDeportistaDTO) {
+    // Verificar DNI único primero (es el identificador principal del deportista en el formulario)
+    const existingDni = await prisma.deportista.findUnique({
+      where: { dni: data.dni },
+    });
+
+    if (existingDni) {
+      throw new ConflictError(ErrorMessages.DEPORTISTA_DNI_EXISTS);
+    }
+
     // Verificar email único
     const existingEmail = await prisma.cuentaUsuario.findUnique({
       where: { email: data.email },
@@ -18,15 +28,6 @@ export class DeportistaService {
 
     if (existingEmail) {
       throw new ConflictError(ErrorMessages.EMAIL_EXISTS);
-    }
-
-    // Verificar DNI único
-    const existingDni = await prisma.deportista.findUnique({
-      where: { dni: data.dni },
-    });
-
-    if (existingDni) {
-      throw new ConflictError(ErrorMessages.DEPORTISTA_DNI_EXISTS);
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -59,13 +60,9 @@ export class DeportistaService {
       if (data.subcategoriaId != null && Number(data.subcategoriaId) > 0) {
         createData.subcategoria = { connect: { id: Number(data.subcategoriaId) } };
       }
-      if (data.obraSocial != null && data.obraSocial !== '') createData.obraSocial = data.obraSocial;
-      if (data.telefonos != null && data.telefonos !== '') createData.telefonos = data.telefonos;
-      if (data.enfermedades != null && data.enfermedades !== '') createData.enfermedades = data.enfermedades;
-
       const nuevoDeportista = await tx.deportista.create({ data: createData });
 
-      // Si es menor (Juveniles/Infantiles), crear adulto responsable
+      // Si es menor (Juveniles/Infantiles), crear adulto(s) responsable(s)
       if (data.adultoResponsable) {
         await tx.adultoResponsable.create({
           data: {
@@ -82,6 +79,13 @@ export class DeportistaService {
       return nuevoDeportista;
     });
 
+    // Si ya existe generación del mes actual, asignar automáticamente la cuota al nuevo deportista
+    try {
+      await cuotaService.asignarCuotaDelMesActual(deportista.id);
+    } catch (_err) {
+      // No fallar la creación del deportista si falla la asignación de cuota
+    }
+
     return this.getById(deportista.id);
   }
 
@@ -93,7 +97,6 @@ export class DeportistaService {
         genero: true,
         categoria: true,
         subcategoria: true,
-        adultoResponsable: true,
         cuenta: {
           select: {
             id: true,
@@ -110,22 +113,34 @@ export class DeportistaService {
       throw new NotFoundError(ErrorMessages.DEPORTISTA_NOT_FOUND);
     }
 
-    return deportista;
+    const adultos = await prisma.adultoResponsable.findMany({
+      where: { deportistaId: id },
+    });
+
+    return { ...deportista, adultosResponsables: adultos };
   }
 
   async getAll(query: DeportistasQuery) {
-    const page = query.page || 1;
-    const limit = query.limit || 10;
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(10000, Math.max(1, Number(query.limit) || 10));
     const skip = (page - 1) * limit;
 
     const where: any = {};
 
-    if (query.estado) {
-      where.estado = query.estado as EstadoDeportista;
+    if (query.disciplinaId != null) {
+      where.disciplinaId = Number(query.disciplinaId);
     }
 
-    if (query.disciplinaId) {
-      where.disciplinaId = query.disciplinaId;
+    if (query.generoId != null) {
+      where.generoId = Number(query.generoId);
+    }
+
+    if (query.categoriaId != null) {
+      where.categoriaId = Number(query.categoriaId);
+    }
+
+    if (query.subcategoriaId != null) {
+      where.subcategoriaId = Number(query.subcategoriaId);
     }
 
     if (query.search) {
@@ -136,7 +151,7 @@ export class DeportistaService {
       ];
     }
 
-    const [deportistas, total] = await Promise.all([
+    const [deportistasRaw, total] = await Promise.all([
       prisma.deportista.findMany({
         where,
         skip,
@@ -146,7 +161,6 @@ export class DeportistaService {
           genero: true,
           categoria: true,
           subcategoria: true,
-          adultoResponsable: true,
           cuenta: {
             select: { email: true, activo: true },
           },
@@ -155,6 +169,15 @@ export class DeportistaService {
       }),
       prisma.deportista.count({ where }),
     ]);
+
+    const deportistas = await Promise.all(
+      deportistasRaw.map(async (d) => {
+        const adultos = await prisma.adultoResponsable.findMany({
+          where: { deportistaId: d.id },
+        });
+        return { ...d, adultosResponsables: adultos };
+      })
+    );
 
     return {
       data: deportistas,
@@ -168,7 +191,6 @@ export class DeportistaService {
   async update(id: number, data: UpdateDeportistaDTO) {
     const deportista = await prisma.deportista.findUnique({
       where: { id },
-      include: { adultoResponsable: true },
     });
 
     if (!deportista) {
@@ -176,7 +198,6 @@ export class DeportistaService {
     }
 
     await prisma.$transaction(async (tx) => {
-      // Actualizar deportista
       await tx.deportista.update({
         where: { id },
         data: {
@@ -186,31 +207,27 @@ export class DeportistaService {
           generoId: data.generoId,
           categoriaId: data.categoriaId,
           subcategoriaId: data.subcategoriaId,
-          obraSocial: data.obraSocial,
           disciplinaId: data.disciplinaId,
-          telefonos: data.telefonos,
-          enfermedades: data.enfermedades,
         },
       });
 
-      // Actualizar o crear adulto responsable si se proporciona
-      if (data.adultoResponsable) {
-        if (deportista.adultoResponsable) {
-          await tx.adultoResponsable.update({
-            where: { deportistaId: id },
-            data: data.adultoResponsable,
-          });
-        } else {
-          await tx.adultoResponsable.create({
-            data: {
-              deportistaId: id,
-              nombre: data.adultoResponsable.nombre!,
-              apellido: data.adultoResponsable.apellido!,
-              dni: data.adultoResponsable.dni!,
-              email: data.adultoResponsable.email!,
-              telefono: data.adultoResponsable.telefono!,
-            },
-          });
+      // Sincronizar adultos responsables: lista nueva reemplaza a los existentes
+      const nuevosAdultos = data.adultosResponsables ?? (data.adultoResponsable ? [data.adultoResponsable] : undefined);
+      if (nuevosAdultos !== undefined && nuevosAdultos.length >= 0) {
+        await tx.adultoResponsable.deleteMany({ where: { deportistaId: id } });
+        for (const ar of nuevosAdultos) {
+          if (ar.nombre && ar.apellido && ar.dni && ar.email && ar.telefono) {
+            await tx.adultoResponsable.create({
+              data: {
+                deportistaId: id,
+                nombre: ar.nombre,
+                apellido: ar.apellido,
+                dni: ar.dni,
+                email: ar.email,
+                telefono: ar.telefono,
+              },
+            });
+          }
         }
       }
     });
@@ -306,6 +323,15 @@ export class DeportistaService {
     };
   }
 
+  /** Solo el ID del deportista; para endpoints que no necesitan el perfil completo (ej. estado de cuenta). */
+  async getDeportistaIdByUserId(userId: number): Promise<number | null> {
+    const d = await prisma.deportista.findUnique({
+      where: { cuentaId: userId },
+      select: { id: true },
+    });
+    return d?.id ?? null;
+  }
+
   async getByUserId(userId: number) {
     const deportista = await prisma.deportista.findUnique({
       where: { cuentaId: userId },
@@ -314,7 +340,7 @@ export class DeportistaService {
         genero: true,
         categoria: true,
         subcategoria: true,
-        adultoResponsable: true,
+        adultosResponsables: true,
       },
     });
 
@@ -323,6 +349,42 @@ export class DeportistaService {
     }
 
     return deportista;
+  }
+
+  /**
+   * Sincronizar la lista de adultos responsables del deportista logueado.
+   * Reemplaza todos los existentes por la lista enviada (puede ser vacía).
+   */
+  async updateMiPerfilAdultos(
+    userId: number,
+    data: { adultosResponsables: Array<{ nombre: string; apellido: string; dni: string; email: string; telefono: string }> }
+  ) {
+    const deportista = await prisma.deportista.findUnique({
+      where: { cuentaId: userId },
+      select: { id: true },
+    });
+
+    if (!deportista) {
+      throw new NotFoundError(ErrorMessages.DEPORTISTA_NOT_FOUND);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.adultoResponsable.deleteMany({ where: { deportistaId: deportista.id } });
+      for (const ar of data.adultosResponsables) {
+        await tx.adultoResponsable.create({
+          data: {
+            deportistaId: deportista.id,
+            nombre: ar.nombre,
+            apellido: ar.apellido,
+            dni: ar.dni,
+            email: ar.email,
+            telefono: ar.telefono,
+          },
+        });
+      }
+    });
+
+    return this.getById(deportista.id);
   }
 
   async resetPassword(id: number, newPassword: string) {
@@ -342,7 +404,7 @@ export class DeportistaService {
       data: { password: hashedPassword },
     });
 
-    return { message: 'Contraseña restablecida correctamente' };
+    return { message: 'Contraseña restablecida correctamente', deportistaId: id };
   }
 
   async resetPasswordByDni(dni: string, newPassword: string) {
@@ -361,7 +423,7 @@ export class DeportistaService {
       data: { password: hashedPassword },
     });
 
-    return { message: 'Contraseña restablecida correctamente' };
+    return { message: 'Contraseña restablecida correctamente', deportistaId: deportista.id };
   }
 }
 

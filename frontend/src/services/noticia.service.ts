@@ -25,8 +25,25 @@ export const noticiaService = {
     return response.data;
   },
 
+  /** Listado para admin (incluye no publicadas) */
+  getAllAdmin: async (): Promise<ApiResponse<Noticia[]>> => {
+    const response = await api.get('/noticias/admin/list');
+    return response.data;
+  },
+
   getById: async (id: number): Promise<ApiResponse<Noticia>> => {
     const response = await api.get(`/noticias/${id}`);
+    return response.data;
+  },
+
+  /** Obtener noticia por ID (admin; incluye no publicadas) */
+  getByIdAdmin: async (id: number): Promise<ApiResponse<Noticia>> => {
+    const response = await api.get(`/noticias/admin/${id}`);
+    return response.data;
+  },
+
+  setPublicada: async (id: number, publicada: boolean): Promise<ApiResponse<Noticia>> => {
+    const response = await api.patch(`/noticias/${id}/publicada`, { publicada });
     return response.data;
   },
 

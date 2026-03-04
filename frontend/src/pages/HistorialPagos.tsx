@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, DollarSign, CheckCircle, XCircle } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { deportistaService } from '../services/deportista.service';
 import styles from './HistorialPagos.module.css';
 
@@ -68,9 +69,10 @@ export const HistorialPagos = () => {
 
     const anioDeCuota = (op: Operacion) => op.anioCuota ?? new Date(op.fecha).getFullYear();
 
+    const ANIO_MINIMO = 2026;
     const aniosDisponibles = useMemo(() => {
         const anios = new Set(operaciones.map((o) => anioDeCuota(o)));
-        return Array.from(anios).sort((a, b) => b - a);
+        return Array.from(anios).filter((y) => y >= ANIO_MINIMO).sort((a, b) => b - a);
     }, [operaciones]);
 
     const operacionesFiltradas = useMemo(() => {
@@ -127,7 +129,7 @@ export const HistorialPagos = () => {
         return (
             <div className={styles.page}>
                 <main className={styles.mainContent}>
-                    <p className={styles.loadingText}>Cargando...</p>
+                    <LoadingScreen fullPage />
                 </main>
                 <Footer />
             </div>
@@ -137,10 +139,10 @@ export const HistorialPagos = () => {
     return (
         <div className={styles.page}>
             <header className={styles.header}>
-                <div className={styles.headerLeft}>
+                <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
-                </div>
+                </Link>
                 <h1 className={styles.title}>Historial de Pagos</h1>
                 <div className={styles.headerRight} aria-hidden />
             </header>

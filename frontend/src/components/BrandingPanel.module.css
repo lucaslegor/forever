@@ -52,3 +52,21 @@
         font-size: 0.95rem;
     }
 }
+
+@media (max-width: 480px) {
+    .brandingPanel {
+        padding: var(--spacing-md);
+        min-height: 30vh;
+    }
+
+    .logo {
+        width: 100px;
+        height: 100px;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .clubText {
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+    }
+}

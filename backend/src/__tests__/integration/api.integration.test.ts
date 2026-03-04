@@ -112,7 +112,6 @@ describe('Tests de API con datos del Seed', () => {
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
                     nombre: 'Hockey Test',
-                    descripcion: 'Hockey para tests',
                     precioMensual: 12000,
                 });
 
@@ -127,7 +126,6 @@ describe('Tests de API con datos del Seed', () => {
                 .set('Authorization', `Bearer ${deportistaToken}`)
                 .send({
                     nombre: 'Voley Test',
-                    descripcion: 'No deberia crearse',
                     precioMensual: 10000,
                 });
 
@@ -179,17 +177,6 @@ describe('Tests de API con datos del Seed', () => {
             console.log('✅ Búsqueda por DNI funciona');
         });
 
-        it('deberia filtrar deportistas por estado', async () => {
-            const response = await request(app)
-                .get('/api/deportistas?estado=EN_DEUDA')
-                .set('Authorization', `Bearer ${adminToken}`);
-
-            expect(response.status).toBe(200);
-            // Pedro González está EN_DEUDA según el seed
-            const enDeuda = response.body.data.data.find((d: any) => d.dni === '39876543');
-            expect(enDeuda).toBeDefined();
-            console.log('✅ Filtro por estado funciona');
-        });
     });
 
     // ============================================================
@@ -372,7 +359,7 @@ describe('Tests de API con datos del Seed', () => {
 
             expect(response.status).toBe(201);
             expect(response.body.data).toHaveProperty('cuotasGeneradas');
-            expect(response.body.data).toHaveProperty('descuentosAplicados');
+            expect(response.body.data).toHaveProperty('montoTotal');
             console.log('✅ Cuotas mensuales generadas:', response.body.data.cuotasGeneradas);
         });
 

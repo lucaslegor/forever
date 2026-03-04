@@ -77,14 +77,6 @@ export class UserService {
       },
     });
 
-    // Si hay teléfono y es deportista, actualizar
-    if (data.telefono && updatedCuenta.deportista) {
-      await prisma.deportista.update({
-        where: { id: updatedCuenta.deportista.id },
-        data: { telefonos: data.telefono },
-      });
-    }
-
     const { password, ...cuentaSinPassword } = updatedCuenta;
     return cuentaSinPassword;
   }
@@ -161,6 +153,28 @@ export class UserService {
     });
 
     return { message: 'Contraseña restablecida correctamente' };
+  }
+
+  async setAdminActivo(principalUserId: number, adminId: number, activo: boolean) {
+    const admin = await prisma.administrativo.findUnique({
+      where: { id: adminId },
+      include: { cuenta: true },
+    });
+
+    if (!admin) {
+      throw new NotFoundError('Administrativo no encontrado');
+    }
+
+    if (admin.cuentaId === principalUserId) {
+      throw new BadRequestError('No podés desactivar tu propia cuenta');
+    }
+
+    await prisma.cuentaUsuario.update({
+      where: { id: admin.cuentaId },
+      data: { activo },
+    });
+
+    return { activo };
   }
 }
 

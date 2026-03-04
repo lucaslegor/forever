@@ -8,9 +8,15 @@
 
 .form { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); max-width: 400px; color: #1a1a1a; }
 .formTitle { font-size: 1.1rem; font-weight: 700; margin: 0 0 var(--spacing-md) 0; color: #1a1a1a; }
+.formHint { font-size: 0.875rem; color: #555; margin: 0 0 var(--spacing-md) 0; }
 .field { margin-bottom: var(--spacing-md); }
+.input[readonly] { background: #f0f0f0; cursor: default; }
 .field label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; color: #1a1a1a; }
 .input { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; color: #1a1a1a; background: #fff; }
+.inputPasswordWrap { position: relative; display: block; }
+.inputPasswordWrap .input { padding-right: 2.75rem; }
+.passwordToggle { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: #666; cursor: pointer; padding: 0.25rem; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+.passwordToggle:hover { color: var(--color-blue); }
 .formActions { display: flex; gap: var(--spacing-md); flex-wrap: wrap; }
 .btnGuardar { padding: 0.6rem 1.25rem; background: var(--color-blue); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9375rem; cursor: pointer; min-width: 100px; }
 .btnGuardar:hover { background: #002244; }
@@ -29,3 +35,19 @@
 .btnToggle:hover { background: #e0e0e0; }
 .btnDesactivar { padding: 0.25rem 0.5rem; font-size: 0.875rem; background: #c62828; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
 .btnDesactivar:hover { background: #b71c1c; }
+
+@media (max-width: 768px) {
+  .page { padding: var(--spacing-sm); }
+  .title { font-size: 1.2rem; }
+  .form { max-width: 100%; padding: var(--spacing-md); }
+  .formActions { flex-direction: column; }
+  .btnGuardar, .btnCancelar { width: 100%; min-height: var(--touch-min); justify-content: center; }
+  .tableWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table th, .table td { padding: var(--spacing-xs) var(--spacing-sm); font-size: 0.875rem; }
+  .btnEdit, .btnToggle, .btnDesactivar { min-height: var(--touch-min); }
+}
+
+@media (max-width: 480px) {
+  .title { font-size: 1.1rem; }
+  .btnPrimary { width: 100%; min-height: var(--touch-min); justify-content: center; }
+}

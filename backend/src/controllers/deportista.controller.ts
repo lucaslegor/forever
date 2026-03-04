@@ -1,10 +1,13 @@
 import { Response, NextFunction } from 'express';
 import { deportistaService } from '../services/deportista.service';
+import { auditoriaService, ACCIONES } from '../services/auditoria.service';
 import { sendSuccess, sendCreated } from '../utils/response';
+import { getClientIp, getUserAgent } from '../utils/request';
 import { AuthenticatedRequest } from '../types';
 import {
   CreateDeportistaInput,
   UpdateDeportistaInput,
+  UpdateMiPerfilInput,
   DeportistasQuery,
 } from '../validators/deportista.validator';
 import { Rol } from '@prisma/client';
@@ -14,6 +17,15 @@ export class DeportistaController {
     try {
       const data = req.body as CreateDeportistaInput;
       const result = await deportistaService.create(data);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DEPORTISTA_ALTA,
+        entidad: 'deportista',
+        entidadId: result.id,
+        detalles: JSON.stringify({ nombre: result.nombre, apellido: result.apellido, dni: result.dni }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendCreated(res, result, 'Deportista creado exitosamente');
     } catch (error) {
       next(error);
@@ -45,6 +57,15 @@ export class DeportistaController {
       const id = parseInt(req.params.id as string, 10);
       const data = req.body as UpdateDeportistaInput;
       const result = await deportistaService.update(id, data);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DEPORTISTA_ACTUALIZACION,
+        entidad: 'deportista',
+        entidadId: id,
+        detalles: JSON.stringify({ cambios: Object.keys(data) }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result, 'Deportista actualizado correctamente');
     } catch (error) {
       next(error);
@@ -55,6 +76,15 @@ export class DeportistaController {
     try {
       const id = parseInt(req.params.id as string, 10);
       const result = await deportistaService.delete(id);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DEPORTISTA_BAJA,
+        entidad: 'deportista',
+        entidadId: id,
+        detalles: JSON.stringify({ deportistaId: id }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result);
     } catch (error) {
       next(error);
@@ -97,11 +127,30 @@ export class DeportistaController {
     }
   }
 
+  async updateMiPerfil(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = req.body as UpdateMiPerfilInput;
+      const result = await deportistaService.updateMiPerfilAdultos(req.user!.id, data);
+      sendSuccess(res, result, 'Adultos responsables guardados correctamente');
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async resetPassword(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = parseInt(req.params.id as string, 10);
       const { newPassword } = req.body;
       const result = await deportistaService.resetPassword(id, newPassword);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DEPORTISTA_RESET_PASSWORD,
+        entidad: 'deportista',
+        entidadId: result.deportistaId ?? id,
+        detalles: JSON.stringify({ deportistaId: result.deportistaId ?? id }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result);
     } catch (error) {
       next(error);
@@ -112,6 +161,15 @@ export class DeportistaController {
     try {
       const { dni, newPassword } = req.body;
       const result = await deportistaService.resetPasswordByDni(dni, newPassword);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DEPORTISTA_RESET_PASSWORD,
+        entidad: 'deportista',
+        entidadId: result.deportistaId ?? null,
+        detalles: JSON.stringify({ dni }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
       sendSuccess(res, result);
     } catch (error) {
       next(error);

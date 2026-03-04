@@ -1,0 +1,503 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: #fff;
+}
+
+.header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #002244 0%, #003366 50%, #004080 100%);
+    padding: var(--spacing-md) var(--spacing-xl);
+    flex-shrink: 0;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    min-width: 180px;
+}
+
+.headerHomeLink {
+    text-decoration: none;
+    color: inherit;
+}
+
+.headerLogo {
+    height: 56px;
+    width: 56px;
+    object-fit: contain;
+}
+
+.headerClubName {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-white);
+}
+
+.title {
+    flex: 1;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-white);
+    text-align: center;
+    margin: 0;
+}
+
+.headerRight {
+    min-width: 180px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.95);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.backLink:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.mainContent {
+    flex: 1;
+    width: 100%;
+    padding: var(--spacing-xl);
+    background-color: #f8f9fa;
+}
+
+.card {
+    max-width: 640px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+    padding: var(--spacing-xl);
+    border: 1px solid #e8e8e8;
+}
+
+.intro {
+    margin: 0 0 var(--spacing-lg) 0;
+    color: #333;
+    line-height: 1.6;
+}
+
+.infoBox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: var(--spacing-md);
+    background: rgba(0, 51, 102, 0.08);
+    border: 1px solid rgba(0, 51, 102, 0.2);
+    border-radius: 8px;
+    margin-bottom: var(--spacing-xl);
+    font-size: 0.9rem;
+    color: #1a1a1a;
+}
+
+.infoBox svg {
+    flex-shrink: 0;
+    color: var(--color-blue);
+}
+
+.section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--color-blue);
+    box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+}
+
+.loading {
+    color: #666;
+    margin: 0;
+}
+
+.slotsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 0.5rem;
+}
+
+.slotBtn {
+    padding: 0.6rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.slotBtn:hover:not(:disabled) {
+    border-color: var(--color-blue);
+    background: rgba(0, 51, 102, 0.06);
+}
+
+.slotOcupado {
+    background: #f0f0f0;
+    color: #999;
+    cursor: not-allowed;
+    border-color: #e0e0e0;
+}
+
+.slotElegido {
+    border-color: var(--color-blue);
+    background: rgba(0, 51, 102, 0.1);
+    color: var(--color-blue);
+}
+
+.form {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid #eee;
+}
+
+.formTitle {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-blue);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.turnoElegido {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.field {
+    margin-bottom: var(--spacing-md);
+}
+
+.field label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.35rem;
+}
+
+.formActions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+/* Botón principal: reservar/pagar con identidad del club (gradiente + logo) */
+.btnPrimary {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #002244 0%, #003366 40%, #004080 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 14px rgba(0, 34, 68, 0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btnPrimary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Franjas sutiles tipo cancha */
+.btnPrimary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        105deg,
+        transparent,
+        transparent 4px,
+        rgba(255,255,255,0.03) 4px,
+        rgba(255,255,255,0.03) 6px
+    );
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.btnPrimary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 34, 68, 0.45);
+}
+
+.btnPrimary:disabled {
+    opacity: 0.85;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btnPrimaryLogo {
+    height: 22px;
+    width: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.btnSecondary {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    color: var(--color-blue);
+    border: 2px solid var(--color-blue);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btnSecondary:hover:not(:disabled) {
+    background: rgba(0, 51, 102, 0.08);
+}
+
+.mensajeOk {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: var(--spacing-md);
+    background: rgba(76, 175, 80, 0.12);
+    color: #2e7d32;
+    border-radius: 8px;
+    margin-bottom: var(--spacing-md);
+    font-size: 0.95rem;
+}
+
+.mensajeError {
+    padding: var(--spacing-md);
+    background: rgba(198, 40, 40, 0.1);
+    color: #b71c1c;
+    border-radius: 8px;
+    margin-bottom: var(--spacing-md);
+    font-size: 0.95rem;
+}
+
+.metodoPagoGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.metodoPagoBtn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: var(--spacing-lg);
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.metodoPagoBtn:hover {
+    border-color: var(--color-blue);
+    background: rgba(0, 51, 102, 0.05);
+}
+
+.metodoPagoElegido {
+    border-color: var(--color-blue);
+    background: rgba(0, 51, 102, 0.08);
+}
+
+.metodoPagoLabel {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1a1a1a;
+}
+
+.metodoPagoHint {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.transferenciaPanel {
+    padding: var(--spacing-lg) 0;
+}
+
+.transferenciaTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-blue);
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.transferenciaText {
+    margin: 0 0 var(--spacing-md) 0;
+    color: #333;
+}
+
+.countdown {
+    margin: 0 0 var(--spacing-md) 0;
+    padding: var(--spacing-sm);
+    background: rgba(255, 152, 0, 0.12);
+    border-radius: 8px;
+    color: #e65100;
+    font-size: 0.95rem;
+}
+
+.countdownExpired {
+    margin: 0 0 var(--spacing-md) 0;
+    padding: var(--spacing-sm);
+    background: rgba(198, 40, 40, 0.1);
+    border-radius: 8px;
+    color: #b71c1c;
+    font-size: 0.95rem;
+}
+
+.whatsappBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #25d366;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-bottom: var(--spacing-md);
+    cursor: pointer;
+}
+
+.whatsappBtn:hover {
+    background: #20bd5a;
+    color: #fff;
+}
+
+@media (max-width: 600px) {
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+    .slotsGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .metodoPagoGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: var(--spacing-sm) var(--spacing-md);
+        flex-wrap: wrap;
+    }
+
+    .headerLeft,
+    .headerRight {
+        min-width: 0;
+    }
+
+    .headerLogo {
+        height: 40px;
+        width: 40px;
+    }
+
+    .headerClubName {
+        font-size: 0.75rem;
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .title {
+        font-size: 1.1rem;
+        width: 100%;
+        order: 3;
+        margin-top: var(--spacing-xs);
+    }
+
+    .mainContent {
+        padding: var(--spacing-md);
+    }
+
+    .card {
+        padding: var(--spacing-md);
+    }
+
+    .slotsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.4rem;
+    }
+
+    .slotBtn {
+        min-height: var(--touch-min);
+    }
+
+    .btnPrimary,
+    .btnSecondary,
+    .backLink {
+        min-height: var(--touch-min);
+        justify-content: center;
+    }
+
+    .formActions {
+        flex-direction: column;
+    }
+
+    .formActions .btnPrimary,
+    .formActions .btnSecondary {
+        width: 100%;
+    }
+
+    .metodoPagoBtn {
+        min-height: var(--touch-min);
+    }
+
+    .whatsappBtn {
+        min-height: var(--touch-min);
+        width: 100%;
+        justify-content: center;
+    }
+}

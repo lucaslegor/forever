@@ -9,8 +9,6 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
-  console.error('Error:', err);
-
   // Errores de aplicación personalizados
   if (err instanceof AppError) {
     if (err instanceof ValidationError) {
@@ -31,6 +29,15 @@ export const errorHandler = (
   // Errores de Prisma
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
+      case 'P1001':
+      case 'P1002':
+      case 'P1008':
+        // P1001: Can't reach DB | P1002: Timeout | P1008: Timeout
+        res.status(503).json({
+          success: false,
+          error: 'El servicio no está disponible. Revisá tu conexión o intentá más tarde.',
+        });
+        return;
       case 'P2002': {
         const target = (err.meta?.target as string[]) || [];
         let message = 'El registro ya existe';
@@ -69,7 +76,6 @@ export const errorHandler = (
   }
 
   if (err instanceof Prisma.PrismaClientValidationError) {
-    console.error('PrismaClientValidationError:', err.message);
     const detail = env.NODE_ENV === 'development' ? err.message : 'Error de validacion en los datos';
     res.status(400).json({
       success: false,

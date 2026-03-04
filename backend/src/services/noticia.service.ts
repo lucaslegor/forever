@@ -4,19 +4,22 @@ import { NotFoundError, ErrorMessages } from '../utils/errors';
 
 export class NoticiaService {
   async create(data: CreateNoticiaDTO) {
+    const imagenes = data.imagenes ?? [];
     const noticia = await prisma.noticia.create({
       data: {
         titulo: data.titulo,
         fecha: new Date(data.fecha),
         resumen: data.resumen,
         contenido: data.contenido,
-        autorId: data.autorId,
-        imagenes: {
-          create: data.imagenes.map((url, index) => ({
-            url,
-            orden: index + 1,
-          })),
-        },
+        autorId: data.autorId ?? undefined,
+        ...(imagenes.length > 0 && {
+          imagenes: {
+            create: imagenes.map((url, index) => ({
+              url,
+              orden: index + 1,
+            })),
+          },
+        }),
       },
       include: {
         imagenes: { orderBy: { orden: 'asc' } },
@@ -27,8 +30,17 @@ export class NoticiaService {
     return noticia;
   }
 
+  /** Formatea fecha a YYYY-MM-DD (Prisma puede devolver Date o string según driver/DB) */
+  private formatFecha(fecha: Date | string): string {
+    if (typeof fecha === 'string') return fecha.slice(0, 10);
+    if (fecha instanceof Date && !Number.isNaN(fecha.getTime())) return fecha.toISOString().split('T')[0];
+    return '';
+  }
+
+  /** Listado público: solo publicadas y no eliminadas */
   async getAll() {
     const noticias = await prisma.noticia.findMany({
+      where: { publicada: true, deletedAt: null },
       include: {
         imagenes: { orderBy: { orden: 'asc' } },
         autor: { select: { nombre: true, apellido: true } },
@@ -36,21 +48,21 @@ export class NoticiaService {
       orderBy: { fecha: 'desc' },
     });
 
-    // Transformar para que coincida con el tipo del frontend
     return noticias.map((n) => ({
       id: n.id,
       titulo: n.titulo,
-      fecha: n.fecha.toISOString().split('T')[0], // YYYY-MM-DD
+      fecha: this.formatFecha(n.fecha),
       resumen: n.resumen,
       contenido: n.contenido,
-      imagenes: n.imagenes.map((img) => img.url),
+      imagenes: (n.imagenes || []).map((img) => img.url),
       autor: n.autor
         ? `${n.autor.nombre} ${n.autor.apellido}`
         : undefined,
     }));
   }
 
-  async getById(id: number) {
+  /** Detalle público: solo si está publicada y no eliminada */
+  async getById(id: number, onlyPublic: boolean = false) {
     const noticia = await prisma.noticia.findUnique({
       where: { id },
       include: {
@@ -62,18 +74,50 @@ export class NoticiaService {
     if (!noticia) {
       throw new NotFoundError('Noticia no encontrada');
     }
+    if (onlyPublic && (noticia.deletedAt != null || !noticia.publicada)) {
+      throw new NotFoundError('Noticia no encontrada');
+    }
+    if (!onlyPublic && noticia.deletedAt != null) {
+      throw new NotFoundError('Noticia no encontrada');
+    }
 
     return {
       id: noticia.id,
       titulo: noticia.titulo,
-      fecha: noticia.fecha.toISOString().split('T')[0],
+      fecha: this.formatFecha(noticia.fecha),
       resumen: noticia.resumen,
       contenido: noticia.contenido,
-      imagenes: noticia.imagenes.map((img) => img.url),
+      publicada: noticia.publicada,
+      imagenes: (noticia.imagenes || []).map((img) => img.url),
       autor: noticia.autor
         ? `${noticia.autor.nombre} ${noticia.autor.apellido}`
         : undefined,
     };
+  }
+
+  /** Listado para admin: todas las no eliminadas (con publicada) */
+  async getAllAdmin() {
+    const noticias = await prisma.noticia.findMany({
+      where: { deletedAt: null },
+      include: {
+        imagenes: { orderBy: { orden: 'asc' } },
+        autor: { select: { nombre: true, apellido: true } },
+      },
+      orderBy: { fecha: 'desc' },
+    });
+
+    return noticias.map((n) => ({
+      id: n.id,
+      titulo: n.titulo,
+      fecha: this.formatFecha(n.fecha),
+      resumen: n.resumen,
+      contenido: n.contenido,
+      publicada: n.publicada,
+      imagenes: (n.imagenes || []).map((img) => img.url),
+      autor: n.autor
+        ? `${n.autor.nombre} ${n.autor.apellido}`
+        : undefined,
+    }));
   }
 
   async update(id: number, data: UpdateNoticiaDTO) {
@@ -82,6 +126,9 @@ export class NoticiaService {
     });
 
     if (!noticia) {
+      throw new NotFoundError('Noticia no encontrada');
+    }
+    if (noticia.deletedAt) {
       throw new NotFoundError('Noticia no encontrada');
     }
 
@@ -118,6 +165,7 @@ export class NoticiaService {
     return this.getById(id);
   }
 
+  /** Soft delete: marca deletedAt (no se muestra en público ni en listado admin) */
   async delete(id: number) {
     const noticia = await prisma.noticia.findUnique({
       where: { id },
@@ -126,12 +174,36 @@ export class NoticiaService {
     if (!noticia) {
       throw new NotFoundError('Noticia no encontrada');
     }
+    if (noticia.deletedAt) {
+      return { message: 'Noticia ya estaba eliminada' };
+    }
 
-    await prisma.noticia.delete({
+    await prisma.noticia.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
 
     return { message: 'Noticia eliminada correctamente' };
+  }
+
+  async setPublicada(id: number, publicada: boolean) {
+    const noticia = await prisma.noticia.findUnique({
+      where: { id },
+    });
+
+    if (!noticia) {
+      throw new NotFoundError('Noticia no encontrada');
+    }
+    if (noticia.deletedAt) {
+      throw new NotFoundError('Noticia no encontrada');
+    }
+
+    await prisma.noticia.update({
+      where: { id },
+      data: { publicada },
+    });
+
+    return this.getById(id);
   }
 }
 

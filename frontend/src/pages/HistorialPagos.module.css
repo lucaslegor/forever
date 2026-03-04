@@ -24,6 +24,11 @@
     min-width: 180px;
 }
 
+.headerHomeLink {
+    text-decoration: none;
+    color: inherit;
+}
+
 .headerLogo {
     height: 72px;
     width: 72px;
@@ -275,5 +280,58 @@
     .td {
         padding: var(--spacing-sm);
         font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: var(--spacing-sm) var(--spacing-md);
+        flex-wrap: wrap;
+    }
+
+    .headerLeft,
+    .headerRight {
+        min-width: 0;
+    }
+
+    .headerLogo {
+        height: 48px;
+        width: 48px;
+    }
+
+    .headerClubName {
+        font-size: 0.75rem;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .title {
+        font-size: 1.15rem;
+        transform: none;
+        width: 100%;
+        order: 3;
+        margin-top: var(--spacing-xs);
+    }
+
+    .mainContent {
+        padding: var(--spacing-sm);
+    }
+
+    .contentCard {
+        padding: var(--spacing-md);
+    }
+
+    .th,
+    .td {
+        padding: var(--spacing-xs);
+        font-size: 0.8rem;
+    }
+
+    .backButton {
+        min-height: var(--touch-min);
+        width: 100%;
+        justify-content: center;
     }
 }

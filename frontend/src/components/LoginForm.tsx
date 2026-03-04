@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { CreditCard, Lock, Eye, EyeOff } from 'lucide-react';
+import { CreditCard, Lock, Eye, EyeOff, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import styles from './LoginForm.module.css';
 
@@ -15,6 +15,9 @@ interface LoginFormData {
 /** Número de WhatsApp del club (con código de país, sin +). Ej: 5492211234567 */
 const WHATSAPP_NUMBER = '5492211234567';
 const WHATSAPP_MSG = 'Hola, olvidé mi contraseña del portal del club. ¿Me pueden ayudar?';
+
+/** Tiempo que el mensaje de error permanece visible (ms) */
+const ERROR_DURATION_MS = 6000;
 
 const loginSchema = yup.object({
     dni: yup.string().required('El DNI es requerido').trim(),
@@ -28,8 +31,15 @@ export const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const navigate = useNavigate();
     const { login } = useAuth();
+
+    useEffect(() => {
+        return () => {
+            if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+        };
+    }, []);
 
     const {
         register,
@@ -40,34 +50,39 @@ export const LoginForm = () => {
     });
 
     const onSubmit = async (data: LoginFormData) => {
+        if (errorTimeoutRef.current) {
+            clearTimeout(errorTimeoutRef.current);
+            errorTimeoutRef.current = null;
+        }
         setLoginError(null);
         setIsLoading(true);
-        
-        console.log('=== INICIO DE LOGIN ===');
-        console.log('Datos del formulario:', data);
-        
+
         try {
             const result = await login(data.dni, data.password);
-            
-            console.log('Resultado del login:', result);
-            
+
             if (result.success) {
-                console.log('✅ Login exitoso, redirigiendo...');
-                // Determinar ruta según el email ingresado
-                // Si contiene @, probablemente es admin, sino es deportista
                 const isAdminLogin = data.dni.includes('@') && data.dni.includes('admin');
                 const redirectPath = isAdminLogin ? '/admin' : '/dashboard';
-                console.log('Redirigiendo a:', redirectPath);
                 navigate(redirectPath);
             } else {
-                const errorMsg = result.error || 'Credenciales incorrectas. Revisá el DNI y la contraseña.';
-                console.error('❌ Login falló:', errorMsg);
+                const errorMsg = (result.error && result.error.trim()) || 'Credenciales incorrectas. Revisá el DNI o email y la contraseña.';
+                if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
                 setLoginError(errorMsg);
+                errorTimeoutRef.current = setTimeout(() => {
+                    setLoginError(null);
+                    errorTimeoutRef.current = null;
+                }, ERROR_DURATION_MS);
                 setIsLoading(false);
             }
-        } catch (error) {
-            console.error('❌ Error en submit:', error);
-            setLoginError('Error de conexión. Por favor, intenta nuevamente.');
+        } catch (error: any) {
+            const serverMsg = error?.response?.data?.error || error?.response?.data?.message;
+            const errorMsg = serverMsg && String(serverMsg).trim() ? String(serverMsg) : 'Credenciales incorrectas. Revisá el DNI o email y la contraseña.';
+            if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+            setLoginError(errorMsg);
+            errorTimeoutRef.current = setTimeout(() => {
+                setLoginError(null);
+                errorTimeoutRef.current = null;
+            }, ERROR_DURATION_MS);
             setIsLoading(false);
         }
     };
@@ -78,11 +93,6 @@ export const LoginForm = () => {
                 <h2 className={styles.formTitle}>Inicia sesión</h2>
 
                 <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-                    {loginError && (
-                        <div className={styles.loginError} role="alert">
-                            {loginError}
-                        </div>
-                    )}
                     <div className={styles.inputGroup}>
                         <label htmlFor="dni" className={styles.label}>
                             DNI
@@ -142,17 +152,21 @@ export const LoginForm = () => {
                                 Haz click aquí para contactarte con nosotros
                             </a>
                         </div>
-                    </div> 
+                    </div>
+                    {loginError && (
+                        <div className={styles.loginError} role="alert" aria-live="assertive">
+                            {loginError}
+                        </div>
+                    )}
                     <button type="submit" className={styles.submitButton} disabled={isLoading}>
                         {isLoading ? 'Iniciando sesión...' : 'Ingresar'}
                     </button>
-                </form>
 
-                <div className={styles.footer}>
-                    <a href="#" className={styles.footerLink}>Privacidad</a>
-                    <a href="#" className={styles.footerLink}>Términos</a>
-                    <a href="#" className={styles.footerLink}>Ayuda</a>
-                </div>
+                    <Link to="/alquilar-cancha" className={styles.canchaLink}>
+                        <Calendar size={20} />
+                        Alquilar cancha de césped sintético
+                    </Link>
+                </form>
 
                 <p className={styles.copyright}>
                     CLUB FOR EVER DE LA PLATA © 2026 <br />

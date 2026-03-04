@@ -1,5 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { clasificacionService } from '../services/clasificacion.service';
+import { ejecutarPaseCategoriaFutbolMasculino } from '../services/paseCategoria.service';
+import { authenticateToken, requireAdministrativo } from '../middlewares/auth.middleware';
+import { validateBody, validateParams } from '../middlewares/validation.middleware';
+import { createSubcategoriaSchema, subcategoriaIdParamSchema } from '../validators/clasificacion.validator';
 
 const router = Router();
 
@@ -90,16 +94,14 @@ router.get('/opciones', async (req: Request, res: Response) => {
  * @desc    Crear una nueva subcategoría
  * @access  Admin
  */
-router.post('/subcategorias', async (req: Request, res: Response) => {
+router.post(
+  '/subcategorias',
+  authenticateToken,
+  requireAdministrativo,
+  validateBody(createSubcategoriaSchema),
+  async (req: Request, res: Response) => {
   try {
     const { nombre, disciplinaNombre, categoriaNombre, generoNombre } = req.body;
-    
-    if (!nombre || !disciplinaNombre || !categoriaNombre) {
-      return res.status(400).json({
-        success: false,
-        message: 'Faltan datos requeridos: nombre, disciplinaNombre, categoriaNombre',
-      });
-    }
 
     const subcategoria = await clasificacionService.createSubcategoria({
       nombre,
@@ -119,23 +121,22 @@ router.post('/subcategorias', async (req: Request, res: Response) => {
       message: error.message || 'Error al crear subcategoría',
     });
   }
-});
+  }
+);
 
 /**
  * @route   DELETE /api/clasificacion/subcategorias/:id
  * @desc    Eliminar una subcategoría
  * @access  Admin
  */
-router.delete('/subcategorias/:id', async (req: Request, res: Response) => {
+router.delete(
+  '/subcategorias/:id',
+  authenticateToken,
+  requireAdministrativo,
+  validateParams(subcategoriaIdParamSchema),
+  async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
-    
-    if (isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'ID inválido',
-      });
-    }
+    const id = req.params.id as unknown as number;
 
     await clasificacionService.deleteSubcategoria(id);
 
@@ -149,6 +150,33 @@ router.delete('/subcategorias/:id', async (req: Request, res: Response) => {
       message: error.message || 'Error al eliminar subcategoría',
     });
   }
-});
+  }
+);
+
+/**
+ * @route   POST /api/clasificacion/pase-categoria
+ * @desc    Ejecutar pase de categoría anual (solo Fútbol masculino: Infantiles y Juveniles)
+ * @access  Admin
+ */
+router.post(
+  '/pase-categoria',
+  authenticateToken,
+  requireAdministrativo,
+  async (req: Request, res: Response) => {
+    try {
+      const result = await ejecutarPaseCategoriaFutbolMasculino();
+      res.json({
+        success: true,
+        data: result,
+        message: `Pase de categoría ejecutado: ${result.actualizados} deportistas actualizados.`,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Error al ejecutar pase de categoría',
+      });
+    }
+  }
+);
 
 export default router;

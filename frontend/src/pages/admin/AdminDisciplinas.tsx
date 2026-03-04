@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { Plus, Pencil } from 'lucide-react';
 import type { Disciplina } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { clasificacionService } from '../../services/clasificacion.service';
+import { disciplinaService } from '../../services/disciplina.service';
 import styles from './AdminDisciplinas.module.css';
 
 export const AdminDisciplinas = () => {
     const {
         disciplinas,
         setDisciplinas,
-        generos,
         generosNombres,
-        setGeneros,
         categorias,
         categoriasNombres,
         setCategorias,
@@ -20,12 +20,13 @@ export const AdminDisciplinas = () => {
         disciplinasNombres,
         refetch,
     } = useOpcionesAdmin();
+    const [borrandoSubcatId, setBorrandoSubcatId] = useState<number | null>(null);
+    const confirm = useConfirm();
 
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [form, setForm] = useState({ nombre: '', valorMensual: 10000 });
 
-    const [nuevoGenero, setNuevoGenero] = useState('');
     const [nuevaCategoria, setNuevaCategoria] = useState('');
     const [nuevaSubcat, setNuevaSubcat] = useState({ disciplina: '', categoria: '', genero: '', nombre: '' });
 
@@ -41,47 +42,44 @@ export const AdminDisciplinas = () => {
         setShowForm(true);
     };
 
-    const guardar = (e: React.FormEvent) => {
+    const [guardando, setGuardando] = useState(false);
+    const guardar = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (editingId !== null) {
-            setDisciplinas((prev) =>
-                prev.map((d) =>
-                    d.id === editingId ? { ...d, nombre: form.nombre.trim(), valorMensual: form.valorMensual } : d
-                )
-            );
-        } else {
-            const nuevo: Disciplina = {
-                id: Math.max(0, ...disciplinas.map((d) => d.id)) + 1,
-                nombre: form.nombre.trim(),
-                valorMensual: form.valorMensual,
-                activo: true,
-            };
-            setDisciplinas((prev) => [...prev, nuevo]);
+        setGuardando(true);
+        try {
+            if (editingId !== null) {
+                await disciplinaService.update(editingId, {
+                    nombre: form.nombre.trim(),
+                    precioMensual: form.valorMensual,
+                });
+            } else {
+                await disciplinaService.create({
+                    nombre: form.nombre.trim(),
+                    precioMensual: form.valorMensual,
+                });
+            }
+            await refetch();
+            setShowForm(false);
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Error al guardar la disciplina');
+        } finally {
+            setGuardando(false);
         }
-        setShowForm(false);
     };
 
-    const borrar = (id: number) => {
-        if (window.confirm('¿Dar de baja esta disciplina?')) {
-            setDisciplinas((prev) => prev.map((d) => (d.id === id ? { ...d, activo: false } : d)));
-        }
+    const borrar = async (id: number) => {
+        const ok = await confirm({
+            title: 'Dar de baja disciplina',
+            message: '¿Dar de baja esta disciplina?',
+            confirmLabel: 'Dar de baja',
+            cancelLabel: 'Cancelar',
+            variant: 'danger',
+        });
+        if (ok) setDisciplinas((prev) => prev.map((d) => (d.id === id ? { ...d, activo: false } : d)));
     };
 
     const reactivar = (id: number) => {
         setDisciplinas((prev) => prev.map((d) => (d.id === id ? { ...d, activo: true } : d)));
-    };
-
-    const agregarGenero = (e: React.FormEvent) => {
-        e.preventDefault();
-        const v = nuevoGenero.trim();
-        if (v && !generos.includes(v)) {
-            setGeneros((prev) => [...prev, v]);
-            setNuevoGenero('');
-        }
-    };
-
-    const quitarGenero = (g: string) => {
-        setGeneros((prev) => prev.filter((x) => x !== g));
     };
 
     const agregarCategoria = (e: React.FormEvent) => {
@@ -115,22 +113,23 @@ export const AdminDisciplinas = () => {
             await refetch();
             
             setNuevaSubcat({ disciplina: '', categoria: '', genero: '', nombre: '' });
-        } catch (error) {
-            console.error('Error al crear subcategoría:', error);
-            alert('Error al crear la subcategoría');
+        } catch (error: any) {
+            const msg = error.response?.data?.message || error.message || 'Error al crear la subcategoría';
+            alert(msg);
         }
     };
 
-    const quitarSubcategoria = (key: string, valor: string) => {
-        setSubcategoriasPorKey((prev) => {
-            const list = prev[key]?.filter((x) => x !== valor) ?? [];
-            if (list.length === 0) {
-                const next = { ...prev };
-                delete next[key];
-                return next;
-            }
-            return { ...prev, [key]: list };
-        });
+    const quitarSubcategoria = async (key: string, item: { id: number; nombre: string }) => {
+        if (borrandoSubcatId !== null) return;
+        setBorrandoSubcatId(item.id);
+        try {
+            await clasificacionService.deleteSubcategoria(item.id);
+            await refetch();
+        } catch (err: any) {
+            alert(err.response?.data?.message || err.message || 'Error al borrar la subcategoría');
+        } finally {
+            setBorrandoSubcatId(null);
+        }
     };
 
     return (
@@ -172,7 +171,9 @@ export const AdminDisciplinas = () => {
                             />
                         </div>
                         <div className={styles.formActions}>
-                            <button type="submit" className={styles.btnGuardar}>Guardar</button>
+                            <button type="submit" className={styles.btnGuardar} disabled={guardando}>
+                            {guardando ? 'Guardando…' : 'Guardar'}
+                        </button>
                             <button type="button" className={styles.btnCancelar} onClick={() => setShowForm(false)}>Cancelar</button>
                         </div>
                     </form>
@@ -219,30 +220,15 @@ export const AdminDisciplinas = () => {
                 </div>
             </section>
 
-            {/* Géneros */}
+            {/* Géneros (fijos: Masculino, Femenino; no se agregan ni quitan desde la app) */}
             <section className={styles.section}>
                 <h3 className={styles.sectionTitle}>Géneros</h3>
-                <p className={styles.sectionHint}>Lista de géneros para deportistas. Agregar otros si es necesario.</p>
+                <p className={styles.sectionHint}>Géneros disponibles para clasificación (Masculino, Femenino).</p>
                 <div className={styles.listInline}>
                     {generosNombres.map((g) => (
-                        <span key={g} className={styles.tag}>
-                            {g}
-                            <button type="button" onClick={() => quitarGenero(g)} aria-label={`Quitar ${g}`}>×</button>
-                        </span>
+                        <span key={g} className={styles.tag}>{g}</span>
                     ))}
                 </div>
-                <form onSubmit={agregarGenero} className={styles.addRow}>
-                    <div className={styles.field}>
-                        <label>Nuevo género</label>
-                        <input
-                            className={styles.input}
-                            value={nuevoGenero}
-                            onChange={(e) => setNuevoGenero(e.target.value)}
-                            placeholder="Ej: Masculino, Femenino, Otro"
-                        />
-                    </div>
-                    <button type="submit" className={styles.btnGuardar}>Agregar</button>
-                </form>
             </section>
 
             {/* Categorías */}
@@ -290,9 +276,16 @@ export const AdminDisciplinas = () => {
                                     <td>
                                         <div className={styles.listInline}>
                                             {vals.map((v) => (
-                                                <span key={v} className={styles.tag}>
-                                                    {v}
-                                                    <button type="button" onClick={() => quitarSubcategoria(key, v)} aria-label={`Quitar ${v}`}>×</button>
+                                                <span key={v.id} className={styles.tag}>
+                                                    {v.nombre}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => quitarSubcategoria(key, v)}
+                                                        aria-label={`Quitar ${v.nombre}`}
+                                                        disabled={borrandoSubcatId === v.id}
+                                                    >
+                                                        ×
+                                                    </button>
                                                 </span>
                                             ))}
                                         </div>

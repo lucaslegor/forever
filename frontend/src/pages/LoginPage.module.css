@@ -17,3 +17,16 @@
         grid-template-columns: 1fr;
     }
 }
+
+@media (max-width: 480px) {
+    .loginPage {
+        min-height: 100vh;
+        min-height: calc(100vh - var(--safe-bottom));
+    }
+
+    .formPanel {
+        padding: var(--spacing-md);
+        align-items: flex-start;
+        padding-top: var(--spacing-xl);
+    }
+}

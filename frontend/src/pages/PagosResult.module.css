@@ -1,0 +1,186 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.card {
+  max-width: 420px;
+  width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 34, 68, 0.08);
+  padding: 2.5rem;
+  text-align: center;
+  border: 1px solid #e8ecf0;
+}
+
+.icon {
+  display: block;
+  margin: 0 auto 1.25rem;
+}
+
+.resultSuccess .icon {
+  color: #2e7d32;
+}
+
+.resultFailure .icon {
+  color: #c62828;
+}
+
+.resultPending .icon {
+  color: #f9a825;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.75rem 0;
+}
+
+.message {
+  font-size: 1rem;
+  color: #5c6b7a;
+  line-height: 1.55;
+  margin: 0 0 1.5rem 0;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background: transparent;
+  color: #003366;
+  border: 2px solid #003366;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.backButton:hover {
+  background: rgba(0, 51, 102, 0.08);
+}
+
+.syncSection {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem;
+  background: #f0f7ff;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.syncHint {
+  font-size: 0.9rem;
+  color: #5c6b7a;
+  margin: 0 0 0.75rem 0;
+}
+
+.syncRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.syncInput {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.syncButton {
+  padding: 0.5rem 1rem;
+  background: #003366;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.syncButton:hover:not(:disabled) {
+  background: #002244;
+}
+
+.syncButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.syncOk {
+  font-size: 0.9rem;
+  color: #2e7d32;
+  margin: 0.25rem 0 0;
+}
+
+.syncError {
+  font-size: 0.9rem;
+  color: #c62828;
+  margin: 0.25rem 0 0;
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: var(--spacing-md);
+  }
+
+  .card {
+    padding: var(--spacing-lg);
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .message {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: var(--spacing-sm);
+  }
+
+  .card {
+    padding: var(--spacing-md);
+    border-radius: 12px;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .message {
+    font-size: 0.9rem;
+  }
+
+  .backButton {
+    min-height: var(--touch-min);
+    width: 100%;
+    justify-content: center;
+  }
+
+  .syncRow {
+    flex-direction: column;
+  }
+
+  .syncButton {
+    min-height: var(--touch-min);
+  }
+}

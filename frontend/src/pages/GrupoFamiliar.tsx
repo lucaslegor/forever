@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Info, UserCheck } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { useAuth } from '../context/AuthContext';
 import { grupoFamiliarService } from '../services/grupoFamiliar.service';
 import styles from './GrupoFamiliar.module.css';
@@ -61,7 +62,7 @@ export const GrupoFamiliar = () => {
         return (
             <div className={styles.page}>
                 <main className={styles.mainContent}>
-                    <p className={styles.loadingText}>Cargando...</p>
+                    <LoadingScreen fullPage />
                 </main>
                 <Footer />
             </div>
@@ -71,10 +72,10 @@ export const GrupoFamiliar = () => {
     return (
         <div className={styles.page}>
             <header className={styles.header}>
-                <div className={styles.headerLeft}>
+                <Link to="/dashboard" className={`${styles.headerLeft} ${styles.headerHomeLink}`}>
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
-                </div>
+                </Link>
                 <h1 className={styles.title}>Grupo Familiar</h1>
                 <div className={styles.headerRight} aria-hidden />
             </header>

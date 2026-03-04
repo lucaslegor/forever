@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { UserPlus, Pencil, Trash2, DollarSign } from 'lucide-react';
 import type { GrupoFamiliarAdmin } from '../../types/admin';
 import type { Deportista } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { grupoFamiliarService } from '../../services/grupoFamiliar.service';
 import { deportistaService } from '../../services/deportista.service';
+import { LoadingScreen } from '../../components/LoadingScreen';
 import styles from './AdminGruposFamiliares.module.css';
 
 type MiembroForm = { deportistaId: number; nombre: string; apellido: string; dni: string };
@@ -26,6 +28,7 @@ export const AdminGruposFamiliares = () => {
     const [inputCuotaHermano, setInputCuotaHermano] = useState('');
     const [deportistas, setDeportistas] = useState<Deportista[]>([]);
     const { disciplinasNombres, generosNombres, getCategoriasOptions, getSubcategoriaOptions } = useOpcionesAdmin();
+    const confirm = useConfirm();
 
     const fetchGrupos = async () => {
         setLoading(true);
@@ -57,31 +60,40 @@ export const AdminGruposFamiliares = () => {
         fetchGrupos();
     }, []);
 
-    useEffect(() => {
-        (async () => {
-            try {
-                // Cargar todos los deportistas para filtrar en el modal (límite alto para no cortar la lista)
-                const res = await deportistaService.getAll({ limit: 10000 });
-                if (res.success && res.data?.data) {
-                    const raw = res.data.data as any[];
-                    setDeportistas(raw.map((d) => ({
-                        id: d.id,
-                        nombre: d.nombre,
-                        apellido: d.apellido,
-                        dni: d.dni,
-                        disciplina: d.disciplina?.nombre ?? '',
-                        genero: d.genero?.nombre ?? '',
-                        categoria: d.categoria?.nombre ?? '',
-                        subcategoria: d.subcategoria?.nombre ?? '',
-                        adultoResponsable: d.adultoResponsable ? { nombre: d.adultoResponsable.nombre, apellido: d.adultoResponsable.apellido, dni: d.adultoResponsable.dni, email: d.adultoResponsable.email, telefono: d.adultoResponsable.telefono } : null,
-                        activo: d.cuenta?.activo ?? true,
-                    })));
-                }
-            } catch {
-                setDeportistas([]);
-            }
-        })();
+    const mapDeportistaFromApi = (d: any) => ({
+        id: d.id,
+        nombre: d.nombre,
+        apellido: d.apellido,
+        dni: d.dni,
+        disciplina: d.disciplina?.nombre ?? '',
+        genero: d.genero?.nombre ?? '',
+        categoria: d.categoria?.nombre ?? '',
+        subcategoria: d.subcategoria?.nombre ?? '',
+        adultoResponsable: (d.adultosResponsables?.[0] || d.adultoResponsable) ? { nombre: (d.adultosResponsables?.[0] || d.adultoResponsable)!.nombre, apellido: (d.adultosResponsables?.[0] || d.adultoResponsable)!.apellido, dni: (d.adultosResponsables?.[0] || d.adultoResponsable)!.dni, email: (d.adultosResponsables?.[0] || d.adultoResponsable)!.email, telefono: (d.adultosResponsables?.[0] || d.adultoResponsable)!.telefono } : null,
+        activo: d.cuenta?.activo ?? true,
+    });
+
+    const fetchDeportistasForModal = useCallback(async () => {
+        try {
+            const res = await deportistaService.getAll({ limit: 10000 });
+            if (!res.success) return;
+            // Backend devuelve { data: { data: [...], total, page, limit, totalPages } }
+            const raw = Array.isArray(res.data) ? res.data : (res.data && typeof res.data === 'object' && Array.isArray((res.data as any).data) ? (res.data as any).data : []);
+            setDeportistas(raw.map(mapDeportistaFromApi));
+        } catch {
+            setDeportistas([]);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchDeportistasForModal();
+    }, [fetchDeportistasForModal]);
+
+    useEffect(() => {
+        if (modal === 'crear' || modal === 'editar') {
+            fetchDeportistasForModal();
+        }
+    }, [modal, fetchDeportistasForModal]);
 
     const openCrear = () => {
         setForm({ miembros: [], titularDni: '' });
@@ -111,6 +123,16 @@ export const AdminGruposFamiliares = () => {
     const opcionesCategoria = useMemo(() => getCategoriasOptions(filtroDisciplina, filtroGenero), [filtroDisciplina, filtroGenero, getCategoriasOptions]);
     const opcionesSubcategoria = useMemo(() => getSubcategoriaOptions(filtroDisciplina, filtroGenero, filtroCategoria), [filtroDisciplina, filtroGenero, filtroCategoria, getSubcategoriaOptions]);
 
+    /** IDs de deportistas que ya están en algún grupo (al editar, excluimos el grupo actual para permitir mantener sus miembros) */
+    const idsEnOtroGrupo = useMemo(() => {
+        const set = new Set<number>();
+        grupos.forEach((g) => {
+            if (modal === 'editar' && g.id === editingId) return;
+            g.miembros.forEach((m) => set.add(m.id));
+        });
+        return set;
+    }, [grupos, modal, editingId]);
+
     const deportistasFiltrados = useMemo(() => {
         let list = deportistas.filter((d) => d.activo);
         if (filtroDisciplina) list = list.filter((d) => d.disciplina === filtroDisciplina);
@@ -131,6 +153,7 @@ export const AdminGruposFamiliares = () => {
 
     const agregarMiembro = (d: Deportista) => {
         if (form.miembros.some((m) => m.dni === d.dni)) return;
+        if (idsEnOtroGrupo.has(d.id)) return;
         setForm((f) => ({
             ...f,
             miembros: [...f.miembros, { deportistaId: d.id, nombre: d.nombre, apellido: d.apellido, dni: d.dni }],
@@ -151,7 +174,6 @@ export const AdminGruposFamiliares = () => {
         const titularDni = form.titularDni?.trim() || form.miembros[0]?.dni || '';
         const integrantes = form.miembros.map((m, idx) => ({
             deportistaId: m.deportistaId,
-            vinculo: idx === 0 ? 'PADRE' : 'HIJO',
             esPrincipal: idx === 0,
         }));
         try {
@@ -162,19 +184,27 @@ export const AdminGruposFamiliares = () => {
             }
             setModal(null);
             await fetchGrupos();
-        } catch (err) {
-            console.error(err);
-            alert('Error al guardar el grupo familiar');
+        } catch (err: any) {
+            const msg = err.response?.status === 409
+                ? (err.response?.data?.error || 'No se pudo guardar el grupo familiar.')
+                : 'Error al guardar el grupo familiar';
+            alert(msg);
         }
     };
 
     const borrar = async (id: number) => {
-        if (!window.confirm('¿Borrar este grupo familiar?')) return;
+        const ok = await confirm({
+            title: 'Borrar grupo familiar',
+            message: '¿Borrar este grupo familiar?',
+            confirmLabel: 'Borrar',
+            cancelLabel: 'Cancelar',
+            variant: 'danger',
+        });
+        if (!ok) return;
         try {
             await grupoFamiliarService.delete(id);
             await fetchGrupos();
         } catch (err) {
-            console.error(err);
             alert('Error al borrar el grupo familiar');
         }
     };
@@ -196,12 +226,11 @@ export const AdminGruposFamiliares = () => {
             await grupoFamiliarService.update(modalCuotaHermano.grupoId, { cuotaHermano: valor });
             await fetchGrupos();
         } catch (err) {
-            console.error(err);
         }
         setModalCuotaHermano(null);
     };
 
-    if (loading) return <p className={styles.loading}>Cargando...</p>;
+    if (loading) return <LoadingScreen fullPage />;
 
     return (
         <div className={styles.page}>
@@ -219,7 +248,7 @@ export const AdminGruposFamiliares = () => {
                         <tr>
                             <th>Titular</th>
                             <th>Miembros</th>
-                            <th>Cuota hermano</th>
+                            <th>Cuota familiar</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -250,7 +279,7 @@ export const AdminGruposFamiliares = () => {
                                 <td>
                                     <button type="button" className={styles.btnCuotaHermano} onClick={() => abrirModalCuotaHermano(g)}>
                                         <DollarSign size={18} />
-                                        Actualizar cuota hermano
+                                        Actualizar cuota familiar
                                     </button>
                                     <button type="button" className={styles.btnEdit} onClick={() => openEditar(g)}>
                                         <Pencil size={18} />
@@ -319,6 +348,8 @@ export const AdminGruposFamiliares = () => {
                             <ul className={styles.lista}>
                                 {deportistasFiltrados.map((d) => {
                                     const yaAgregado = form.miembros.some((m) => m.dni === d.dni);
+                                    const yaEnOtroGrupo = idsEnOtroGrupo.has(d.id);
+                                    const noSePuedeAgregar = yaAgregado || yaEnOtroGrupo;
                                     return (
                                         <li key={d.id} className={styles.listaItem}>
                                             <span>{d.nombre} {d.apellido} — DNI {d.dni} — {d.disciplina}, {d.subcategoria}, {d.genero}</span>
@@ -326,9 +357,10 @@ export const AdminGruposFamiliares = () => {
                                                 type="button"
                                                 className={styles.btnAddSmall}
                                                 onClick={() => agregarMiembro(d)}
-                                                disabled={yaAgregado}
+                                                disabled={noSePuedeAgregar}
+                                                title={yaEnOtroGrupo ? 'Ya pertenece a otro grupo familiar' : undefined}
                                             >
-                                                {yaAgregado ? 'En grupo' : '+ Agregar'}
+                                                {yaAgregado ? 'En grupo' : yaEnOtroGrupo ? 'Ya en otro grupo' : '+ Agregar'}
                                             </button>
                                         </li>
                                     );
@@ -386,7 +418,7 @@ export const AdminGruposFamiliares = () => {
             {modalCuotaHermano !== null && (
                 <div className={styles.overlay} onClick={() => setModalCuotaHermano(null)}>
                     <div className={styles.modalSmall} onClick={(e) => e.stopPropagation()}>
-                        <h3>Actualizar monto cuota hermano</h3>
+                        <h3>Actualizar monto cuota familiar</h3>
                         <form onSubmit={guardarCuotaHermano}>
                             <div className={styles.field}>
                                 <label>Monto (ARS)</label>

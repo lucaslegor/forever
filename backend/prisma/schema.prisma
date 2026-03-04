@@ -36,14 +36,6 @@ enum Rol {
   DEPORTISTA      @map("Deportista")
 }
 
-enum Vinculo {
-  PADRE    @map("Padre")
-  MADRE    @map("Madre")
-  HIJO     @map("Hijo")
-  HERMANO  @map("Hermano")
-  OTRO     @map("Otro")
-}
-
 enum Periodicidad {
   MENSUAL   @map("Mensual")
   ANUAL     @map("Anual")
@@ -58,7 +50,6 @@ enum Periodicidad {
 model Disciplina {
   id             Int            @id @default(autoincrement()) @map("id_disciplina")
   nombre         String         @unique
-  descripcion    String?
   precioMensual  Decimal        @map("precio_mensual") @db.Decimal(10, 2)
   activa         Boolean        @default(true)
   deportistas    Deportista[]
@@ -123,8 +114,28 @@ model CuentaUsuario {
   updatedAt       DateTime        @updatedAt @map("updated_at")
   deportista      Deportista?
   administrativo  Administrativo?
+  auditoriaLogs   AuditoriaLog[]
 
   @@map("cuentas_usuario")
+}
+
+model AuditoriaLog {
+  id        Int       @id @default(autoincrement()) @map("id_auditoria")
+  cuentaId  Int?      @map("id_cuenta")
+  accion    String    @map("accion")
+  entidad   String    @map("entidad")
+  entidadId Int?      @map("id_entidad")
+  detalles  String?   @map("detalles")
+  ip        String?   @map("ip")
+  userAgent String?   @map("user_agent")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  cuenta CuentaUsuario? @relation(fields: [cuentaId], references: [id], onDelete: SetNull)
+
+  @@index([cuentaId])
+  @@index([entidad, entidadId])
+  @@index([createdAt])
+  @@map("auditoria_log")
 }
 
 model Administrativo {
@@ -157,34 +168,34 @@ model Deportista {
   categoria          Categoria                 @relation(fields: [categoriaId], references: [id])
   subcategoriaId     Int?                      @map("id_subcategoria")
   subcategoria       Subcategoria?             @relation(fields: [subcategoriaId], references: [id])
-  obraSocial         String?                   @map("obra_social")
   estado             EstadoDeportista          @default(AL_DIA)
   disciplinaId       Int                       @map("id_disciplina")
   disciplina         Disciplina                @relation(fields: [disciplinaId], references: [id])
   cuentaId           Int                       @unique @map("id_cuenta")
   cuenta             CuentaUsuario             @relation(fields: [cuentaId], references: [id], onDelete: Cascade)
-  enfermedades       String?
-  telefonos          String?
-  adultoResponsable  AdultoResponsable?
+  adultosResponsables AdultoResponsable[]
   pagos              Pago[]
   cuotas             Cuota[]
   grupoFamiliar      GrupoFamiliarIntegrante[]
-  createdAt          DateTime                  @default(now()) @map("created_at")
-  updatedAt          DateTime                  @updatedAt @map("updated_at")
+  becado             Boolean                  @default(false)
+  cuotaBeca          Decimal?                 @map("cuota_beca") @db.Decimal(10, 2)
+  createdAt          DateTime                 @default(now()) @map("created_at")
+  updatedAt          DateTime                 @updatedAt @map("updated_at")
 
   @@map("deportistas")
 }
 
 model AdultoResponsable {
-  id           Int        @id @default(autoincrement()) @map("id_adulto")
-  deportistaId Int        @unique @map("id_deportista")
-  deportista   Deportista @relation(fields: [deportistaId], references: [id], onDelete: Cascade)
+  id           Int         @id @default(autoincrement()) @map("id_adulto")
+  deportistaId Int         @map("id_deportista")
+  deportista   Deportista  @relation(fields: [deportistaId], references: [id], onDelete: Cascade)
   nombre       String
   apellido     String
   dni          String
   email        String
   telefono     String
 
+  @@index([deportistaId])
   @@map("adultos_responsables")
 }
 
@@ -207,7 +218,6 @@ model GrupoFamiliar {
 model GrupoFamiliarIntegrante {
   grupoId      Int           @map("id_grupo_familiar")
   deportistaId Int           @map("id_deportista")
-  vinculo      Vinculo
   esPrincipal  Boolean       @default(false) @map("es_principal")
   grupo        GrupoFamiliar @relation(fields: [grupoId], references: [id], onDelete: Cascade)
   deportista   Deportista    @relation(fields: [deportistaId], references: [id], onDelete: Cascade)
@@ -272,6 +282,8 @@ model Noticia {
   contenido    String           @db.Text
   autorId      Int?             @map("id_autor")
   autor        Administrativo?  @relation(fields: [autorId], references: [id], onDelete: SetNull)
+  publicada    Boolean          @default(true)
+  deletedAt    DateTime?        @map("deleted_at")
   imagenes     NoticiaImagen[]
   createdAt    DateTime         @default(now()) @map("created_at")
   updatedAt    DateTime         @updatedAt @map("updated_at")
@@ -287,4 +299,47 @@ model NoticiaImagen {
   orden      Int      @default(0)
 
   @@map("noticia_imagenes")
+}
+
+// =============================================================================
+// ALQUILER CANCHA CÉSPED SINTÉTICO
+// Turnos de 14:00 a 01:00 (12 slots/hora), Lunes a Domingo.
+// Seña 5000 pesos; el resto se paga en cancha (transferencia/efectivo).
+// =============================================================================
+
+model ReservaCancha {
+  id              Int       @id @default(autoincrement()) @map("id_reserva")
+  fecha           DateTime  @db.Date
+  hora            Int       @map("hora") // 14-23 y 0, 1 (0 = 00:00, 1 = 01:00)
+  nombreCliente   String    @map("nombre_cliente")
+  telefono        String    @map("telefono")
+  email           String?   @map("email")
+  montoSena       Decimal   @default(5000) @map("monto_sena") @db.Decimal(10, 2)
+  senaPagada      Boolean   @default(false) @map("sena_pagada")
+  senaMetodoPago  String?   @map("sena_metodo_pago") // 'mercadopago' | 'transferencia'
+  senaExpiraAt    DateTime? @map("sena_expira_at") // para transferencia: vence en 20 min
+  restoPagado     Boolean   @default(false) @map("resto_pagado")
+  montoTotal      Decimal?  @map("monto_total") @db.Decimal(10, 2)
+  notas           String?   @db.Text
+  canceladaAt     DateTime? @map("cancelada_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([fecha, hora])
+  @@index([fecha])
+  @@index([senaMetodoPago, senaExpiraAt])
+  @@map("reservas_cancha")
+}
+
+// =============================================================================
+// CONFIG (clave-valor para jobs: pase de categoría último año, etc.)
+// =============================================================================
+
+model Config {
+  id        Int      @id @default(autoincrement()) @map("id_config")
+  clave     String   @unique @map("clave")
+  valor     String   @map("valor")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("config")
 }

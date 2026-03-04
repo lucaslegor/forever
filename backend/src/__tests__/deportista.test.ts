@@ -148,8 +148,6 @@ describe('Deportista Module', () => {
         fechaNac: new Date(deportistaData.fechaNac),
         cuentaId: 3,
         estado: EstadoDeportista.AL_DIA,
-        telefonos: '12345678,87654321',
-        enfermedades: 'Gripe,Alergia',
         createdAt: new Date(),
         updatedAt: new Date(),
         disciplina: { nombre: 'Futbol' },
@@ -165,25 +163,17 @@ describe('Deportista Module', () => {
       const response = await request(app)
         .post('/api/deportistas')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          ...deportistaData,
-          telefonos: '12345678,87654321', // Example string input for telefonos
-          enfermedades: 'Gripe,Alergia',  // Example string input for enfermedades
-        });
+        .send(deportistaData);
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.data.nombre).toBe(deportistaData.nombre);
-      expect(response.body.data.telefonos).toBe('12345678,87654321');
-      expect(response.body.data.enfermedades).toBe('Gripe,Alergia');
     });
   });
 
   describe('PUT /api/deportistas/:id', () => {
     const updateData = {
       nombre: 'Juan Actualizado',
-      telefonos: '99999999',
-      enfermedades: 'Ninguna',
     };
 
     it('deberia retornar 200 y actualizar deportista correctamente', async () => {
@@ -192,8 +182,6 @@ describe('Deportista Module', () => {
       const existingDeportista = {
         id: 1,
         nombre: 'Juan',
-        telefonos: '111111',
-        enfermedades: 'Asma',
       };
 
       (mockPrisma.deportista.findUnique as jest.Mock)
@@ -211,8 +199,6 @@ describe('Deportista Module', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data.nombre).toBe(updateData.nombre);
-      expect(response.body.data.telefonos).toBe(updateData.telefonos);
-      expect(response.body.data.enfermedades).toBe(updateData.enfermedades);
     });
 
     it('deberia retornar 404 si el deportista no existe', async () => {
@@ -265,8 +251,6 @@ describe('Deportista Module', () => {
         dni: '12345678',
         disciplina: { nombre: 'Futbol' },
         cuenta: { email: 'juan@test.com' },
-        telefonos: null,
-        enfermedades: null,
       });
 
       const response = await request(app)

@@ -6,9 +6,12 @@ import cuotaRoutes from './cuota.routes';
 import pagoRoutes from './pago.routes';
 import disciplinaRoutes from './disciplina.routes';
 import grupoFamiliarRoutes from './grupoFamiliar.routes';
+import becaRoutes from './beca.routes';
 import clasificacionRoutes from './clasificacion.routes';
 import noticiaRoutes from './noticia.routes';
-
+import reservaCanchaRoutes from './reservaCancha.routes';
+import dashboardRoutes from './dashboard.routes';
+import auditoriaRoutes from './auditoria.routes';
 const router = Router();
 
 router.use('/auth', authRoutes);
@@ -18,7 +21,10 @@ router.use('/cuotas', cuotaRoutes);
 router.use('/pagos', pagoRoutes);
 router.use('/disciplinas', disciplinaRoutes);
 router.use('/grupos-familiares', grupoFamiliarRoutes);
+router.use('/becas', becaRoutes);
 router.use('/clasificacion', clasificacionRoutes);
 router.use('/noticias', noticiaRoutes);
-
+router.use('/reservas-cancha', reservaCanchaRoutes);
+router.use('/dashboard', dashboardRoutes);
+router.use('/auditoria', auditoriaRoutes);
 export default router;

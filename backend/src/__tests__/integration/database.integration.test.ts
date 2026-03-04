@@ -161,7 +161,6 @@ describe('Tests de Integración - Base de Datos Real', () => {
         .set('Authorization', `Bearer ${adminToken2}`)
         .send({
           nombre: 'Basquet Test',
-          descripcion: 'Basquet para tests de integración',
           precioMensual: 4500,
         });
 
@@ -374,9 +373,10 @@ describe('Tests de Integración - Base de Datos Real', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           nombre: 'Familia Perez Test',
+          titularDni: '12345678',
           integrantes: [
-            { deportistaId: deportistaId, vinculo: 'PADRE', esPrincipal: true },
-            { deportistaId: deportista2Id, vinculo: 'HIJO', esPrincipal: false },
+            { deportistaId: deportistaId, esPrincipal: true },
+            { deportistaId: deportista2Id, esPrincipal: false },
           ],
         });
 

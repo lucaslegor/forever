@@ -12,8 +12,13 @@ export interface AuthResponse {
     id: number;
     email: string;
     rol: string;
+    activo: boolean;
     nombre?: string;
     apellido?: string;
+    /** Solo para rol DEPORTISTA; evita llamar a getMiPerfil solo para el ID */
+    deportistaId?: number;
+    /** Nombre de la disciplina del deportista (para menú condicional, ej. fixture LAPF / hockey) */
+    disciplinaNombre?: string;
   };
 }
 
