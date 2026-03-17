@@ -98,6 +98,7 @@ describe('Tests de Integración - Base de Datos Real', () => {
         .send({
           email: testData.admin.email,
           password: testData.admin.password,
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(200);
@@ -116,6 +117,7 @@ describe('Tests de Integración - Base de Datos Real', () => {
         .send({
           email: testData.admin.email,
           password: 'ContraseñaIncorrecta123!',
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(401);
@@ -152,7 +154,7 @@ describe('Tests de Integración - Base de Datos Real', () => {
       // Login como administrativo
       const loginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'admin2.test@forever.com', password: 'Admin123!' });
+        .send({ email: 'admin2.test@forever.com', password: 'Admin123!', captchaToken: 'test-token' });
 
       const adminToken2 = loginRes.body.data.token;
 
@@ -186,7 +188,7 @@ describe('Tests de Integración - Base de Datos Real', () => {
       // Login como administrativo
       const loginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'admin2.test@forever.com', password: 'Admin123!' });
+        .send({ email: 'admin2.test@forever.com', password: 'Admin123!', captchaToken: 'test-token' });
 
       const token = loginRes.body.data.token;
 
@@ -237,6 +239,7 @@ describe('Tests de Integración - Base de Datos Real', () => {
         .send({
           email: testData.deportista.email,
           password: testData.deportista.password,
+          captchaToken: 'test-token',
         });
 
       expect(response.status).toBe(200);
@@ -257,7 +260,7 @@ describe('Tests de Integración - Base de Datos Real', () => {
       // Login como administrativo
       const loginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'admin2.test@forever.com', password: 'Admin123!' });
+        .send({ email: 'admin2.test@forever.com', password: 'Admin123!', captchaToken: 'test-token' });
 
       const token = loginRes.body.data.token;
 
@@ -317,7 +320,7 @@ describe('Tests de Integración - Base de Datos Real', () => {
     it('admin deberia poder listar deportistas', async () => {
       const loginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'admin2.test@forever.com', password: 'Admin123!' });
+        .send({ email: 'admin2.test@forever.com', password: 'Admin123!', captchaToken: 'test-token' });
 
       const token = loginRes.body.data.token;
 
@@ -345,7 +348,7 @@ describe('Tests de Integración - Base de Datos Real', () => {
       // Crear segundo deportista
       const loginRes = await request(app)
         .post('/api/auth/login')
-        .send({ email: 'admin2.test@forever.com', password: 'Admin123!' });
+        .send({ email: 'admin2.test@forever.com', password: 'Admin123!', captchaToken: 'test-token' });
 
       const token = loginRes.body.data.token;
 

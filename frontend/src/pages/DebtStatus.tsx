@@ -252,19 +252,50 @@ export const DebtStatus = () => {
                         </p>
                         <div className={styles.sponsorsModalList}>
                             <div className={styles.sponsorsModalCard}>
-                                <div className={styles.sponsorsModalLogoLD}>LD</div>
+                                <img
+                                    src="/laucha-removebg-preview.png"
+                                    alt="Lautaro Domato Nutricionista"
+                                    className={styles.sponsorsModalLogoImage}
+                                />
                                 <div>
                                     <div className={styles.sponsorsModalName}>Lautaro Domato Nutricionista</div>
-                                    <div className={styles.sponsorsModalTagline}>Especializado en nutrición deportiva</div>
-                                    <a href="tel:+5491112345678" className={styles.sponsorsModalPhone}>11 1234-5678</a>
+                                    <div className={styles.sponsorsModalTagline}>
+                                        Curso de Nutrición Deportiva (FC Barcelona, Barca Innovation Hub) 2018
+                                        <br />
+                                        Certificación ISAK II
+                                    </div>
+                                    <a
+                                        href="https://wa.me/5492214280686"
+                                        className={styles.sponsorsModalPhone}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        221 428-0686
+                                    </a>
                                 </div>
                             </div>
                             <div className={styles.sponsorsModalCard}>
-                                <div className={styles.sponsorsModalLogoM}>M</div>
+                                <img
+                                    src="/maps.jpg"
+                                    alt="MAPS ASESORES"
+                                    className={styles.sponsorsModalLogoImage}
+                                />
                                 <div>
                                     <div className={styles.sponsorsModalName}>MAPS ASESORES</div>
-                                    <div className={styles.sponsorsModalTagline}>Tu organización de seguros de confianza</div>
-                                    <a href="tel:+5491155678901" className={styles.sponsorsModalPhone}>11 5567-8901</a>
+                                    <div className={styles.sponsorsModalTagline}>
+                                        Organización de seguros, <br/> 
+                                        coberturas integrales para familias,
+                                        ,comercios, etc. 
+                                        <br/> con asesoramiento personalizado.
+                                    </div>
+                                    <a
+                                        href="https://www.instagram.com/mapsasesoresarg/"
+                                        className={styles.sponsorsModalPhone}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        @mapsasesoresarg
+                                    </a>
                                 </div>
                             </div>
                         </div>

@@ -54,6 +54,7 @@ export const authenticateToken = async (
       res.status(403).json({
         success: false,
         error: ErrorMessages.USER_BLOCKED,
+        bloqueadoHasta: cuenta.bloqueadoHasta.toISOString(),
       });
       return;
     }

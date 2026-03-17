@@ -238,17 +238,36 @@ export class DeportistaService {
   async delete(id: number) {
     const deportista = await prisma.deportista.findUnique({
       where: { id },
+      include: { cuenta: true },
     });
 
     if (!deportista) {
       throw new NotFoundError(ErrorMessages.DEPORTISTA_NOT_FOUND);
     }
 
-    await prisma.deportista.delete({
+    await prisma.cuentaUsuario.update({
+      where: { id: deportista.cuentaId },
+      data: { activo: false },
+    });
+
+    return { message: 'Deportista dado de baja. No podrá iniciar sesión hasta que se le dé de alta.' };
+  }
+
+  async darDeAlta(id: number) {
+    const deportista = await prisma.deportista.findUnique({
       where: { id },
     });
 
-    return { message: 'Deportista eliminado correctamente' };
+    if (!deportista) {
+      throw new NotFoundError(ErrorMessages.DEPORTISTA_NOT_FOUND);
+    }
+
+    await prisma.cuentaUsuario.update({
+      where: { id: deportista.cuentaId },
+      data: { activo: true },
+    });
+
+    return this.getById(id);
   }
 
   async getConPagosPendientes() {

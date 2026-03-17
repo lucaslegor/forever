@@ -95,6 +95,15 @@ router.delete(
   deportistaController.delete.bind(deportistaController)
 );
 
+// PUT /api/deportistas/:id/alta - Dar de alta deportista (reactivar cuenta, solo Administrativo)
+router.put(
+  '/:id/alta',
+  authenticateToken,
+  requireAdministrativo,
+  validateParams(idParamSchema),
+  deportistaController.darDeAlta.bind(deportistaController)
+);
+
 // PUT /api/deportistas/:id/reset-password - Restablecer contraseña (solo Administrativo)
 router.put(
   '/:id/reset-password',

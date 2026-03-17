@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Info, CreditCard, MessageCircle } from 'lucide-react';
 import { Footer } from '../components/Footer';
+import { TurnstileWidget } from '../components/TurnstileWidget';
 import { reservaCanchaService, HORAS_TURNO, horaToLabel, MONTO_SENA } from '../services/reservaCancha.service';
 import styles from './AlquilarCancha.module.css';
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
 
 type MetodoPago = 'mercadopago' | 'transferencia';
 
@@ -28,6 +31,8 @@ export const AlquilarCancha = () => {
         hora: number;
     } | null>(null);
     const [countdown, setCountdown] = useState<{ min: number; seg: number } | null>(null);
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
@@ -74,6 +79,11 @@ export const AlquilarCancha = () => {
             setMensaje({ tipo: 'error', texto: 'Para pagar con Mercado Pago es necesario ingresar tu email.' });
             return;
         }
+        const token = TURNSTILE_SITE_KEY ? (captchaToken ?? '') : 'dev-bypass';
+        if (TURNSTILE_SITE_KEY && !captchaToken) {
+            setMensaje({ tipo: 'error', texto: 'Completá la verificación de seguridad antes de reservar.' });
+            return;
+        }
         setEnviando(true);
         setMensaje(null);
         try {
@@ -84,6 +94,7 @@ export const AlquilarCancha = () => {
                 telefono: form.telefono.trim(),
                 email: form.email.trim() || undefined,
                 metodoPago: metodo,
+                captchaToken: token,
             });
             if (res.success && res.data) {
                 const payload = res.data as {
@@ -105,6 +116,8 @@ export const AlquilarCancha = () => {
                     setSlotElegido(null);
                     setForm({ nombreCliente: '', telefono: '', email: '' });
                     setHorasOcupadas((prev) => [...prev, slotElegido]);
+                    setCaptchaToken(null);
+                    setTurnstileResetKey((k) => k + 1);
                 } else if (payload.initPoint) {
                     window.location.href = payload.initPoint;
                     return;
@@ -116,15 +129,21 @@ export const AlquilarCancha = () => {
                     setSlotElegido(null);
                     setForm({ nombreCliente: '', telefono: '', email: '' });
                     setHorasOcupadas((prev) => [...prev, slotElegido]);
+                    setCaptchaToken(null);
+                    setTurnstileResetKey((k) => k + 1);
                 }
             } else {
                 setMensaje({ tipo: 'error', texto: (res as { error?: string }).error || 'Error al reservar.' });
+                setCaptchaToken(null);
+                setTurnstileResetKey((k) => k + 1);
             }
         } catch (err: unknown) {
             const msg = err && typeof err === 'object' && 'response' in err
                 ? (err as { response?: { data?: { error?: string } } }).response?.data?.error
                 : 'Error al reservar.';
             setMensaje({ tipo: 'error', texto: msg || 'Error al reservar.' });
+            setCaptchaToken(null);
+            setTurnstileResetKey((k) => k + 1);
         } finally {
             setEnviando(false);
         }
@@ -154,7 +173,7 @@ export const AlquilarCancha = () => {
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
                 </Link>
-                <h1 className={styles.title}>Alquiler cancha césped sintético</h1>
+                <h1 className={styles.title}>Alquiler de cancha de césped sintético</h1>
                 <div className={styles.headerRight}>
                     <Link to="/" className={styles.backLink}>
                         <ArrowLeft size={20} />
@@ -307,11 +326,24 @@ export const AlquilarCancha = () => {
                                             {mensaje.texto}
                                         </div>
                                     )}
+                                    {TURNSTILE_SITE_KEY && (
+                                        <div className={styles.turnstileWrap} key={turnstileResetKey}>
+                                            <TurnstileWidget
+                                                siteKey={TURNSTILE_SITE_KEY}
+                                                onVerify={setCaptchaToken}
+                                                onExpire={() => setCaptchaToken(null)}
+                                            />
+                                        </div>
+                                    )}
                                     <div className={styles.formActions}>
                                         <button type="button" className={styles.btnSecondary} onClick={() => setSlotElegido(null)} disabled={enviando}>
                                             Cambiar horario
                                         </button>
-                                        <button type="submit" className={styles.btnPrimary} disabled={enviando}>
+                                        <button
+                                            type="submit"
+                                            className={styles.btnPrimary}
+                                            disabled={enviando || (!!TURNSTILE_SITE_KEY && !captchaToken)}
+                                        >
                                             <img src="/logo.png" alt="" className={styles.btnPrimaryLogo} aria-hidden />
                                             {enviando ? 'Enviando...' : 'Reservar turno'}
                                         </button>

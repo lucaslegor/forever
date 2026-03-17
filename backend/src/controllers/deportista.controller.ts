@@ -91,6 +91,25 @@ export class DeportistaController {
     }
   }
 
+  async darDeAlta(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = parseInt(req.params.id as string, 10);
+      const result = await deportistaService.darDeAlta(id);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.DEPORTISTA_REACTIVAR,
+        entidad: 'deportista',
+        entidadId: id,
+        detalles: JSON.stringify({ deportistaId: id }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
+      sendSuccess(res, result, 'Deportista dado de alta. Ya puede iniciar sesión.');
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getConPagosPendientes(_req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const result = await deportistaService.getConPagosPendientes();

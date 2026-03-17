@@ -3,7 +3,7 @@ import { clasificacionService } from '../services/clasificacion.service';
 import { ejecutarPaseCategoriaFutbolMasculino } from '../services/paseCategoria.service';
 import { authenticateToken, requireAdministrativo } from '../middlewares/auth.middleware';
 import { validateBody, validateParams } from '../middlewares/validation.middleware';
-import { createSubcategoriaSchema, subcategoriaIdParamSchema } from '../validators/clasificacion.validator';
+import { createSubcategoriaSchema, subcategoriaIdParamSchema, createCategoriaSchema, categoriaIdParamSchema } from '../validators/clasificacion.validator';
 
 const router = Router();
 
@@ -40,6 +40,59 @@ router.get('/categorias', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Error al obtener categorías' });
   }
 });
+
+/**
+ * @route   POST /api/clasificacion/categorias
+ * @desc    Crear una nueva categoría
+ * @access  Admin
+ */
+router.post(
+  '/categorias',
+  authenticateToken,
+  requireAdministrativo,
+  validateBody(createCategoriaSchema),
+  async (req: Request, res: Response) => {
+    try {
+      const { nombre } = req.body;
+      const categoria = await clasificacionService.createCategoria(nombre);
+      res.status(201).json({
+        success: true,
+        data: categoria,
+        message: 'Categoría creada exitosamente',
+      });
+    } catch (error: any) {
+      const status = error.statusCode ?? 500;
+      const message = error.message || 'Error al crear categoría';
+      res.status(status).json({ success: false, error: message, message });
+    }
+  }
+);
+
+/**
+ * @route   DELETE /api/clasificacion/categorias/:id
+ * @desc    Eliminar una categoría (solo si no tiene deportistas asociados)
+ * @access  Admin
+ */
+router.delete(
+  '/categorias/:id',
+  authenticateToken,
+  requireAdministrativo,
+  validateParams(categoriaIdParamSchema),
+  async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      await clasificacionService.deleteCategoria(id);
+      res.json({
+        success: true,
+        message: 'Categoría eliminada exitosamente',
+      });
+    } catch (error: any) {
+      const status = error.statusCode ?? 500;
+      const message = error.message || 'Error al eliminar categoría';
+      res.status(status).json({ success: false, error: message, message });
+    }
+  }
+);
 
 /**
  * @route   GET /api/clasificacion/subcategorias
@@ -145,9 +198,12 @@ router.delete(
       message: 'Subcategoría eliminada exitosamente',
     });
   } catch (error: any) {
-    res.status(500).json({
+    const status = error.statusCode ?? 500;
+    const message = error.message || 'Error al eliminar subcategoría';
+    res.status(status).json({
       success: false,
-      message: error.message || 'Error al eliminar subcategoría',
+      error: message,
+      message,
     });
   }
   }

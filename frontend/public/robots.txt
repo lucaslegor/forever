@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /pagos/
 
-Sitemap: https://foreverclub.com/sitemap.xml
+Sitemap: https://cscdforever.com/sitemap.xml

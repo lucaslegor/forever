@@ -29,6 +29,17 @@ export class ForbiddenError extends AppError {
   }
 }
 
+/** Error cuando la cuenta está bloqueada por intentos fallidos; incluye hasta cuándo está bloqueada */
+export class UserBlockedError extends ForbiddenError {
+  constructor(
+    message: string = 'Usuario bloqueado temporalmente por intentos fallidos',
+    public readonly bloqueadoHasta?: Date
+  ) {
+    super(message);
+    Object.setPrototypeOf(this, UserBlockedError.prototype);
+  }
+}
+
 export class ValidationError extends AppError {
   public readonly errors: Record<string, string[]>;
 
@@ -92,9 +103,11 @@ export const ErrorMessages = {
   GRUPO_FAMILIAR_DUPLICATE: 'Ya existe un grupo familiar con la misma composicion',
   GRUPO_FAMILIAR_DEPORTISTA_EN_OTRO: 'Uno o mas deportistas ya pertenecen a otro grupo familiar. Elimine el grupo anterior para poder agregarlos.',
 
-  // Disciplina
+  // Disciplina / Clasificación
   DISCIPLINA_NOT_FOUND: 'Disciplina no encontrada',
   DISCIPLINA_NAME_EXISTS: 'Ya existe una disciplina con ese nombre',
+  SUBCATEGORIA_TIENE_DEPORTISTAS: 'No se puede eliminar la subcategoría porque tiene deportistas asociados. Reasigná o eliminá los jugadores primero.',
+  CATEGORIA_TIENE_DEPORTISTAS: 'No se puede eliminar la categoría porque tiene deportistas asociados. Reasigná o eliminá los jugadores primero.',
 
   // General
   REQUIRED_FIELDS: 'Complete todos los campos obligatorios',

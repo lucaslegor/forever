@@ -48,6 +48,7 @@ export const reservaCanchaService = {
     email?: string;
     notas?: string;
     metodoPago?: 'mercadopago' | 'transferencia';
+    captchaToken: string;
   }): Promise<
     ApiResponse<
       | { reserva: ReservaCancha; metodoPago: 'mercadopago'; initPoint?: string; preferenceId?: string }

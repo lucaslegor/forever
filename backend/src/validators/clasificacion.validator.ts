@@ -10,3 +10,11 @@ export const createSubcategoriaSchema = z.object({
 export const subcategoriaIdParamSchema = z.object({
   id: z.string().regex(/^\d+$/, 'ID inválido').transform(Number),
 });
+
+export const createCategoriaSchema = z.object({
+  nombre: z.string().min(1, 'nombre requerido').max(200),
+});
+
+export const categoriaIdParamSchema = z.object({
+  id: z.string().regex(/^\d+$/, 'ID inválido').transform(Number),
+});

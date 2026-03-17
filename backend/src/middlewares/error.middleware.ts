@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
-import { AppError, ValidationError, ErrorMessages } from '../utils/errors';
+import { AppError, ValidationError, UserBlockedError, ErrorMessages } from '../utils/errors';
 import { env } from '../config/env';
 
 export const errorHandler = (
@@ -16,6 +16,14 @@ export const errorHandler = (
         success: false,
         error: err.message,
         errors: err.errors,
+      });
+      return;
+    }
+    if (err instanceof UserBlockedError && err.bloqueadoHasta) {
+      res.status(err.statusCode).json({
+        success: false,
+        error: err.message,
+        bloqueadoHasta: err.bloqueadoHasta.toISOString(),
       });
       return;
     }

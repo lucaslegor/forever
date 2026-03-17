@@ -605,6 +605,14 @@
     text-decoration: underline;
 }
 
+.sponsorsModalLogoImage {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
 .sponsorsModalActions {
     display: flex;
     gap: var(--spacing-sm);

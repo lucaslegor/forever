@@ -223,8 +223,13 @@ export const AdminDeportistas = () => {
     };
 
     const handleAlta = async (id: number) => {
-        // TODO: Implementar activación en el backend
-        alert('Funcionalidad de reactivar en desarrollo');
+        try {
+            await deportistaService.darDeAlta(id);
+            await fetchDeportistas();
+            alert('Deportista dado de alta. Ya puede iniciar sesión.');
+        } catch (error) {
+            alert('Error al dar de alta al deportista');
+        }
     };
 
     const validateForm = (): string | null => {
@@ -421,7 +426,7 @@ export const AdminDeportistas = () => {
                 );
                 const arr = subRes.success && Array.isArray(subRes.data) ? subRes.data : [];
                 const sub = arr.find((s: any) => s.nombre === form.subcategoria);
-                if (sub) subcategoriaId = sub.id ?? (sub as any).id_subcategoria;
+                if (sub) subcategoriaId = (sub as any).id_subcategoria ?? (sub as any).id;
             } else if (mode === 'edit') {
                 subcategoriaId = null; // Permitir vaciar subcategoría al editar
             }

@@ -38,6 +38,16 @@ export const clasificacionService = {
     return response.data;
   },
 
+  createCategoria: async (nombre: string): Promise<ApiResponse<any>> => {
+    const response = await api.post('/clasificacion/categorias', { nombre: nombre.trim() });
+    return response.data;
+  },
+
+  deleteCategoria: async (id: number): Promise<ApiResponse<any>> => {
+    const response = await api.delete(`/clasificacion/categorias/${id}`);
+    return response.data;
+  },
+
   getSubcategorias: async (
     disciplinaId?: number,
     categoriaId?: number,

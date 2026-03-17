@@ -16,13 +16,13 @@ export class GrupoFamiliarService {
       throw new NotFoundError('Uno o mas deportistas no existen');
     }
 
-    // Cuota familiar = valor cuota (precio disciplina) × 1.6; el dirigente puede actualizarla después
+    // Cuota familiar = valor cuota (precio disciplina) × 1,5; el dirigente puede actualizarla después
     const principal = data.integrantes.find((i) => i.esPrincipal) || data.integrantes[0];
     const deportistaPrincipal = deportistas.find((d) => d.id === principal.deportistaId);
     const precioMensual = deportistaPrincipal?.disciplina?.precioMensual
       ? Number(deportistaPrincipal.disciplina.precioMensual)
       : 0;
-    const cuotaFamiliarAuto = Math.round(precioMensual * 1.6 * 100) / 100;
+    const cuotaFamiliarAuto = Math.round(precioMensual * 1.5 * 100) / 100;
 
     // Verificar que ningún deportista esté ya en otro grupo familiar
     const integrantesEnOtroGrupo = await prisma.grupoFamiliarIntegrante.findMany({
@@ -242,13 +242,13 @@ export class GrupoFamiliarService {
 
   /**
    * Recalcula cuotaHermano para todos los grupos cuyo titular (esPrincipal) está en la disciplina dada.
-   * Se usa cuando se actualiza el precio de una disciplina (misma fórmula: precio × 1.6).
+   * Se usa cuando se actualiza el precio de una disciplina (misma fórmula: precio × 1,5).
    */
   async actualizarCuotaHermanoPorCambioPrecioDisciplina(
     disciplinaId: number,
     nuevoPrecioMensual: number
   ): Promise<void> {
-    const cuotaFamiliar = Math.round(nuevoPrecioMensual * 1.6 * 100) / 100;
+    const cuotaFamiliar = Math.round(nuevoPrecioMensual * 1.5 * 100) / 100;
 
     const integrantesPrincipal = await prisma.grupoFamiliarIntegrante.findMany({
       where: {

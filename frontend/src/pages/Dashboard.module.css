@@ -198,6 +198,15 @@
     box-shadow: 0 2px 8px rgba(0, 51, 102, 0.25);
 }
 
+.sponsorLogoImage {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    object-fit: cover;
+    margin-bottom: 0.35rem;
+    box-shadow: 0 2px 8px rgba(0, 51, 102, 0.25);
+}
+
 .sponsorLogoM {
     width: 38px;
     height: 38px;

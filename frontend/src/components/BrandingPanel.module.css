@@ -37,6 +37,13 @@
     margin: 0;
 }
 
+.subtitle {
+    margin-top: var(--spacing-md);
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 22rem;
+}
+
 @media (max-width: 768px) {
     .brandingPanel {
         padding: var(--spacing-lg);
@@ -50,6 +57,11 @@
 
     .clubText {
         font-size: 0.95rem;
+    }
+
+    .subtitle {
+        font-size: 0.85rem;
+        max-width: 18rem;
     }
 }
 
@@ -68,5 +80,10 @@
     .clubText {
         font-size: 0.8rem;
         letter-spacing: 0.05em;
+    }
+
+    .subtitle {
+        font-size: 0.8rem;
+        max-width: 16rem;
     }
 }

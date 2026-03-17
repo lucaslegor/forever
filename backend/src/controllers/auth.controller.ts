@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
+import { captchaService } from '../services/captcha.service';
 import { sendSuccess, sendCreated } from '../utils/response';
 import { LoginInput, RegisterInput } from '../validators/auth.validator';
 import { AuthenticatedRequest } from '../types';
@@ -17,6 +18,14 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const data = req.body as LoginInput;
+      const valid = await captchaService.verifyTurnstile(data.captchaToken);
+      if (!valid) {
+        res.status(400).json({
+          success: false,
+          error: 'La verificación de seguridad falló. Intentá de nuevo.',
+        });
+        return;
+      }
       const result = await authService.login(data);
       res.cookie(env.AUTH_COOKIE_NAME, result.token, cookieOptions);
       sendSuccess(res, { user: result.user }, 'Inicio de sesion exitoso');

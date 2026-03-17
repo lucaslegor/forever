@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 
-const SITE_URL = import.meta.env.VITE_APP_URL || 'https://foreverclub.com';
-const DEFAULT_TITLE = 'For Ever';
-const DEFAULT_DESCRIPTION = 'For Ever Club - Club deportivo: noticias, estado de cuenta, alquiler de cancha y gestión para deportistas y familias.';
+const SITE_URL = import.meta.env.VITE_APP_URL || 'https://cscdforever.com';
+const DEFAULT_TITLE = 'Club Social Cultural y Deportivo For Ever La Plata';
+const DEFAULT_DESCRIPTION =
+  'Sistema de pagos online, cuotas y alquiler de cancha del Club Social Cultural y Deportivo For Ever, La Plata.';
 
 export interface SeoProps {
   title?: string;

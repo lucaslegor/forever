@@ -78,6 +78,11 @@ export const deportistaService = {
     return response.data;
   },
 
+  darDeAlta: async (id: number): Promise<ApiResponse<any>> => {
+    const response = await api.put(`/deportistas/${id}/alta`);
+    return response.data;
+  },
+
   resetPassword: async (id: number, newPassword: string): Promise<ApiResponse<any>> => {
     const response = await api.put(`/deportistas/${id}/reset-password`, { newPassword });
     return response.data;

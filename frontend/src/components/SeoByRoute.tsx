@@ -1,45 +1,56 @@
 import { useLocation } from 'react-router-dom';
 import { Seo } from './Seo';
 
-const DEFAULT_DESCRIPTION = 'For Ever Club - Club deportivo: noticias, estado de cuenta, alquiler de cancha y gestión para deportistas y familias.';
+const DEFAULT_DESCRIPTION =
+  'Sistema de pagos online, cuotas y alquiler de cancha del Club Social Cultural y Deportivo For Ever, La Plata.';
 
 /** Mapa path -> { title, description }. Coincidencia por prefijo (primera que matchee). */
 const ROUTE_SEO: Record<string, { title: string; description: string; noIndex?: boolean }> = {
   '/': {
-    title: 'For Ever',
-    description: 'For Ever Club - Club deportivo: noticias, estado de cuenta, alquiler de cancha y gestión para deportistas y familias.',
+    title: 'Iniciar sesión | Club Social Cultural y Deportivo For Ever La Plata',
+    description:
+      'Accedé al sistema de pagos online, cuotas y alquiler de cancha del Club Social Cultural y Deportivo For Ever, La Plata.',
   },
   '/dashboard': {
-    title: 'Inicio',
-    description: 'Panel de inicio - For Ever Club. Acceso a noticias, estado de cuenta y servicios.',
+    title: 'Inicio | Sistema de pagos For Ever',
+    description: 'Panel de inicio del sistema de pagos y gestión de socios del Club For Ever.',
+    noIndex: true,
   },
   '/perfil': {
-    title: 'Mi perfil',
-    description: 'Editar perfil y datos de contacto - For Ever Club.',
+    title: 'Mi perfil | Club For Ever',
+    description:
+      'Editar datos personales y de contacto en el sistema del Club Social Cultural y Deportivo For Ever.',
+    noIndex: true,
   },
   '/estado-deuda': {
-    title: 'Estado de cuenta',
-    description: 'Consultar estado de cuenta y cuotas - For Ever Club.',
+    title: 'Estado de cuenta | Sistema de pagos For Ever',
+    description: 'Consultar estado de cuenta, cuotas pendientes y pagadas del Club For Ever.',
+    noIndex: true,
   },
   '/historial-pagos': {
-    title: 'Historial de pagos',
-    description: 'Historial de pagos realizados - For Ever Club.',
+    title: 'Historial de pagos | Sistema de pagos For Ever',
+    description: 'Ver el historial de pagos de cuotas y servicios del Club For Ever.',
+    noIndex: true,
   },
   '/grupo-familiar': {
-    title: 'Grupo familiar',
-    description: 'Gestionar grupo familiar - For Ever Club.',
+    title: 'Grupo familiar | Club For Ever',
+    description:
+      'Gestionar grupo familiar, cuotas y beneficios en el Club Social Cultural y Deportivo For Ever.',
+    noIndex: true,
   },
   '/noticias': {
-    title: 'Noticias',
-    description: 'Últimas noticias del club - For Ever Club.',
+    title: 'Noticias del Club For Ever La Plata',
+    description:
+      'Últimas noticias, novedades deportivas y comunicados oficiales del Club Social Cultural y Deportivo For Ever, La Plata.',
   },
   '/alquilar-cancha': {
-    title: 'Alquilar cancha',
-    description: 'Reservar y alquilar la cancha - For Ever Club.',
+    title: 'Alquiler de cancha de césped sintético | Club For Ever La Plata',
+    description:
+      'Reservá online la cancha de césped sintético del Club Social Cultural y Deportivo For Ever en La Plata. Turnos, horarios y formas de pago.',
   },
   '/admin': {
-    title: 'Panel de administración',
-    description: 'Administración del club - For Ever Club.',
+    title: 'Panel de administración | Sistema de gestión Club For Ever',
+    description: 'Panel de administración del sistema de gestión del Club Social Cultural y Deportivo For Ever.',
     noIndex: true,
   },
 };
@@ -54,7 +65,10 @@ function getSeoForPath(pathname: string): { title: string; description: string; 
   if (ROUTE_SEO[normalized]) return ROUTE_SEO[normalized];
   // Noticia detalle
   if (/^\/noticias\/\d+$/.test(normalized)) {
-    return { title: 'Noticia', description: 'Noticia - For Ever Club.' };
+    return {
+      title: 'Noticia | Club For Ever',
+      description: 'Noticia del Club Social Cultural y Deportivo For Ever, La Plata.',
+    };
   }
   // Pagos (success/failure/pending)
   if (normalized.startsWith('/pagos/')) {

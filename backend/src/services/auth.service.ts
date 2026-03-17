@@ -9,25 +9,38 @@ import {
   UnauthorizedError,
   ConflictError,
   ForbiddenError,
+  UserBlockedError,
   ErrorMessages,
 } from '../utils/errors';
 import { Rol } from '@prisma/client';
 
 export class AuthService {
   async login(data: LoginDTO): Promise<AuthResponse> {
-    // Intentar login por email O por DNI (deportista/admin)
-    let cuenta = await prisma.cuentaUsuario.findUnique({
-      where: { email: data.email },
-      include: {
-        deportista: { include: { disciplina: true } },
-        administrativo: true,
-      },
-    });
+    const raw = (data.email || '').trim();
+    const isEmail = raw.includes('@');
+    const emailForLookup = isEmail ? raw.toLowerCase() : raw;
+    const dniNorm = raw.replace(/\D/g, '');
 
-    // Si no se encuentra por email, buscar por DNI de deportista
-    if (!cuenta) {
+    // Intentar login por email (solo si parece email) o por DNI (deportista/admin)
+    let cuenta = null as Awaited<ReturnType<typeof prisma.cuentaUsuario.findUnique>> & {
+      deportista?: unknown;
+      administrativo?: unknown;
+    } | null;
+
+    if (isEmail) {
+      cuenta = await prisma.cuentaUsuario.findUnique({
+        where: { email: emailForLookup },
+        include: {
+          deportista: { include: { disciplina: true } },
+          administrativo: true,
+        },
+      });
+    }
+
+    // Si no se encontró por email: con 7 u 8 dígitos buscar por DNI o por email de admin (patrón usado al crear: dni@admin.forever)
+    if (!cuenta && dniNorm.length >= 7 && dniNorm.length <= 8) {
       const deportista = await prisma.deportista.findUnique({
-        where: { dni: data.email }, // El frontend envía DNI en el campo 'email'
+        where: { dni: dniNorm },
         include: {
           cuenta: {
             include: {
@@ -40,10 +53,9 @@ export class AuthService {
       if (deportista) cuenta = deportista.cuenta;
     }
 
-    // Si tampoco, buscar por DNI de administrativo
-    if (!cuenta) {
+    if (!cuenta && dniNorm.length >= 7 && dniNorm.length <= 8) {
       const admin = await prisma.administrativo.findUnique({
-        where: { dni: data.email }, // El frontend envía documento en el campo 'email'
+        where: { dni: dniNorm },
         include: {
           cuenta: {
             include: {
@@ -56,13 +68,25 @@ export class AuthService {
       if (admin) cuenta = admin.cuenta;
     }
 
+    // Respaldo: admins creados desde el panel tienen email {dni}@admin.forever
+    if (!cuenta && dniNorm.length >= 7 && dniNorm.length <= 8) {
+      const cuentaAdmin = await prisma.cuentaUsuario.findUnique({
+        where: { email: `${dniNorm}@admin.forever`.toLowerCase() },
+        include: {
+          deportista: { include: { disciplina: true } },
+          administrativo: true,
+        },
+      });
+      if (cuentaAdmin?.administrativo) cuenta = cuentaAdmin;
+    }
+
     if (!cuenta) {
       throw new UnauthorizedError(ErrorMessages.INVALID_CREDENTIALS);
     }
 
-    // Verificar si está bloqueado
+    // Verificar si está bloqueado (incluir hasta cuándo para mostrarlo al usuario)
     if (cuenta.bloqueadoHasta && cuenta.bloqueadoHasta > new Date()) {
-      throw new ForbiddenError(ErrorMessages.USER_BLOCKED);
+      throw new UserBlockedError(ErrorMessages.USER_BLOCKED, cuenta.bloqueadoHasta);
     }
 
     // Verificar si está activo
@@ -107,22 +131,26 @@ export class AuthService {
   }
 
   async register(data: RegisterDTO): Promise<AuthResponse> {
+    const emailNorm = data.email.trim().toLowerCase();
+    const dniNorm = data.dni.replace(/\D/g, '');
+
     // Verificar email único
     const existingEmail = await prisma.cuentaUsuario.findUnique({
-      where: { email: data.email },
+      where: { email: emailNorm },
     });
 
     if (existingEmail) {
       throw new ConflictError(ErrorMessages.EMAIL_EXISTS);
     }
 
-    // Verificar DNI único
-    const existingDni = await prisma.administrativo.findUnique({
-      where: { dni: data.dni },
-    });
-
-    if (existingDni) {
-      throw new ConflictError(ErrorMessages.DNI_EXISTS);
+    // Verificar DNI único (solo para admins)
+    if (data.rol === 'ADMIN' || data.rol === 'ADMINISTRATIVO') {
+      const existingDni = await prisma.administrativo.findUnique({
+        where: { dni: dniNorm },
+      });
+      if (existingDni) {
+        throw new ConflictError(ErrorMessages.DNI_EXISTS);
+      }
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -130,7 +158,7 @@ export class AuthService {
     const cuenta = await prisma.$transaction(async (tx) => {
       const nuevaCuenta = await tx.cuentaUsuario.create({
         data: {
-          email: data.email,
+          email: emailNorm,
           password: hashedPassword,
           rol: data.rol as Rol,
         },
@@ -141,7 +169,7 @@ export class AuthService {
           data: {
             nombre: data.nombre,
             apellido: data.apellido,
-            dni: data.dni,
+            dni: dniNorm,
             cuentaId: nuevaCuenta.id,
           },
         });

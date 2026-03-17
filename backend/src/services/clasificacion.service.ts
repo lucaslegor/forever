@@ -1,4 +1,5 @@
 import prisma from '../config/prisma';
+import { ConflictError, ErrorMessages } from '../utils/errors';
 
 export class ClasificacionService {
   async getGeneros() {
@@ -10,6 +11,30 @@ export class ClasificacionService {
   async getCategorias() {
     return prisma.categoria.findMany({
       orderBy: { nombre: 'asc' },
+    });
+  }
+
+  async createCategoria(nombre: string) {
+    const n = nombre.trim();
+    if (!n) throw new Error('El nombre de la categoría es requerido');
+    const existente = await prisma.categoria.findFirst({
+      where: { nombre: { equals: n, mode: 'insensitive' } },
+    });
+    if (existente) throw new ConflictError('Ya existe una categoría con ese nombre');
+    return prisma.categoria.create({
+      data: { nombre: n },
+    });
+  }
+
+  async deleteCategoria(id: number) {
+    const count = await prisma.deportista.count({
+      where: { categoriaId: id },
+    });
+    if (count > 0) {
+      throw new ConflictError(ErrorMessages.CATEGORIA_TIENE_DEPORTISTAS);
+    }
+    return prisma.categoria.delete({
+      where: { id },
     });
   }
 
@@ -119,6 +144,12 @@ export class ClasificacionService {
   }
 
   async deleteSubcategoria(id: number) {
+    const count = await prisma.deportista.count({
+      where: { subcategoriaId: id },
+    });
+    if (count > 0) {
+      throw new ConflictError(ErrorMessages.SUBCATEGORIA_TIENE_DEPORTISTAS);
+    }
     return prisma.subcategoria.delete({
       where: { id },
     });

@@ -44,6 +44,7 @@ export const AdminCuotas = () => {
     const [totalPages, setTotalPages] = useState(0);
 
     const disciplinaId = useMemo(() => disciplinas.find((d) => d.nombre === filtroDisciplina)?.id, [disciplinas, filtroDisciplina]);
+    const generarSeleccionValida = anioGenerar === ANIO_ACTUAL && mesGenerar === MES_ACTUAL;
 
     const cargarListadoGeneradas = useCallback(async () => {
         setLoadingListado(true);
@@ -213,7 +214,13 @@ export const AdminCuotas = () => {
                             disabled={generando}
                         >
                             {MESES.map((nombre, i) => (
-                                <option key={nombre} value={i + 1}>{nombre}</option>
+                                <option
+                                    key={nombre}
+                                    value={i + 1}
+                                    disabled={anioGenerar !== ANIO_ACTUAL || (i + 1) !== MES_ACTUAL}
+                                >
+                                    {nombre}
+                                </option>
                             ))}
                         </select>
                     </label>
@@ -226,23 +233,23 @@ export const AdminCuotas = () => {
                             disabled={generando}
                         >
                             {ANIOS_OPCIONES.map((a) => (
-                                <option key={a} value={a}>{a}</option>
+                                <option key={a} value={a} disabled={a !== ANIO_ACTUAL}>{a}</option>
                             ))}
                         </select>
                     </label>
                     <button
                         type="submit"
                         className={styles.btnGenerar}
-                        disabled={generando || anioGenerar > ANIO_ACTUAL || (anioGenerar === ANIO_ACTUAL && mesGenerar > MES_ACTUAL)}
-                        title={anioGenerar > ANIO_ACTUAL || (anioGenerar === ANIO_ACTUAL && mesGenerar > MES_ACTUAL) ? 'Solo se pueden generar cuotas a partir del 1º del mes correspondiente' : undefined}
+                        disabled={generando || !generarSeleccionValida}
+                        title={!generarSeleccionValida ? 'Solo se pueden generar cuotas del mes en curso' : undefined}
                     >
                         <CalendarPlus size={18} />
                         {generando ? 'Generando…' : 'Generar cuotas mensuales'}
                     </button>
                 </form>
-                {(anioGenerar > ANIO_ACTUAL || (anioGenerar === ANIO_ACTUAL && mesGenerar > MES_ACTUAL)) && (
+                {!generarSeleccionValida && (
                     <p className={styles.sectionGenerarHint} style={{ marginTop: '0.5rem', color: '#c62828' }}>
-                        Solo se pueden generar cuotas a partir del primer día del mes (cuotas con plazo de 30 días).
+                        Solo se pueden generar cuotas del mes en curso.
                     </p>
                 )}
                 {mensajeGenerar && (

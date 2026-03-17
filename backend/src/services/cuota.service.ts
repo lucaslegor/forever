@@ -483,10 +483,9 @@ export class CuotaService {
     const now = new Date();
     const mesActual = now.getMonth() + 1;
     const anioActual = now.getFullYear();
-    if (anio > anioActual || (anio === anioActual && mes > mesActual)) {
-      throw new ConflictError(
-        'Solo se pueden generar cuotas a partir del primer día del mes correspondiente. Las cuotas tienen un plazo de 30 días; no es posible generar cuotas de meses futuros.'
-      );
+    // Regla: solo permitir generar cuotas del mes en curso (evita backfill y meses futuros).
+    if (anio !== anioActual || mes !== mesActual) {
+      throw new ConflictError('Solo se pueden generar cuotas del mes en curso.');
     }
 
     // Generar por disciplinas: todos los deportistas activos (cuenta activa). Si se agrega un

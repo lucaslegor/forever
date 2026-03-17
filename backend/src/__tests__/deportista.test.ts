@@ -9,6 +9,7 @@ jest.mock('../config/prisma', () => {
     cuentaUsuario: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
     },
     deportista: {
       findUnique: jest.fn(),
@@ -300,17 +301,26 @@ describe('Deportista Module', () => {
   });
 
   describe('DELETE /api/deportistas/:id', () => {
-    it('deberia retornar 200 al eliminar', async () => {
+    it('deberia retornar 200 al dar de baja (desactivar cuenta)', async () => {
       (mockPrisma.cuentaUsuario.findUnique as jest.Mock).mockResolvedValue(adminUser);
-      (mockPrisma.deportista.findUnique as jest.Mock).mockResolvedValue({ id: 1, nombre: 'Juan' });
-      (mockPrisma.deportista.delete as jest.Mock).mockResolvedValue({});
+      (mockPrisma.deportista.findUnique as jest.Mock).mockResolvedValue({
+        id: 1,
+        nombre: 'Juan',
+        cuentaId: 2,
+        cuenta: {},
+      });
+      (mockPrisma.cuentaUsuario.update as jest.Mock).mockResolvedValue({});
 
       const response = await request(app)
         .delete('/api/deportistas/1')
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.data.message).toContain('eliminado');
+      expect(response.body.data.message).toContain('baja');
+      expect(mockPrisma.cuentaUsuario.update).toHaveBeenCalledWith({
+        where: { id: 2 },
+        data: { activo: false },
+      });
     });
   });
 

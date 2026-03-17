@@ -1,0 +1,82 @@
+/* Modal de advertencia/info (un solo botón Aceptar) */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--spacing-md);
+}
+
+.dialog {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  color: var(--color-dark-gray);
+}
+
+.header {
+  background: var(--color-blue);
+  color: var(--color-white);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.body {
+  padding: var(--spacing-lg);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-dark-gray);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+}
+
+.btnAccept {
+  padding: 0.65rem 1.35rem;
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  min-width: 100px;
+  transition: background 0.2s;
+  outline: none;
+}
+
+.btnAccept:hover {
+  background: #002244;
+}
+
+.btnAccept:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 0 4px rgba(0, 51, 102, 0.3);
+}
+
+@media (max-width: 480px) {
+  .overlay {
+    padding: var(--spacing-sm);
+    align-items: flex-end;
+  }
+
+  .dialog {
+    max-width: none;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .btnAccept {
+    width: 100%;
+    min-height: var(--touch-min);
+    justify-content: center;
+  }
+}

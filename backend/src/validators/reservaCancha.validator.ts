@@ -12,6 +12,7 @@ export const createReservaSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   notas: z.string().max(1000).optional(),
   metodoPago: z.enum(['mercadopago', 'transferencia']).optional(),
+  captchaToken: z.string().min(1, 'CAPTCHA requerido'),
 });
 
 export const listReservasQuerySchema = z.object({

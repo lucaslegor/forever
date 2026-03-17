@@ -54,6 +54,10 @@ export const env = {
   PRINCIPAL_ADMIN_EMAIL: (process.env.PRINCIPAL_ADMIN_EMAIL || 'admin@foreverclub.com').toLowerCase(),
   /** WhatsApp del club para transferencia de seña (código país + número sin +). Ej: 5492211234567 */
   CLUB_WHATSAPP_NUMBER: process.env.CLUB_WHATSAPP_NUMBER || '5492211234567',
+  /** Cloudflare Turnstile: clave secreta para verificar CAPTCHA en backend. Vacío en dev = skip verificación. */
+  TURNSTILE_SECRET_KEY: (process.env.TURNSTILE_SECRET_KEY || '').trim(),
+  /** URL de verificación Turnstile (opcional; por defecto la oficial). */
+  TURNSTILE_VERIFY_URL: process.env.TURNSTILE_VERIFY_URL || 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
   /** Cookie: sameSite ("lax" por defecto; "none" si front y API en dominios distintos). */
   COOKIE_SAME_SITE,
   /** Cookie: secure (true en producción; obligatorio si COOKIE_SAME_SITE=none). */

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { reservaCanchaService } from '../services/reservaCancha.service';
+import { captchaService } from '../services/captcha.service';
 import { sendSuccess, sendCreated } from '../utils/response';
 
 export class ReservaCanchaController {
@@ -27,8 +28,18 @@ export class ReservaCanchaController {
         email?: string;
         notas?: string;
         metodoPago?: 'mercadopago' | 'transferencia';
+        captchaToken: string;
       };
-      const result = await reservaCanchaService.create(body);
+      const valid = await captchaService.verifyTurnstile(body.captchaToken);
+      if (!valid) {
+        res.status(400).json({
+          success: false,
+          error: 'La verificación de seguridad falló. Intentá de nuevo.',
+        });
+        return;
+      }
+      const { captchaToken: _t, ...data } = body;
+      const result = await reservaCanchaService.create(data);
       const message =
         result.metodoPago === 'transferencia'
           ? 'Reserva registrada. Tenés 20 minutos para abonar la seña por transferencia vía WhatsApp.'

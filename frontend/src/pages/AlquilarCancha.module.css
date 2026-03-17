@@ -214,6 +214,19 @@
     margin-bottom: 0.35rem;
 }
 
+.turnstileWrap {
+    margin: var(--spacing-md) 0;
+    min-height: 65px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+@media (max-width: 480px) {
+    .turnstileWrap {
+        min-height: 140px;
+    }
+}
+
 .formActions {
     display: flex;
     gap: var(--spacing-md);

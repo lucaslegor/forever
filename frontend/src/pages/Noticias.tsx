@@ -24,7 +24,7 @@ export const Noticias = () => {
                     <img src="/logo.png" alt="Club For Ever" className={styles.headerLogo} />
                     <span className={styles.headerClubName}>Club Social y Deportivo For Ever</span>
                 </Link>
-                <h1 className={styles.title}>Noticias</h1>
+                <h1 className={styles.title}>Noticias del Club For Ever La Plata</h1>
                 <div className={styles.headerRight} aria-hidden />
             </header>
 
@@ -32,7 +32,8 @@ export const Noticias = () => {
                 <div className={styles.contentCard}>
                     <p className={styles.intro}>
                         <Newspaper size={22} />
-                        Novedades del club
+                        Novedades, comunicados oficiales y actividades deportivas del Club Social Cultural y Deportivo
+                        For Ever en La Plata.
                     </p>
 
                     {loading ? (

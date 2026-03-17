@@ -15,15 +15,17 @@ describe('Tests de API con datos del Seed', () => {
     let adminToken: string;
     let deportistaToken: string;
 
-    // Credenciales del seed
+    // Credenciales del seed (captchaToken requerido por el schema; en test el backend no verifica si secret vacío)
     const adminCredentials = {
         email: 'admin@club.com',
         password: 'Admin123',
+        captchaToken: 'test-token',
     };
 
     const deportistaCredentials = {
         email: 'juan.perez@mail.com',
         password: 'Juan1234',
+        captchaToken: 'test-token',
     };
 
     // ============================================================
@@ -61,7 +63,7 @@ describe('Tests de API con datos del Seed', () => {
         it('deberia rechazar login con credenciales incorrectas', async () => {
             const response = await request(app)
                 .post('/api/auth/login')
-                .send({ email: 'admin@club.com', password: 'incorrecta' });
+                .send({ email: 'admin@club.com', password: 'incorrecta', captchaToken: 'test-token' });
 
             expect(response.status).toBe(401);
             expect(response.body.success).toBe(false);
@@ -349,18 +351,59 @@ describe('Tests de API con datos del Seed', () => {
     // ============================================================
     describe('Generación Mensual de Cuotas', () => {
         it('admin deberia poder generar cuotas mensuales', async () => {
+            const now = new Date();
+            const mesActual = now.getMonth() + 1;
+            const anioActual = now.getFullYear();
             const response = await request(app)
                 .post('/api/cuotas/generar-mensual')
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
-                    mes: 12,
-                    anio: 2026,
+                    mes: mesActual,
+                    anio: anioActual,
                 });
 
             expect(response.status).toBe(201);
             expect(response.body.data).toHaveProperty('cuotasGeneradas');
             expect(response.body.data).toHaveProperty('montoTotal');
             console.log('✅ Cuotas mensuales generadas:', response.body.data.cuotasGeneradas);
+        });
+
+        it('admin NO deberia poder generar cuotas de meses pasados', async () => {
+            const now = new Date();
+            const mesActual = now.getMonth() + 1;
+            const anioActual = now.getFullYear();
+            const mesPasado = mesActual === 1 ? 12 : mesActual - 1;
+            const anioPasado = mesActual === 1 ? anioActual - 1 : anioActual;
+
+            const response = await request(app)
+                .post('/api/cuotas/generar-mensual')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({
+                    mes: mesPasado,
+                    anio: anioPasado,
+                });
+
+            expect(response.status).toBe(409);
+            console.log('✅ Mes pasado bloqueado (409)');
+        });
+
+        it('admin NO deberia poder generar cuotas de meses futuros', async () => {
+            const now = new Date();
+            const mesActual = now.getMonth() + 1;
+            const anioActual = now.getFullYear();
+            const mesFuturo = mesActual === 12 ? 1 : mesActual + 1;
+            const anioFuturo = mesActual === 12 ? anioActual + 1 : anioActual;
+
+            const response = await request(app)
+                .post('/api/cuotas/generar-mensual')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({
+                    mes: mesFuturo,
+                    anio: anioFuturo,
+                });
+
+            expect(response.status).toBe(409);
+            console.log('✅ Mes futuro bloqueado (409)');
         });
 
         it('deportista NO deberia poder generar cuotas', async () => {

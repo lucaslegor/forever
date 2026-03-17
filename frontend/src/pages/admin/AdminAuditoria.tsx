@@ -7,6 +7,7 @@ import styles from './AdminReportes.module.css';
 const ACCIONES_LABEL: Record<string, string> = {
   DEPORTISTA_ALTA: 'Alta deportista',
   DEPORTISTA_BAJA: 'Baja deportista',
+  DEPORTISTA_REACTIVAR: 'Dar de alta deportista',
   DEPORTISTA_ACTUALIZACION: 'Actualización deportista',
   DEPORTISTA_RESET_PASSWORD: 'Restablecer contraseña deportista',
   PAGO_CONFIRMAR: 'Confirmar pago',

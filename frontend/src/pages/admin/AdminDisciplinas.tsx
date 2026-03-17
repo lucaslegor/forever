@@ -3,6 +3,7 @@ import { Plus, Pencil } from 'lucide-react';
 import type { Disciplina } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
 import { useConfirm } from '../../context/ConfirmContext';
+import { AlertModal } from '../../components/AlertModal';
 import { clasificacionService } from '../../services/clasificacion.service';
 import { disciplinaService } from '../../services/disciplina.service';
 import styles from './AdminDisciplinas.module.css';
@@ -14,7 +15,6 @@ export const AdminDisciplinas = () => {
         generosNombres,
         categorias,
         categoriasNombres,
-        setCategorias,
         subcategoriasPorKey,
         setSubcategoriasPorKey,
         disciplinasNombres,
@@ -61,7 +61,7 @@ export const AdminDisciplinas = () => {
             await refetch();
             setShowForm(false);
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Error al guardar la disciplina');
+            setAdvertenciaModal({ message: err.response?.data?.message || 'Error al guardar la disciplina' });
         } finally {
             setGuardando(false);
         }
@@ -82,17 +82,41 @@ export const AdminDisciplinas = () => {
         setDisciplinas((prev) => prev.map((d) => (d.id === id ? { ...d, activo: true } : d)));
     };
 
-    const agregarCategoria = (e: React.FormEvent) => {
+    const [guardandoCategoria, setGuardandoCategoria] = useState(false);
+    const [borrandoCategoriaId, setBorrandoCategoriaId] = useState<number | null>(null);
+    const [advertenciaModal, setAdvertenciaModal] = useState<{ title?: string; message: string } | null>(null);
+
+    const agregarCategoria = async (e: React.FormEvent) => {
         e.preventDefault();
         const v = nuevaCategoria.trim();
-        if (v && !categorias.includes(v)) {
-            setCategorias((prev) => [...prev, v]);
+        if (!v) return;
+        if (categorias.some((c) => c.nombre.toLowerCase() === v.toLowerCase())) {
+            setAdvertenciaModal({ message: 'Ya existe una categoría con ese nombre.' });
+            return;
+        }
+        setGuardandoCategoria(true);
+        try {
+            await clasificacionService.createCategoria(v);
             setNuevaCategoria('');
+            await refetch();
+        } catch (err: any) {
+            setAdvertenciaModal({ message: err.response?.data?.error || err.response?.data?.message || err.message || 'Error al crear la categoría' });
+        } finally {
+            setGuardandoCategoria(false);
         }
     };
 
-    const quitarCategoria = (c: string) => {
-        setCategorias((prev) => prev.filter((x) => x !== c));
+    const quitarCategoria = async (id: number) => {
+        if (borrandoCategoriaId !== null) return;
+        setBorrandoCategoriaId(id);
+        try {
+            await clasificacionService.deleteCategoria(id);
+            await refetch();
+        } catch (err: any) {
+            setAdvertenciaModal({ message: err.response?.data?.error || err.response?.data?.message || err.message || 'Error al eliminar la categoría' });
+        } finally {
+            setBorrandoCategoriaId(null);
+        }
     };
 
     const agregarSubcategoria = async (e: React.FormEvent) => {
@@ -115,7 +139,7 @@ export const AdminDisciplinas = () => {
             setNuevaSubcat({ disciplina: '', categoria: '', genero: '', nombre: '' });
         } catch (error: any) {
             const msg = error.response?.data?.message || error.message || 'Error al crear la subcategoría';
-            alert(msg);
+            setAdvertenciaModal({ message: msg });
         }
     };
 
@@ -126,7 +150,7 @@ export const AdminDisciplinas = () => {
             await clasificacionService.deleteSubcategoria(item.id);
             await refetch();
         } catch (err: any) {
-            alert(err.response?.data?.message || err.message || 'Error al borrar la subcategoría');
+            setAdvertenciaModal({ message: err.response?.data?.error || err.response?.data?.message || err.message || 'Error al borrar la subcategoría' });
         } finally {
             setBorrandoSubcatId(null);
         }
@@ -236,10 +260,17 @@ export const AdminDisciplinas = () => {
                 <h3 className={styles.sectionTitle}>Categorías</h3>
                 <p className={styles.sectionHint}>Categorías generales (Mayores, Juveniles, Infantiles, etc.). Agregar otras si es necesario.</p>
                 <div className={styles.listInline}>
-                    {categoriasNombres.map((c) => (
-                        <span key={c} className={styles.tag}>
-                            {c}
-                            <button type="button" onClick={() => quitarCategoria(c)} aria-label={`Quitar ${c}`}>×</button>
+                    {categorias.map((cat) => (
+                        <span key={cat.id} className={styles.tag}>
+                            {cat.nombre}
+                            <button
+                                type="button"
+                                onClick={() => quitarCategoria(cat.id)}
+                                aria-label={`Quitar ${cat.nombre}`}
+                                disabled={borrandoCategoriaId === cat.id}
+                            >
+                                ×
+                            </button>
                         </span>
                     ))}
                 </div>
@@ -253,7 +284,9 @@ export const AdminDisciplinas = () => {
                             placeholder="Ej: Mayores, Juveniles"
                         />
                     </div>
-                    <button type="submit" className={styles.btnGuardar}>Agregar</button>
+                    <button type="submit" className={styles.btnGuardar} disabled={guardandoCategoria}>
+                        {guardandoCategoria ? 'Agregando...' : 'Agregar'}
+                    </button>
                 </form>
             </section>
 
@@ -351,6 +384,13 @@ export const AdminDisciplinas = () => {
                     </div>
                 </form>
             </section>
+
+            <AlertModal
+                open={!!advertenciaModal}
+                title={advertenciaModal?.title ?? 'Aviso'}
+                message={advertenciaModal?.message ?? ''}
+                onAccept={() => setAdvertenciaModal(null)}
+            />
         </div>
     );
 };

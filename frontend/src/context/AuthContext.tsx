@@ -36,7 +36,7 @@ function getStoredAuth(): AuthUser | null {
 
 interface AuthContextValue {
   user: AuthUser | null;
-  login: (dni: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (dni: string, password: string, captchaToken: string) => Promise<{ success: boolean; error?: string; bloqueadoHasta?: string }>;
   logout: () => void;
   isAdmin: boolean;
   /** Solo el admin principal (admin@foreverclub.com) puede gestionar admins y restablecer sus contraseñas */
@@ -90,10 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return 'deportista';
   };
 
-  const login = useCallback(async (dni: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = useCallback(async (dni: string, password: string, captchaToken: string): Promise<{ success: boolean; error?: string; bloqueadoHasta?: string }> => {
     setLoading(true);
     try {
-      const response = await authService.login({ email: dni, password });
+      const response = await authService.login({ email: dni, password, captchaToken });
 
       if (response.success && response.data) {
         const { user: userData } = response.data;
@@ -122,7 +122,8 @@ const authUser: AuthUser = {
     } catch (error: any) {
       setLoading(false);
       const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Error al iniciar sesión';
-      return { success: false, error: errorMsg };
+      const bloqueadoHasta = error.response?.data?.bloqueadoHasta as string | undefined;
+      return { success: false, error: errorMsg, bloqueadoHasta };
     }
   }, []);
 
