@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { authService } from '../services/auth.service';
 import { deportistaService } from '../services/deportista.service';
 
@@ -96,7 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authService.login({ email: dni, password, captchaToken });
 
       if (response.success && response.data) {
-        const { user: userData } = response.data;
+        // La respuesta de login puede venir reducida (según rol), tipar de forma tolerante
+        const userData = (response.data as any).user as {
+          id: number;
+          email: string;
+          rol: string;
+          activo?: boolean;
+          deportistaId?: number;
+          nombre?: string;
+          disciplinaNombre?: string;
+        };
         // El token va en cookie HttpOnly (no se guarda en el frontend)
         // deportistaId viene en la respuesta del login para evitar una segunda llamada a getMiPerfil
 const authUser: AuthUser = {

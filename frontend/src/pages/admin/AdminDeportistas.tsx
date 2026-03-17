@@ -17,7 +17,7 @@ const initialAdulto = (): AdultoResponsable => ({
 });
 
 export const AdminDeportistas = () => {
-    const { disciplinas, disciplinasNombres, generos, generosNombres, categorias, categoriasNombres, getCategoriasOptions, getSubcategoriaOptions, subcategoriasPorKey } = useOpcionesAdmin();
+    const { disciplinas, disciplinasNombres, generos, generosNombres, categorias, getCategoriasOptions, getSubcategoriaOptions } = useOpcionesAdmin();
     const confirm = useConfirm();
     const [deportistas, setDeportistas] = useState<Deportista[]>([]);
     const [loading, setLoading] = useState(true);
@@ -59,16 +59,38 @@ export const AdminDeportistas = () => {
     const disciplinaIdFiltro = useMemo(() => disciplinas.find((d) => d.nombre === filtroDisciplina)?.id, [disciplinas, filtroDisciplina]);
     const generoIdFiltro = useMemo(() => generos.find((g) => g.nombre === filtroGenero)?.id, [generos, filtroGenero]);
     const categoriaIdFiltro = useMemo(() => categorias.find((c) => c.nombre === filtroCategoria)?.id, [categorias, filtroCategoria]);
-    const subcategoriaIdFiltro = useMemo(() => {
-        const keyTriple = `${filtroDisciplina}|${filtroCategoria}|${filtroGenero}`;
-        const keyDoble = `${filtroDisciplina}|${filtroCategoria}`;
-        const arr = subcategoriasPorKey[keyTriple] ?? subcategoriasPorKey[keyDoble] ?? [];
-        const sub = Array.isArray(arr) ? arr.find((s: { id: number; nombre: string }) => s?.nombre === filtroSubcategoria) : null;
-        return sub?.id;
-    }, [subcategoriasPorKey, filtroDisciplina, filtroCategoria, filtroGenero, filtroSubcategoria]);
+    const [subcategoriaIdFiltro, setSubcategoriaIdFiltro] = useState<number | undefined>(undefined);
 
     const categoriasFiltroOptions = useMemo(() => getCategoriasOptions(filtroDisciplina || primeraDisciplina, filtroGenero || primerGenero), [filtroDisciplina, filtroGenero, getCategoriasOptions, primeraDisciplina, primerGenero]);
     const subcategoriasFiltroOptions = useMemo(() => getSubcategoriaOptions(filtroDisciplina, filtroGenero, filtroCategoria), [filtroDisciplina, filtroGenero, filtroCategoria, getSubcategoriaOptions]);
+
+    // Resolver subcategoriaId (para filtro server-side) a partir del nombre elegido
+    useEffect(() => {
+        let cancelled = false;
+        const run = async () => {
+            if (!filtroSubcategoria) {
+                setSubcategoriaIdFiltro(undefined);
+                return;
+            }
+            if (!disciplinaIdFiltro || !categoriaIdFiltro) {
+                setSubcategoriaIdFiltro(undefined);
+                return;
+            }
+            try {
+                const res = await clasificacionService.getSubcategorias(disciplinaIdFiltro, categoriaIdFiltro, generoIdFiltro);
+                const arr = res.success && Array.isArray(res.data) ? res.data : [];
+                const found = arr.find((s: any) => s?.nombre === filtroSubcategoria);
+                const id = found ? (found as any).id_subcategoria : undefined;
+                if (!cancelled) setSubcategoriaIdFiltro(typeof id === 'number' ? id : undefined);
+            } catch {
+                if (!cancelled) setSubcategoriaIdFiltro(undefined);
+            }
+        };
+        run();
+        return () => {
+            cancelled = true;
+        };
+    }, [filtroSubcategoria, disciplinaIdFiltro, categoriaIdFiltro, generoIdFiltro]);
 
     const fetchDeportistas = useCallback(async () => {
         setLoading(true);

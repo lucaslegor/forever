@@ -12,11 +12,11 @@ export const AdminDisciplinas = () => {
     const {
         disciplinas,
         setDisciplinas,
+        generos,
         generosNombres,
         categorias,
         categoriasNombres,
         subcategoriasPorKey,
-        setSubcategoriasPorKey,
         disciplinasNombres,
         refetch,
     } = useOpcionesAdmin();
@@ -143,11 +143,31 @@ export const AdminDisciplinas = () => {
         }
     };
 
-    const quitarSubcategoria = async (key: string, item: { id: number; nombre: string }) => {
+    const quitarSubcategoria = async (key: string, nombre: string) => {
         if (borrandoSubcatId !== null) return;
-        setBorrandoSubcatId(item.id);
         try {
-            await clasificacionService.deleteSubcategoria(item.id);
+            const [disciplinaNombre, categoriaNombre, generoNombre] = key.split('|').map((s) => s.trim());
+            const disciplinaId = disciplinas.find((d) => d.nombre === disciplinaNombre)?.id;
+            const categoriaId = categorias.find((c) => c.nombre === categoriaNombre)?.id;
+            const generoId = generoNombre ? generos.find((g) => g.nombre === generoNombre)?.id : undefined;
+
+            if (!disciplinaId || !categoriaId) {
+                setAdvertenciaModal({ message: 'No se pudo resolver la subcategoría a eliminar (faltan IDs).' });
+                return;
+            }
+
+            const res = await clasificacionService.getSubcategorias(disciplinaId, categoriaId, generoId);
+            const arr = res.success && Array.isArray(res.data) ? res.data : [];
+            const found = arr.find((s: any) => s?.nombre === nombre);
+            const id = found ? (found as any).id_subcategoria : undefined;
+
+            if (typeof id !== 'number') {
+                setAdvertenciaModal({ message: 'No se encontró el ID de la subcategoría a eliminar.' });
+                return;
+            }
+
+            setBorrandoSubcatId(id);
+            await clasificacionService.deleteSubcategoria(id);
             await refetch();
         } catch (err: any) {
             setAdvertenciaModal({ message: err.response?.data?.error || err.response?.data?.message || err.message || 'Error al borrar la subcategoría' });
@@ -309,13 +329,13 @@ export const AdminDisciplinas = () => {
                                     <td>
                                         <div className={styles.listInline}>
                                             {vals.map((v) => (
-                                                <span key={v.id} className={styles.tag}>
-                                                    {v.nombre}
+                                                <span key={`${key}|${v}`} className={styles.tag}>
+                                                    {v}
                                                     <button
                                                         type="button"
                                                         onClick={() => quitarSubcategoria(key, v)}
-                                                        aria-label={`Quitar ${v.nombre}`}
-                                                        disabled={borrandoSubcatId === v.id}
+                                                        aria-label={`Quitar ${v}`}
+                                                        disabled={borrandoSubcatId !== null}
                                                     >
                                                         ×
                                                     </button>

@@ -4,6 +4,7 @@ import { dashboardService } from '../../services/dashboard.service';
 import type { DashboardStats, DeudorRow } from '../../services/dashboard.service';
 import { exportReportesPDF, exportDeudoresPDF } from '../../utils/exportReportes';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
+import { clasificacionService } from '../../services/clasificacion.service';
 import styles from './AdminReportes.module.css';
 
 const MESES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -20,7 +21,7 @@ function formatMoney(n: number): string {
 }
 
 export const AdminReportes = () => {
-  const { disciplinas, generos, categorias, subcategoriasPorKey, getCategoriasOptions } = useOpcionesAdmin();
+  const { disciplinas, generos, categorias, getCategoriasOptions } = useOpcionesAdmin();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [deudores, setDeudores] = useState<DeudorRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,13 +47,39 @@ export const AdminReportes = () => {
     () => (filtroCategoriaId === '' ? '' : categorias.find((c) => c.id === filtroCategoriaId)?.nombre ?? ''),
     [filtroCategoriaId, categorias]
   );
-  const subcategoriaOpciones = useMemo(() => {
-    if (!filtroDisciplinaNombre || !filtroCategoriaNombre || !filtroGeneroNombre) return [];
-    const keyTriple = `${filtroDisciplinaNombre}|${filtroCategoriaNombre}|${filtroGeneroNombre}`;
-    const keyDoble = `${filtroDisciplinaNombre}|${filtroCategoriaNombre}`;
-    const arr = subcategoriasPorKey[keyTriple] ?? subcategoriasPorKey[keyDoble] ?? [];
-    return Array.isArray(arr) ? arr.filter((s): s is { id: number; nombre: string } => typeof s === 'object' && s != null && 'id' in s) : [];
-  }, [filtroDisciplinaNombre, filtroCategoriaNombre, filtroGeneroNombre, subcategoriasPorKey]);
+  const [subcategoriaOpciones, setSubcategoriaOpciones] = useState<Array<{ id: number; nombre: string }>>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (filtroDisciplinaId === '' || filtroCategoriaId === '' || filtroGeneroId === '') {
+        setSubcategoriaOpciones([]);
+        setFiltroSubcategoriaId('');
+        return;
+      }
+      try {
+        const res = await clasificacionService.getSubcategorias(filtroDisciplinaId, filtroCategoriaId, filtroGeneroId);
+        const arr = res.success && Array.isArray(res.data) ? res.data : [];
+        const mapped = arr
+          .map((s: any) => ({ id: s.id_subcategoria as number, nombre: s.nombre as string }))
+          .filter((s) => typeof s.id === 'number' && !!s.nombre);
+        if (cancelled) return;
+        setSubcategoriaOpciones(mapped);
+        if (filtroSubcategoriaId !== '' && !mapped.some((s) => s.id === filtroSubcategoriaId)) {
+          setFiltroSubcategoriaId('');
+        }
+      } catch {
+        if (!cancelled) {
+          setSubcategoriaOpciones([]);
+          setFiltroSubcategoriaId('');
+        }
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [filtroDisciplinaId, filtroCategoriaId, filtroGeneroId]);
 
   const categoriasOpciones = useMemo(
     () => getCategoriasOptions(filtroDisciplinaNombre, filtroGeneroNombre),

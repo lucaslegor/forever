@@ -4,9 +4,8 @@ import { reservaCanchaService } from '../services/reservaCancha.service';
 import { getPaymentById } from '../services/mercadopago.service';
 import { deportistaService } from '../services/deportista.service';
 import { auditoriaService, ACCIONES } from '../services/auditoria.service';
-import { sendSuccess, sendCreated, sendUnauthorized, sendForbidden, sendError } from '../utils/response';
+import { sendSuccess, sendCreated, sendForbidden, sendError } from '../utils/response';
 import { getClientIp, getUserAgent } from '../utils/request';
-import { validateMercadoPagoWebhookSignature } from '../utils/webhookSignature';
 import { AuthenticatedRequest } from '../types';
 import { env } from '../config/env';
 import { CreatePagoInput, SyncPagoInput } from '../validators/pago.validator';
@@ -125,7 +124,7 @@ export class PagoController {
   }
 
   /** Endpoint de prueba para verificar que el webhook es accesible */
-  async webhookTest(req: Request, res: Response): Promise<void> {
+  async webhookTest(_req: Request, res: Response): Promise<void> {
     console.log('🧪 [Webhook Test] Endpoint de prueba accedido correctamente');
     res.json({
       success: true,

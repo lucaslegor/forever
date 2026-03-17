@@ -1,11 +1,12 @@
-import { createContext, useContext, useMemo, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type { Disciplina } from '../types/admin';
 import { clasificacionService } from '../services/clasificacion.service';
 
 /** Categorías por disciplina|genero (excepción). Ej: "Hockey|Masculino" -> ['Mayores'] */
 type CategoriasExcepcion = Record<string, string[]>;
-/** Subcategorías por key: "Disciplina|Categoria|Genero" o "Disciplina|Categoria"; cada valor tiene id (para borrar) y nombre */
-type SubcategoriasPorKey = Record<string, Array<{ id: number; nombre: string }>>;
+/** Subcategorías por key: "Disciplina|Categoria|Genero" o "Disciplina|Categoria"; cada valor es lista de nombres */
+type SubcategoriasPorKey = Record<string, string[]>;
 
 type OpcionesAdminState = {
   disciplinas: Disciplina[];
@@ -114,7 +115,7 @@ export const OpcionesAdminProvider = ({ children }: { children: ReactNode }) => 
       const keyTriple = `${disciplina}|${categoria}|${genero}`;
       const keyDoble = `${disciplina}|${categoria}`;
       const arr = subcategoriasPorKey[keyTriple] ?? subcategoriasPorKey[keyDoble] ?? [];
-      return arr.map((s) => (typeof s === 'string' ? s : s.nombre));
+      return arr;
     },
     [subcategoriasPorKey]
   );

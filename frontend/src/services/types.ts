@@ -19,6 +19,10 @@ export interface LoginResponse {
       rol: string;
       activo: boolean;
       deportistaId?: number;
+      /** Nombre del usuario (deportista/administrativo), si aplica */
+      nombre?: string;
+      /** Disciplina del deportista para menú/fixture, si aplica */
+      disciplinaNombre?: string;
     };
     /** Ya no se envía: el token va en cookie HttpOnly */
     token?: string;

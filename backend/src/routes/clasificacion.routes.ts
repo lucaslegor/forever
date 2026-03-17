@@ -7,12 +7,17 @@ import { createSubcategoriaSchema, subcategoriaIdParamSchema, createCategoriaSch
 
 const router = Router();
 
+function paramToInt(param: unknown): number {
+  const raw = Array.isArray(param) ? param[0] : param;
+  return parseInt(String(raw), 10);
+}
+
 /**
  * @route   GET /api/clasificacion/generos
  * @desc    Obtener todos los géneros
  * @access  Public
  */
-router.get('/generos', async (req: Request, res: Response) => {
+router.get('/generos', async (_req: Request, res: Response) => {
   try {
     const generos = await clasificacionService.getGeneros();
     res.json({
@@ -29,7 +34,7 @@ router.get('/generos', async (req: Request, res: Response) => {
  * @desc    Obtener todas las categorías
  * @access  Public
  */
-router.get('/categorias', async (req: Request, res: Response) => {
+router.get('/categorias', async (_req: Request, res: Response) => {
   try {
     const categorias = await clasificacionService.getCategorias();
     res.json({
@@ -80,7 +85,7 @@ router.delete(
   validateParams(categoriaIdParamSchema),
   async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = paramToInt(req.params.id);
       await clasificacionService.deleteCategoria(id);
       res.json({
         success: true,
@@ -130,7 +135,7 @@ router.get('/subcategorias', async (req: Request, res: Response) => {
  * @desc    Obtener todas las opciones de clasificación (para frontend)
  * @access  Public
  */
-router.get('/opciones', async (req: Request, res: Response) => {
+router.get('/opciones', async (_req: Request, res: Response) => {
   try {
     const opciones = await clasificacionService.getOpcionesCompletas();
     res.json({
@@ -189,7 +194,7 @@ router.delete(
   validateParams(subcategoriaIdParamSchema),
   async (req: Request, res: Response) => {
   try {
-    const id = req.params.id as unknown as number;
+    const id = paramToInt(req.params.id);
 
     await clasificacionService.deleteSubcategoria(id);
 
@@ -218,7 +223,7 @@ router.post(
   '/pase-categoria',
   authenticateToken,
   requireAdministrativo,
-  async (req: Request, res: Response) => {
+  async (_req: Request, res: Response) => {
     try {
       const result = await ejecutarPaseCategoriaFutbolMasculino();
       res.json({

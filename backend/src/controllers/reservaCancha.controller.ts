@@ -4,6 +4,12 @@ import { captchaService } from '../services/captcha.service';
 import { sendSuccess, sendCreated } from '../utils/response';
 
 export class ReservaCanchaController {
+  private getParamId(param: unknown): number {
+    const raw = Array.isArray(param) ? param[0] : param;
+    const id = parseInt(String(raw), 10);
+    return id;
+  }
+
   async getDisponibilidad(req: Request, res: Response, next: NextFunction) {
     try {
       const fecha = req.query.fecha as string;
@@ -65,7 +71,7 @@ export class ReservaCanchaController {
 
   async updatePagos(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = this.getParamId(req.params.id);
       const body = req.body as { senaPagada?: boolean; restoPagado?: boolean; montoTotal?: number };
       const data = await reservaCanchaService.updatePagos(id, body);
       sendSuccess(res, data, 'Pagos actualizados');
@@ -76,7 +82,7 @@ export class ReservaCanchaController {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = this.getParamId(req.params.id);
       const body = req.body as { notas?: string; montoTotal?: number };
       const data = await reservaCanchaService.update(id, body);
       sendSuccess(res, data, 'Reserva actualizada');
@@ -87,7 +93,7 @@ export class ReservaCanchaController {
 
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = this.getParamId(req.params.id);
       await reservaCanchaService.delete(id);
       sendSuccess(res, { ok: true }, 'Reserva cancelada');
     } catch (error) {

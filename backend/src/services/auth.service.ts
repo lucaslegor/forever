@@ -12,7 +12,14 @@ import {
   UserBlockedError,
   ErrorMessages,
 } from '../utils/errors';
-import { Rol } from '@prisma/client';
+import { Prisma, Rol } from '@prisma/client';
+
+type CuentaConPerfil = Prisma.CuentaUsuarioGetPayload<{
+  include: {
+    deportista: { include: { disciplina: true } };
+    administrativo: true;
+  };
+}>;
 
 export class AuthService {
   async login(data: LoginDTO): Promise<AuthResponse> {
@@ -22,10 +29,7 @@ export class AuthService {
     const dniNorm = raw.replace(/\D/g, '');
 
     // Intentar login por email (solo si parece email) o por DNI (deportista/admin)
-    let cuenta = null as Awaited<ReturnType<typeof prisma.cuentaUsuario.findUnique>> & {
-      deportista?: unknown;
-      administrativo?: unknown;
-    } | null;
+    let cuenta: CuentaConPerfil | null = null;
 
     if (isEmail) {
       cuenta = await prisma.cuentaUsuario.findUnique({
@@ -59,7 +63,7 @@ export class AuthService {
         include: {
           cuenta: {
             include: {
-              deportista: true,
+              deportista: { include: { disciplina: true } },
               administrativo: true,
             },
           },
