@@ -6,7 +6,7 @@ import {
   requireDeportista,
 } from '../middlewares/auth.middleware';
 import { validateBody, validateParams, validateQuery } from '../middlewares/validation.middleware';
-import { asignarCuotaSchema, updateCuotaSchema, cuotasQuerySchema, listCuotasQuerySchema, generarCuotasSchema, deletePorGeneracionQuerySchema, deletePorMesQuerySchema } from '../validators/cuota.validator';
+import { asignarCuotaSchema, updateCuotaSchema, cancelarCuotaSchema, cuotasQuerySchema, listCuotasQuerySchema, generarCuotasSchema, deletePorGeneracionQuerySchema, deletePorMesQuerySchema } from '../validators/cuota.validator';
 import { idParamSchema } from '../validators/user.validator';
 
 const router = Router();
@@ -123,6 +123,16 @@ router.post(
   requireAdministrativo,
   validateParams(idParamSchema),
   cuotaController.marcarPagadaEfectivo.bind(cuotaController)
+);
+
+// PATCH /api/cuotas/:id/cancelar - Cancelar deuda (solo si está pendiente/vencida)
+router.patch(
+  '/:id/cancelar',
+  authenticateToken,
+  requireAdministrativo,
+  validateParams(idParamSchema),
+  validateBody(cancelarCuotaSchema),
+  cuotaController.cancelarDeuda.bind(cuotaController)
 );
 
 export default router;

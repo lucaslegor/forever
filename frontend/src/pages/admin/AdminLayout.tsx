@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Users, DollarSign, UserCircle, Shield, Trophy, FileText, Home, KeyRound, User, CalendarDays, Award, BarChart3, ClipboardList } from 'lucide-react';
+import { LogOut, Users, DollarSign, UserCircle, Shield, Trophy, FileText, Home, KeyRound, User, Award, BarChart3, ClipboardList } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Footer } from '../../components/Footer';
 import styles from './AdminLayout.module.css';
@@ -14,7 +14,6 @@ const menuItems = [
     { to: '/admin/admins', label: 'Gestión admin', icon: Shield },
     { to: '/admin/restablecer-contrasena', label: 'Restablecer contraseña', icon: KeyRound },
     { to: '/admin/disciplinas', label: 'Gestión disciplinas', icon: Trophy },
-    { to: '/admin/cancha', label: 'Alquiler cancha', icon: CalendarDays },
     { to: '/admin/noticias', label: 'Gestión noticias', icon: FileText },
     { to: '/admin/reportes', label: 'Reportes', icon: BarChart3 },
     { to: '/admin/auditoria', label: 'Auditoría', icon: ClipboardList },

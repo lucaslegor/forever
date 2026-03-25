@@ -21,7 +21,6 @@ const profileSchema = yup.object({
     nombre: yup.string().required('El nombre es requerido'),
     apellido: yup.string().required('El apellido es requerido'),
     dni: yup.string().required('El DNI es requerido'),
-    fechaNac: yup.string().required('La fecha de nacimiento es requerida'),
     disciplina: yup.string().required('Seleccioná una disciplina'),
     genero: yup.string().oneOf([...GENEROS]).required('Seleccioná un género'),
     categoriaGeneral: yup.string().required('Seleccioná una categoría'),
@@ -68,7 +67,6 @@ const defaultValues: Partial<ProfileFormValues> = {
     nombre: '',
     apellido: '',
     dni: '',
-    fechaNac: '',
     disciplina: '',
     genero: '',
     categoriaGeneral: '',
@@ -167,7 +165,6 @@ export const ProfileEdit = () => {
                         nombre: string;
                         apellido: string;
                         dni: string;
-                        fechaNac?: string;
                         disciplina?: { nombre: string };
                         genero?: { nombre: string };
                         categoria?: { nombre: string };
@@ -198,7 +195,6 @@ export const ProfileEdit = () => {
                         nombre: data.nombre,
                         apellido: data.apellido,
                         dni: data.dni,
-                        fechaNac: data.fechaNac?.split('T')[0] || '',
                         disciplina: disciplinaNombre,
                         genero: (genero === 'Masculino' || genero === 'Femenino' ? genero : '') as ProfileFormValues['genero'],
                         categoriaGeneral: categoriaGeneral as ProfileFormValues['categoriaGeneral'],
@@ -476,17 +472,6 @@ export const ProfileEdit = () => {
                                         type="text"
                                         className={styles.input}
                                         {...register('dni')}
-                                        disabled
-                                        readOnly
-                                    />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label htmlFor="fechaNac" className={styles.label}>Fecha de nacimiento</label>
-                                    <input
-                                        id="fechaNac"
-                                        type="date"
-                                        className={styles.input}
-                                        {...register('fechaNac')}
                                         disabled
                                         readOnly
                                     />

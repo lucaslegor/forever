@@ -4,6 +4,7 @@ import type { Deportista, AdultoResponsable } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { deportistaService } from '../../services/deportista.service';
+import type { CreateDeportistaDTO, UpdateDeportistaDTO } from '../../services/deportista.service';
 import { clasificacionService, getSubcategoriaId } from '../../services/clasificacion.service';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import styles from './AdminDeportistas.module.css';
@@ -32,7 +33,6 @@ export const AdminDeportistas = () => {
         nombre: '',
         apellido: '',
         dni: '',
-        fechaNac: '',
         disciplina: primeraDisciplina,
         genero: primerGenero,
         categoria: '',
@@ -110,15 +110,11 @@ export const AdminDeportistas = () => {
                 setTotal(paginated.total ?? 0);
                 setTotalPages(paginated.totalPages ?? 0);
                 const deportistasMap = list.map((d: any) => {
-                    const fechaNac = d.fechaNac
-                        ? (typeof d.fechaNac === 'string' ? d.fechaNac.split('T')[0] : new Date(d.fechaNac).toISOString().split('T')[0])
-                        : '';
                     return {
                     id: d.id,
                     nombre: d.nombre,
                     apellido: d.apellido,
                     dni: d.dni,
-                    fechaNac,
                     disciplina: d.disciplina?.nombre || '',
                     genero: d.genero?.nombre || '',
                     categoria: d.categoria?.nombre || '',
@@ -185,7 +181,6 @@ export const AdminDeportistas = () => {
             nombre: '',
             apellido: '',
             dni: '',
-            fechaNac: '',
             disciplina: primeraDisciplina,
             genero: primerGenero,
             categoria: '',
@@ -214,7 +209,6 @@ export const AdminDeportistas = () => {
             nombre: d.nombre,
             apellido: d.apellido,
             dni: d.dni,
-            fechaNac: d.fechaNac || '',
             disciplina: d.disciplina,
             genero: d.genero,
             categoria: d.categoria,
@@ -270,31 +264,6 @@ export const AdminDeportistas = () => {
             return 'El DNI del deportista debe tener 7 u 8 dígitos (solo números, sin puntos ni espacios).';
         }
 
-        if (mode === 'create') {
-            if (!form.fechaNac || !form.fechaNac.trim()) return 'La fecha de nacimiento es obligatoria.';
-            const fechaNacNorm = form.fechaNac.trim();
-            let fechaDate: Date;
-            const matchDDMMYYYY = fechaNacNorm.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-            if (matchDDMMYYYY) {
-                const [, d, m, y] = matchDDMMYYYY;
-                fechaDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-            } else {
-                fechaDate = new Date(fechaNacNorm);
-            }
-            if (Number.isNaN(fechaDate.getTime())) return 'La fecha de nacimiento no es válida.';
-            const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0);
-            if (fechaDate > hoy) return 'La fecha de nacimiento no puede ser futura.';
-            const años = Math.floor((hoy.getTime() - fechaDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-            if (años > 120) return 'La fecha de nacimiento no es válida.';
-        } else if (mode === 'edit' && form.fechaNac.trim()) {
-            const fechaDate = new Date(form.fechaNac.trim());
-            if (Number.isNaN(fechaDate.getTime())) return 'La fecha de nacimiento no es válida.';
-            const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0);
-            if (fechaDate > hoy) return 'La fecha de nacimiento no puede ser futura.';
-        }
-
         if (!form.categoria || form.categoria === '') return 'Seleccioná una categoría.';
         if (subcategoriaOptions.length > 0 && !form.subcategoria.trim()) {
             return 'Seleccioná una subcategoría para la disciplina y categoría elegidas.';
@@ -341,36 +310,6 @@ export const AdminDeportistas = () => {
         if (!dniSolo) err.dni = 'El DNI es obligatorio.';
         else if (!/^\d{7,8}$/.test(dniSolo)) err.dni = '7 u 8 dígitos (solo números).';
 
-        if (mode === 'create') {
-            if (!form.fechaNac?.trim()) err.fechaNac = 'La fecha es obligatoria.';
-            else {
-                const fechaNacNorm = form.fechaNac.trim();
-                let fechaDate: Date;
-                const matchDDMMYYYY = fechaNacNorm.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                if (matchDDMMYYYY) {
-                    const [, d, m, y] = matchDDMMYYYY;
-                    fechaDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-                } else {
-                    fechaDate = new Date(fechaNacNorm);
-                }
-                if (Number.isNaN(fechaDate.getTime())) err.fechaNac = 'Fecha no válida.';
-                else {
-                    const hoy = new Date();
-                    hoy.setHours(0, 0, 0, 0);
-                    if (fechaDate > hoy) err.fechaNac = 'No puede ser futura.';
-                    else if (Math.floor((hoy.getTime() - fechaDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)) > 120) err.fechaNac = 'Fecha no válida.';
-                }
-            }
-        } else if (mode === 'edit' && form.fechaNac.trim()) {
-            const fechaDate = new Date(form.fechaNac.trim());
-            if (Number.isNaN(fechaDate.getTime())) err.fechaNac = 'Fecha no válida.';
-            else {
-                const hoy = new Date();
-                hoy.setHours(0, 0, 0, 0);
-                if (fechaDate > hoy) err.fechaNac = 'No puede ser futura.';
-            }
-        }
-
         if (!form.categoria?.trim()) err.categoria = 'Seleccioná una categoría.';
         if (subcategoriaOptions.length > 0 && !form.subcategoria.trim()) err.subcategoria = 'Seleccioná una subcategoría.';
 
@@ -400,7 +339,7 @@ export const AdminDeportistas = () => {
         e.preventDefault();
         setFormError(null);
         setTouched({
-            nombre: true, apellido: true, dni: true, fechaNac: true, categoria: true, subcategoria: true,
+            nombre: true, apellido: true, dni: true, categoria: true, subcategoria: true,
             password: true, passwordConfirm: true,
             adulto_nombre: true, adulto_apellido: true, adulto_dni: true, adulto_email: true, adulto_telefono: true,
         });
@@ -455,18 +394,10 @@ export const AdminDeportistas = () => {
 
             if (mode === 'create') {
                 const dniDeportista = form.dni.replace(/\D/g, '').trim();
-                // Asegurar fecha en YYYY-MM-DD (input type="date" ya lo da; por si acaso normalizar dd/mm/yyyy)
-                let fechaNac = form.fechaNac.trim();
-                const matchDDMMYYYY = fechaNac.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                if (matchDDMMYYYY) {
-                    const [, d, m, y] = matchDDMMYYYY;
-                    fechaNac = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-                }
-                const createData = {
+                const createData: CreateDeportistaDTO = {
                     nombre: form.nombre.trim(),
                     apellido: form.apellido.trim(),
                     dni: dniDeportista,
-                    fechaNac,
                    generoId: Number(generoId),
                     categoriaId: Number(categoriaId),
                     ...(subcategoriaId != null && subcategoriaId !== undefined ? { subcategoriaId: Number(subcategoriaId) } : {}),
@@ -490,10 +421,9 @@ export const AdminDeportistas = () => {
                     setFormError('Error al crear deportista');
                 }
             } else if (mode === 'edit' && editingId !== null) {
-                const updateData = {
+                const updateData: UpdateDeportistaDTO = {
                     nombre: form.nombre.trim(),
                     apellido: form.apellido.trim(),
-                    fechaNac: form.fechaNac || undefined,
                     generoId,
                     categoriaId,
                     subcategoriaId: subcategoriaId ?? null,
@@ -769,18 +699,6 @@ export const AdminDeportistas = () => {
                                     disabled={mode === 'edit'}
                                 />
                                 {touched.dni && fieldErrors.dni && <span className={styles.fieldError}>{fieldErrors.dni}</span>}
-                            </div>
-                            <div className={styles.fieldWrap}>
-                                <label>Fecha de Nacimiento *</label>
-                                <input
-                                    type="date"
-                                    value={form.fechaNac}
-                                    onChange={(e) => setForm({ ...form, fechaNac: e.target.value })}
-                                    onBlur={() => setFieldTouched('fechaNac')}
-                                    className={touched.fechaNac && fieldErrors.fechaNac ? styles.inputError : ''}
-                                    required
-                                />
-                                {touched.fechaNac && fieldErrors.fechaNac && <span className={styles.fieldError}>{fieldErrors.fechaNac}</span>}
                             </div>
                         </div>
 

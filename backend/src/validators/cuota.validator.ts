@@ -28,10 +28,19 @@ export const updateCuotaSchema = z.object({
   periodicidad: z.enum(['MENSUAL', 'ANUAL']).optional(),
 });
 
+// Cancelar deuda de cuota (admin)
+export const cancelarCuotaSchema = z.object({
+  motivo: z
+    .string({ message: 'El motivo es requerido' })
+    .trim()
+    .min(5, 'El motivo debe tener al menos 5 caracteres')
+    .max(500, 'El motivo no puede superar 500 caracteres'),
+});
+
 export const cuotasQuerySchema = z.object({
   page: z.string().regex(/^\d+$/).transform(Number).optional(),
   limit: z.string().regex(/^\d+$/).transform(Number).optional(),
-  estado: z.enum(['PAGADA', 'PENDIENTE', 'VENCIDA']).optional(),
+  estado: z.enum(['PAGADA', 'PENDIENTE', 'VENCIDA', 'CANCELADA']).optional(),
   deportistaId: z.string().regex(/^\d+$/).transform(Number).optional(),
   disciplinaId: z.string().regex(/^\d+$/).transform(Number).optional(),
 });
@@ -42,7 +51,7 @@ export const listCuotasQuerySchema = z.object({
   mes: z.string().regex(/^\d+$/).transform(Number).optional(),
   page: z.string().regex(/^\d+$/).transform(Number).optional(),
   limit: z.string().regex(/^\d+$/).transform(Number).optional(),
-  estado: z.enum(['PAGADA', 'PENDIENTE', 'VENCIDA']).optional(),
+  estado: z.enum(['PAGADA', 'PENDIENTE', 'VENCIDA', 'CANCELADA']).optional(),
   disciplinaId: z.string().regex(/^\d+$/).transform(Number).optional(),
 });
 
@@ -67,6 +76,7 @@ export const deletePorMesQuerySchema = z.object({
 
 export type AsignarCuotaInput = z.infer<typeof asignarCuotaSchema>;
 export type UpdateCuotaInput = z.infer<typeof updateCuotaSchema>;
+export type CancelarCuotaInput = z.infer<typeof cancelarCuotaSchema>;
 export type CuotasQuery = z.infer<typeof cuotasQuerySchema>;
 export type ListCuotasQuery = z.infer<typeof listCuotasQuerySchema>;
 export type GenerarCuotasInput = z.infer<typeof generarCuotasSchema>;

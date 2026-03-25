@@ -32,7 +32,7 @@ export function RichTextEditor({ value, onChange, minHeight = '200px' }: RichTex
         class: styles.editorContent,
         style: `min-height: ${minHeight}`,
       },
-      handlePaste(view, event) {
+      handlePaste(_view, event) {
         const items = event.clipboardData?.items;
         if (!items) return false;
         for (const item of items) {
@@ -52,7 +52,7 @@ export function RichTextEditor({ value, onChange, minHeight = '200px' }: RichTex
         }
         return false;
       },
-      handleDrop(view, event) {
+      handleDrop(_view, event) {
         const file = event.dataTransfer?.files?.[0];
         if (file?.type.startsWith('image/')) {
           event.preventDefault();
@@ -97,7 +97,7 @@ export function RichTextEditor({ value, onChange, minHeight = '200px' }: RichTex
   useEffect(() => {
     if (!editor) return;
     if (value === '' && editor.getHTML() !== '<p></p>') {
-      editor.commands.setContent('', false);
+      editor.commands.setContent('');
     }
   }, [value, editor]);
 

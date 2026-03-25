@@ -77,7 +77,7 @@ export const AdminAdmins = () => {
                     rol: 'ADMINISTRATIVO',
                 });
                 if (!res.success) {
-                    alert(res.error || 'Error al crear el administrador');
+                    alert(res.message || 'Error al crear el administrador');
                     return;
                 }
             } else {
@@ -99,7 +99,7 @@ export const AdminAdmins = () => {
         try {
             const res = await authService.setAdminActivo(a.id, nuevoActivo);
             if (res.success) await fetchAdmins();
-            else alert(res.error || 'Error al actualizar el estado');
+            else alert(res.message || 'Error al actualizar el estado');
         } catch (err: any) {
             alert(err.response?.data?.error || err.message || 'Error al actualizar el estado');
         }

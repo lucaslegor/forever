@@ -45,7 +45,7 @@ export class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async logout(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       res.clearCookie(env.AUTH_COOKIE_NAME, {
         path: '/',

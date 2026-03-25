@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { CreditCard, Lock, Eye, EyeOff, Calendar } from 'lucide-react';
+import { CreditCard, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AlertModal } from './AlertModal';
 import { TurnstileWidget } from './TurnstileWidget';
@@ -208,10 +208,6 @@ export const LoginForm = () => {
                         {isLoading ? 'Iniciando sesión...' : 'Ingresar'}
                     </button>
 
-                    <Link to="/alquilar-cancha" className={styles.canchaLink}>
-                        <Calendar size={20} />
-                        Alquilar cancha de césped sintético
-                    </Link>
                 </form>
 
                 <p className={styles.copyright}>

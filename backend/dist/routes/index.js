@@ -1,0 +1,33 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_routes_1 = __importDefault(require("./auth.routes"));
+const user_routes_1 = __importDefault(require("./user.routes"));
+const deportista_routes_1 = __importDefault(require("./deportista.routes"));
+const cuota_routes_1 = __importDefault(require("./cuota.routes"));
+const pago_routes_1 = __importDefault(require("./pago.routes"));
+const disciplina_routes_1 = __importDefault(require("./disciplina.routes"));
+const grupoFamiliar_routes_1 = __importDefault(require("./grupoFamiliar.routes"));
+const beca_routes_1 = __importDefault(require("./beca.routes"));
+const clasificacion_routes_1 = __importDefault(require("./clasificacion.routes"));
+const noticia_routes_1 = __importDefault(require("./noticia.routes"));
+const dashboard_routes_1 = __importDefault(require("./dashboard.routes"));
+const auditoria_routes_1 = __importDefault(require("./auditoria.routes"));
+const router = (0, express_1.Router)();
+router.use('/auth', auth_routes_1.default);
+router.use('/users', user_routes_1.default);
+router.use('/deportistas', deportista_routes_1.default);
+router.use('/cuotas', cuota_routes_1.default);
+router.use('/pagos', pago_routes_1.default);
+router.use('/disciplinas', disciplina_routes_1.default);
+router.use('/grupos-familiares', grupoFamiliar_routes_1.default);
+router.use('/becas', beca_routes_1.default);
+router.use('/clasificacion', clasificacion_routes_1.default);
+router.use('/noticias', noticia_routes_1.default);
+router.use('/dashboard', dashboard_routes_1.default);
+router.use('/auditoria', auditoria_routes_1.default);
+exports.default = router;
+//# sourceMappingURL=index.js.map

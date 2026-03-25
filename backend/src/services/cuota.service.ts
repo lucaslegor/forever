@@ -66,6 +66,7 @@ export class CuotaService {
         disciplina: true,
         deportista: true,
         pagos: true,
+        canceladaPorCuenta: { select: { id: true, email: true } } as any,
       },
     });
 
@@ -184,7 +185,10 @@ export class CuotaService {
         disciplina: c.disciplina?.nombre ?? null,
       }));
 
-    const pendientesRaw = cuotas.filter((c) => c.estadoCuota !== EstadoCuota.PAGADA);
+    // Deuda = solo cuotas PENDIENTE o VENCIDA (excluir CANCELADA)
+    const pendientesRaw = cuotas.filter(
+      (c) => c.estadoCuota === EstadoCuota.PENDIENTE || c.estadoCuota === EstadoCuota.VENCIDA
+    );
 
     const cuotasAActualizar = pendientesRaw.filter(
       (c) => montoObjetivoPendientes != null && Number(c.monto) !== montoObjetivoPendientes
@@ -289,6 +293,7 @@ export class CuotaService {
         take: limit,
         include: {
           disciplina: { select: { nombre: true } },
+          canceladaPorCuenta: { select: { id: true, email: true } } as any,
           deportista: {
             include: {
               genero: { select: { nombre: true } },
@@ -326,6 +331,9 @@ export class CuotaService {
         formaPago,
         estadoCuota: c.estadoCuota,
         fechaPago: pago?.fechaPago,
+        canceladaAt: (c as any).canceladaAt ?? null,
+        cancelacionMotivo: (c as any).cancelacionMotivo ?? null,
+        canceladaPor: (c as any).canceladaPorCuenta?.email ?? null,
       };
     });
 
@@ -460,6 +468,50 @@ export class CuotaService {
     }
 
     await prisma.$transaction(steps);
+    return this.getById(id);
+  }
+
+  /** Cancelar deuda de una cuota (admin). Solo si está PENDIENTE o VENCIDA. */
+  async cancelarDeuda(id: number, motivo: string, canceladaPorCuentaId: number) {
+    const cuota = await prisma.cuota.findUnique({
+      where: { id },
+      select: { id: true, estadoCuota: true, deportistaId: true },
+    });
+    if (!cuota) throw new NotFoundError(ErrorMessages.CUOTA_NOT_FOUND);
+
+    if (cuota.estadoCuota === EstadoCuota.PAGADA) {
+      throw new ConflictError('No se puede cancelar una cuota que ya está pagada');
+    }
+    if (cuota.estadoCuota !== EstadoCuota.PENDIENTE && cuota.estadoCuota !== EstadoCuota.VENCIDA) {
+      throw new ConflictError('Solo se pueden cancelar cuotas pendientes o vencidas');
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.cuota.update({
+        where: { id },
+        data: {
+          estadoCuota: EstadoCuota.CANCELADA as any,
+          canceladaAt: new Date(),
+          cancelacionMotivo: motivo,
+          canceladaPorCuentaId,
+        } as any,
+      });
+
+      // Si ya no tiene cuotas pendientes/vencidas, marcar deportista AL_DIA
+      const pendientes = await tx.cuota.count({
+        where: {
+          deportistaId: cuota.deportistaId,
+          estadoCuota: { in: [EstadoCuota.PENDIENTE, EstadoCuota.VENCIDA] },
+        },
+      });
+      if (pendientes === 0) {
+        await tx.deportista.update({
+          where: { id: cuota.deportistaId },
+          data: { estado: 'AL_DIA' as any },
+        });
+      }
+    });
+
     return this.getById(id);
   }
 

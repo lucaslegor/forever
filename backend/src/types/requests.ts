@@ -50,7 +50,6 @@ export interface CreateDeportistaDTO {
   nombre: string;
   apellido: string;
   dni: string;
-  fechaNac: string;
   generoId: number;
   categoriaId: number;
   subcategoriaId?: number;
@@ -63,7 +62,6 @@ export interface CreateDeportistaDTO {
 export interface UpdateDeportistaDTO {
   nombre?: string;
   apellido?: string;
-  fechaNac?: string;
   generoId?: number;
   categoriaId?: number;
   subcategoriaId?: number | null;

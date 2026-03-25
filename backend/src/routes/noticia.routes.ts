@@ -16,7 +16,7 @@ const router = Router();
  * @desc    Obtener todas las noticias
  * @access  Public
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (_req: Request, res: Response) => {
   try {
     const noticias = await noticiaService.getAll();
     res.json({
@@ -41,7 +41,7 @@ router.get(
   '/admin/list',
   authenticateToken,
   requireAdministrativo,
-  async (req: Request, res: Response) => {
+  async (_req: Request, res: Response) => {
     try {
       const noticias = await noticiaService.getAllAdmin();
       res.json({ success: true, data: noticias });

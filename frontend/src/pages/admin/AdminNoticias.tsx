@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import type { Noticia } from '../../types/noticia';
 import { noticiaService } from '../../services/noticia.service';
 import { useConfirm } from '../../context/ConfirmContext';

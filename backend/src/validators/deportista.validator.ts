@@ -24,14 +24,6 @@ export const createDeportistaSchema = z.object({
     .string({ message: 'El DNI es requerido' })
     .transform((s) => s.replace(/\D/g, ''))
     .refine((s) => /^\d{7,8}$/.test(s), { message: 'El DNI debe tener 7 u 8 digitos' }),
-  fechaNac: z
-    .string({ message: 'La fecha de nacimiento es requerida' })
-    .transform((s) => {
-      const t = s.trim();
-      const dmy = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-      if (dmy) return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
-      return t;
-    }),
   generoId: z.coerce.number({ message: 'El género es requerido' }).int().positive(),
   categoriaId: z.coerce.number({ message: 'La categoría es requerida' }).int().positive(),
   subcategoriaId: z.coerce.number().int().positive().optional(),
@@ -50,7 +42,6 @@ export const createDeportistaSchema = z.object({
 export const updateDeportistaSchema = z.object({
   nombre: z.string().min(2).max(50).optional(),
   apellido: z.string().min(2).max(50).optional(),
-  fechaNac: z.string().optional(),
   generoId: z.number().int().positive().optional(),
   categoriaId: z.number().int().positive().optional(),
   subcategoriaId: z.number().int().positive().nullable().optional(),

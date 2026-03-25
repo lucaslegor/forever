@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { CheckCircle, CalendarPlus, Trash2, List, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, CalendarPlus, Trash2, List, ChevronDown, ChevronUp, Ban } from 'lucide-react';
 import type { CuotaAdmin } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
 import { cuotaService } from '../../services/cuota.service';
@@ -42,6 +42,14 @@ export const AdminCuotas = () => {
     const [limit] = useState(50);
     const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+
+    const [cancelModal, setCancelModal] = useState<{ open: boolean; cuota: CuotaAdmin | null; motivo: string; saving: boolean; error: string | null }>({
+        open: false,
+        cuota: null,
+        motivo: '',
+        saving: false,
+        error: null,
+    });
 
     const disciplinaId = useMemo(() => disciplinas.find((d) => d.nombre === filtroDisciplina)?.id, [disciplinas, filtroDisciplina]);
     const generarSeleccionValida = anioGenerar === ANIO_ACTUAL && mesGenerar === MES_ACTUAL;
@@ -91,8 +99,11 @@ export const AdminCuotas = () => {
                     anio: c.anio,
                     monto: c.monto,
                     formaPago: (c.formaPago === 'efectivo' || c.formaPago === 'sistema' ? c.formaPago : '') as 'efectivo' | 'sistema' | '',
-                    estadoCuota: c.estadoCuota === 'PAGADA' ? 'PAGADA' : 'PENDIENTE',
+                    estadoCuota: c.estadoCuota,
                     fechaPago: c.fechaPago,
+                    canceladaAt: c.canceladaAt ?? null,
+                    cancelacionMotivo: c.cancelacionMotivo ?? null,
+                    canceladaPor: c.canceladaPor ?? null,
                 })));
             } else setCuotas([]);
         } catch {
@@ -116,6 +127,32 @@ export const AdminCuotas = () => {
             if (res.success) await cargarCuotasGestion();
         } catch {
             // error silencioso o toast
+        }
+    };
+
+    const abrirCancelar = (cuota: CuotaAdmin) => {
+        setCancelModal({ open: true, cuota, motivo: '', saving: false, error: null });
+    };
+
+    const confirmarCancelar = async () => {
+        if (!cancelModal.cuota) return;
+        const motivo = cancelModal.motivo.trim();
+        if (motivo.length < 5) {
+            setCancelModal((s) => ({ ...s, error: 'El motivo debe tener al menos 5 caracteres.' }));
+            return;
+        }
+        setCancelModal((s) => ({ ...s, saving: true, error: null }));
+        try {
+            const res = await cuotaService.cancelarDeuda(cancelModal.cuota.id, motivo);
+            if (res.success) {
+                setCancelModal({ open: false, cuota: null, motivo: '', saving: false, error: null });
+                await cargarCuotasGestion();
+                return;
+            }
+            setCancelModal((s) => ({ ...s, saving: false, error: (res as any).error || (res as any).message || 'No se pudo cancelar la deuda.' }));
+        } catch (err: any) {
+            const msg = err?.response?.data?.error || err?.message || 'No se pudo cancelar la deuda.';
+            setCancelModal((s) => ({ ...s, saving: false, error: msg }));
         }
     };
 
@@ -436,7 +473,7 @@ export const AdminCuotas = () => {
                             <th>Monto</th>
                             <th>Forma de pago</th>
                             <th>Estado</th>
-                            <th>Acción</th>
+                            <th className={styles.colAccion}>Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -450,25 +487,62 @@ export const AdminCuotas = () => {
                                 <td>{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(c.monto)}</td>
                                 <td>{c.formaPago === 'efectivo' ? 'Efectivo' : c.formaPago === 'sistema' ? 'Sistema' : '—'}</td>
                                 <td>
-                                    <span className={c.estadoCuota === 'PAGADA' ? styles.badgePagada : styles.badgePendiente}>
-                                        {c.estadoCuota === 'PAGADA' ? 'Pagada' : 'Pendiente'}
+                                    <span
+                                        className={
+                                            c.estadoCuota === 'PAGADA'
+                                                ? styles.badgePagada
+                                                : c.estadoCuota === 'CANCELADA'
+                                                    ? styles.badgePendiente
+                                                    : styles.badgePendiente
+                                        }
+                                        title={
+                                            c.estadoCuota === 'CANCELADA'
+                                                ? `Cancelada${c.canceladaPor ? ` por ${c.canceladaPor}` : ''}${c.canceladaAt ? ` el ${new Date(c.canceladaAt).toLocaleDateString('es-AR')}` : ''}${c.cancelacionMotivo ? ` · Motivo: ${c.cancelacionMotivo}` : ''}`
+                                                : undefined
+                                        }
+                                    >
+                                        {c.estadoCuota === 'PAGADA'
+                                            ? 'Pagada'
+                                            : c.estadoCuota === 'VENCIDA'
+                                                ? 'Vencida'
+                                                : c.estadoCuota === 'CANCELADA'
+                                                    ? 'Cancelada'
+                                                    : 'Pendiente'}
                                     </span>
                                 </td>
-                                <td className={styles.cellActions}>
-                                    {c.estadoCuota === 'PENDIENTE' && (
-                                        <button
-                                            type="button"
-                                            className={styles.btnPagar}
-                                            onClick={() => void marcarComoPagada(c.id)}
-                                            title="Pago en efectivo en sede o corrección por error de sistema"
-                                        >
-                                            <CheckCircle size={18} />
-                                            Marcar pagada
-                                        </button>
-                                    )}
-                                    {c.estadoCuota === 'PAGADA' && c.fechaPago && (
-                                        <span className={styles.fechaPago}>Pagado: {new Date(c.fechaPago).toLocaleDateString('es-AR')}</span>
-                                    )}
+                                <td className={styles.colAccion}>
+                                    <div className={styles.cellActions}>
+                                        {(c.estadoCuota === 'PENDIENTE' || c.estadoCuota === 'VENCIDA') && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    className={styles.btnPagar}
+                                                    onClick={() => void marcarComoPagada(c.id)}
+                                                    title="Pago en efectivo en sede o corrección por error de sistema"
+                                                >
+                                                    <CheckCircle size={18} />
+                                                    Marcar pagada
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={styles.btnCancelar}
+                                                    onClick={() => abrirCancelar(c)}
+                                                    title="Cancelar la deuda de esta cuota (requiere motivo)"
+                                                >
+                                                    <Ban size={18} />
+                                                    Cancelar deuda
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {c.estadoCuota === 'PAGADA' && c.fechaPago && (
+                                            <span className={styles.fechaPago}>Pagado: {new Date(c.fechaPago).toLocaleDateString('es-AR')}</span>
+                                        )}
+
+                                        {c.estadoCuota !== 'PENDIENTE' && c.estadoCuota !== 'VENCIDA' && !(c.estadoCuota === 'PAGADA' && c.fechaPago) && (
+                                            <span className={styles.noActions}>—</span>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ))
@@ -491,6 +565,56 @@ export const AdminCuotas = () => {
                     <p className={styles.empty}>No hay cuotas en efectivo pendientes.</p>
                 )}
             </section>
+
+            {cancelModal.open && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="cancel-title"
+                    className={styles.modalOverlay}
+                >
+                    <div className={styles.modalDialog}>
+                        <div className={styles.modalHeader} id="cancel-title">Cancelar deuda</div>
+                        <div className={styles.modalBody}>
+                            <p style={{ marginTop: 0 }}>
+                                Cuota: <strong>{cancelModal.cuota ? `${MESES[cancelModal.cuota.mes - 1]} ${cancelModal.cuota.anio}` : ''}</strong>
+                                {cancelModal.cuota ? ` · ${cancelModal.cuota.deportistaNombre}` : ''}
+                            </p>
+                            <label style={{ display: 'block', fontWeight: 700, marginBottom: 6, color: '#0f172a' }}>Motivo *</label>
+                            <textarea
+                                value={cancelModal.motivo}
+                                onChange={(e) => setCancelModal((s) => ({ ...s, motivo: e.target.value }))}
+                                rows={4}
+                                placeholder="Ej: Error de carga, excepción autorizada, etc."
+                                disabled={cancelModal.saving}
+                            />
+                            {cancelModal.error && (
+                                <p style={{ color: '#c62828', marginTop: 8, marginBottom: 0 }}>
+                                    {cancelModal.error}
+                                </p>
+                            )}
+                        </div>
+                        <div className={styles.modalActions}>
+                            <button
+                                type="button"
+                                className={styles.btnModalCancel}
+                                onClick={() => setCancelModal({ open: false, cuota: null, motivo: '', saving: false, error: null })}
+                                disabled={cancelModal.saving}
+                            >
+                                Volver
+                            </button>
+                            <button
+                                type="button"
+                                className={styles.btnModalConfirm}
+                                onClick={() => void confirmarCancelar()}
+                                disabled={cancelModal.saving}
+                            >
+                                {cancelModal.saving ? 'Cancelando…' : 'Confirmar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

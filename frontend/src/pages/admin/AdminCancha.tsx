@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Calendar, Plus, Check, DollarSign, Trash2, X } from 'lucide-react';
+import { Plus, Check, Trash2, X } from 'lucide-react';
 import { useConfirm } from '../../context/ConfirmContext';
 import { reservaCanchaService, type ReservaCancha, getEstadoReserva, HORAS_TURNO, horaToLabel, MONTO_SENA } from '../../services/reservaCancha.service';
 import { LoadingScreen } from '../../components/LoadingScreen';
@@ -112,6 +112,8 @@ export const AdminCancha = () => {
                 nombreCliente: formNueva.nombreCliente.trim(),
                 telefono: formNueva.telefono.trim(),
                 email: formNueva.email.trim() || undefined,
+                // El módulo está deshabilitado; este endpoint no debería usarse en esta versión.
+                captchaToken: 'disabled-module',
             });
             if (res.success) {
                 setMensaje({ tipo: 'ok', texto: 'Reserva creada.' });

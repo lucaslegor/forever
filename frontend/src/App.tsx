@@ -24,10 +24,8 @@ import { AdminNoticiasCrear } from './pages/admin/AdminNoticiasCrear';
 import { AdminNoticiasEditar } from './pages/admin/AdminNoticiasEditar';
 import { AdminRestablecerContrasena } from './pages/admin/AdminRestablecerContrasena';
 import { AdminPerfil } from './pages/admin/AdminPerfil';
-import { AdminCancha } from './pages/admin/AdminCancha';
 import { AdminReportes } from './pages/admin/AdminReportes';
 import { AdminAuditoria } from './pages/admin/AdminAuditoria';
-import { AlquilarCancha } from './pages/AlquilarCancha';
 import { OpcionesAdminProvider } from './context/OpcionesAdminContext';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { SeoByRoute } from './components/SeoByRoute';
@@ -49,7 +47,6 @@ function App() {
         <Route path="/grupo-familiar" element={<ProtectedRoute><GrupoFamiliar /></ProtectedRoute>} />
         <Route path="/noticias" element={<Noticias />} />
         <Route path="/noticias/:id" element={<NoticiaDetalle />} />
-        <Route path="/alquilar-cancha" element={<AlquilarCancha />} />
 
         <Route path="/admin" element={<ProtectedAdminRoute><ConfirmProvider><OpcionesAdminProvider><AdminLayout /></OpcionesAdminProvider></ConfirmProvider></ProtectedAdminRoute>}>
           <Route index element={<AdminDashboard />} />
@@ -64,7 +61,6 @@ function App() {
           <Route path="noticias/editar/:id" element={<AdminNoticiasEditar />} />
           <Route path="restablecer-contrasena" element={<AdminRestablecerContrasena />} />
           <Route path="perfil" element={<AdminPerfil />} />
-          <Route path="cancha" element={<AdminCancha />} />
           <Route path="reportes" element={<AdminReportes />} />
           <Route path="auditoria" element={<AdminAuditoria />} />
         </Route>

@@ -7,7 +7,7 @@ import {
   ConflictError,
   ErrorMessages,
 } from '../utils/errors';
-import { Rol, EstadoDeportista, EstadoCuota } from '@prisma/client';
+import { Rol, EstadoCuota } from '@prisma/client';
 import { cuotaService } from './cuota.service';
 
 export class DeportistaService {
@@ -32,6 +32,10 @@ export class DeportistaService {
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
+    // Soft-remove fecha de nacimiento: el campo sigue siendo NOT NULL en Prisma/DB.
+    // Usamos un placeholder fijo para no depender del frontend.
+    const FECHA_NAC_PLACEHOLDER = new Date('2000-01-01T00:00:00.000Z');
+
     const deportista = await prisma.$transaction(async (tx) => {
       // Crear cuenta
       const cuenta = await tx.cuentaUsuario.create({
@@ -42,16 +46,11 @@ export class DeportistaService {
         },
       });
 
-      const fechaNacDate = new Date(data.fechaNac);
-      if (Number.isNaN(fechaNacDate.getTime())) {
-        throw new Error(`Fecha de nacimiento invalida: ${data.fechaNac}`);
-      }
-
       const createData: Parameters<typeof tx.deportista.create>[0]['data'] = {
         nombre: data.nombre,
         apellido: data.apellido,
         dni: data.dni,
-        fechaNac: fechaNacDate,
+        fechaNac: FECHA_NAC_PLACEHOLDER,
         genero: { connect: { id: Number(data.generoId) } },
         categoria: { connect: { id: Number(data.categoriaId) } },
         disciplina: { connect: { id: Number(data.disciplinaId) } },
@@ -203,7 +202,6 @@ export class DeportistaService {
         data: {
           nombre: data.nombre,
           apellido: data.apellido,
-          fechaNac: data.fechaNac ? new Date(data.fechaNac) : undefined,
           generoId: data.generoId,
           categoriaId: data.categoriaId,
           subcategoriaId: data.subcategoriaId,

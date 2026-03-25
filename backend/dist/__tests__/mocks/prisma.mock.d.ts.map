@@ -1,0 +1,1 @@
+{"version":3,"file":"prisma.mock.d.ts","sourceRoot":"","sources":["../../../src/__tests__/mocks/prisma.mock.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,gBAAgB,CAAC;AAC9C,OAAO,EAAY,aAAa,EAAE,MAAM,oBAAoB,CAAC;AAE7D,MAAM,MAAM,gBAAgB,GAAG,aAAa,CAAC,YAAY,CAAC,CAAC;AAE3D,eAAO,MAAM,UAAU,+IAA2B,CAAC"}

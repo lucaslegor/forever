@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Users, DollarSign, UserCircle, Shield, Trophy, FileText, CalendarDays, Award, BarChart3, ClipboardList } from 'lucide-react';
+import { Users, DollarSign, UserCircle, Shield, Trophy, FileText, Award, BarChart3, ClipboardList } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import styles from './AdminDashboard.module.css';
 
@@ -10,7 +10,6 @@ const allCards = [
     { to: '/admin/becas', label: 'Gestión de becas', icon: Award, desc: 'Becar deportistas (cuota 70%) y actualizar montos' },
     { to: '/admin/admins', label: 'Gestión admin', icon: Shield, desc: 'Administrar usuarios admin', principalAdminOnly: true },
     { to: '/admin/disciplinas', label: 'Gestión disciplinas', icon: Trophy, desc: 'ABM y valor por disciplina' },
-    { to: '/admin/cancha', label: 'Alquiler cancha', icon: CalendarDays, desc: 'Turnos, seña y pago en cancha' },
     { to: '/admin/noticias', label: 'Gestión noticias', icon: FileText, desc: 'Listar, editar, publicar/despublicar y borrar noticias' },
     { to: '/admin/reportes', label: 'Reportes', icon: BarChart3, desc: 'Recaudación por disciplina/género/categoría, deudores, exportar Excel/PDF' },
     { to: '/admin/auditoria', label: 'Auditoría', icon: ClipboardList, desc: 'Log de acciones (altas, bajas, pagos, cambios) para soporte y seguridad', principalAdminOnly: true },

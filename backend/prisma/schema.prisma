@@ -22,6 +22,7 @@ enum EstadoCuota {
   PAGADA      @map("Pagada")
   PENDIENTE   @map("Pendiente")
   VENCIDA     @map("Vencida")
+  CANCELADA   @map("Cancelada")
 }
 
 enum EstadoPago {
@@ -115,6 +116,7 @@ model CuentaUsuario {
   deportista      Deportista?
   administrativo  Administrativo?
   auditoriaLogs   AuditoriaLog[]
+  cuotasCanceladas Cuota[]        @relation("CuotaCanceladaPorCuenta")
 
   @@map("cuentas_usuario")
 }
@@ -243,6 +245,10 @@ model Cuota {
   disciplina       Disciplina   @relation(fields: [disciplinaId], references: [id])
   deportistaId     Int          @map("id_deportista")
   deportista       Deportista   @relation(fields: [deportistaId], references: [id], onDelete: Cascade)
+  canceladaAt      DateTime?    @map("cancelada_at")
+  cancelacionMotivo String?     @map("cancelacion_motivo") @db.Text
+  canceladaPorCuentaId Int?     @map("cancelada_por_cuenta_id")
+  canceladaPorCuenta   CuentaUsuario? @relation("CuotaCanceladaPorCuenta", fields: [canceladaPorCuentaId], references: [id])
   pagos            Pago[]
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")

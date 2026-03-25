@@ -71,7 +71,6 @@ describe('Deportista Module', () => {
       nombre: 'Juan',
       apellido: 'Perez',
       dni: '12345678',
-      fechaNac: '2000-01-15',
       generoId: 1,
       categoriaId: 1,
       disciplinaId: 1,
@@ -146,7 +145,6 @@ describe('Deportista Module', () => {
       const createdDeportista = {
         id: 1,
         ...deportistaData,
-        fechaNac: new Date(deportistaData.fechaNac),
         cuentaId: 3,
         estado: EstadoDeportista.AL_DIA,
         createdAt: new Date(),

@@ -57,4 +57,9 @@ export const cuotaService = {
     const response = await api.post(`/cuotas/${id}/marcar-efectivo`);
     return response.data;
   },
+
+  cancelarDeuda: async (id: number, motivo: string): Promise<ApiResponse<any>> => {
+    const response = await api.patch(`/cuotas/${id}/cancelar`, { motivo });
+    return response.data;
+  },
 };

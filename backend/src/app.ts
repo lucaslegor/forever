@@ -10,6 +10,10 @@ import { globalApiRateLimiter } from './middlewares/rateLimit.middleware';
 
 const app = express();
 
+// Cuando el backend corre detrás de un reverse proxy (Nginx/Load Balancer),
+// esto permite que Express confíe en X-Forwarded-* para IP/HTTPS real.
+app.set('trust proxy', 1);
+
 // Configuración de CORS (credentials: true para enviar cookies desde el frontend)
 const corsOptions = {
   origin: env.FRONTEND_URL.split(',').map((url) => url.trim()),

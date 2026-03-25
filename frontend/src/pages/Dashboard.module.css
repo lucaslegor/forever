@@ -8,12 +8,13 @@
 .imageHeader {
     position: relative;
     height: 200px;
-    background-image: url('/club-background.PNG');
+    background-image: url('/club-background.png');
     background-size: cover;
     background-position: center 38%;
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 0.8;
 }
 
 .logoutButton {
@@ -63,7 +64,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(0, 34, 68, 0.88) 0%, rgba(0, 51, 102, 0.9) 100%);
+    /* Overlay más suave para que se vea la foto de fondo */
+    background: linear-gradient(135deg, rgba(0, 34, 68, 0.38) 0%, rgba(0, 51, 102, 0.46) 100%);
     z-index: 0;
 }
 

@@ -75,10 +75,7 @@ export const Footer = () => {
                                 <Mail size={18} />
                                 <span>contacto@clubforever.com</span>
                             </a>
-                            <a href="tel:+542214211475" className={styles.footerLink}>
-                                <Phone size={18} />
-                                <span>(221) 426-6684</span>
-                                <br />
+                            <a href="tel:+542215585761" className={styles.footerLink}>
                                 <Phone size={18} />
                                 <span>(221) 558-5761</span>
                             </a>

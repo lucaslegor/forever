@@ -13,7 +13,6 @@ export interface Deportista {
     nombre: string;
     apellido: string;
     dni: string;
-    fechaNac?: string;
     disciplina: string;
     genero: string;
     categoria: string;
@@ -37,8 +36,11 @@ export interface CuotaAdmin {
     monto: number;
     /** 'efectivo' = pago en efectivo; 'sistema' = transferencia/tarjeta/online */
     formaPago: 'efectivo' | 'sistema' | '';
-    estadoCuota: 'PENDIENTE' | 'PAGADA';
+    estadoCuota: 'PENDIENTE' | 'PAGADA' | 'VENCIDA' | 'CANCELADA';
     fechaPago?: string;
+    canceladaAt?: string | null;
+    cancelacionMotivo?: string | null;
+    canceladaPor?: string | null;
 }
 
 /** Grupo familiar para admin: crear, modificar, borrar; titular paga la cuota */

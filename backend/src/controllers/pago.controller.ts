@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { pagoService } from '../services/pago.service';
-import { reservaCanchaService } from '../services/reservaCancha.service';
 import { getPaymentById } from '../services/mercadopago.service';
 import { deportistaService } from '../services/deportista.service';
 import { auditoriaService, ACCIONES } from '../services/auditoria.service';
@@ -96,12 +95,9 @@ export class PagoController {
 
         if (payment?.external_reference) {
           const ref = payment.external_reference;
+          // Módulo de cancha deshabilitado: ignorar pagos con external_reference "reserva-{id}"
           if (typeof ref === 'string' && ref.startsWith('reserva-')) {
-            const reservaId = parseInt(ref.slice(8), 10);
-            if (!Number.isNaN(reservaId) && payment.status === 'approved') {
-              console.log('  - Actualizando reserva:', reservaId);
-              await reservaCanchaService.updatePagos(reservaId, { senaPagada: true });
-            }
+            console.log('  - Webhook reserva-cancha ignorado (módulo deshabilitado)');
           } else {
             const pagoId = parseInt(ref, 10);
             if (!Number.isNaN(pagoId)) {

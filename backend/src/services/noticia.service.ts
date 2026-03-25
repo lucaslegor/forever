@@ -1,6 +1,6 @@
 import prisma from '../config/prisma';
 import { CreateNoticiaDTO, UpdateNoticiaDTO } from '../types/requests';
-import { NotFoundError, ErrorMessages } from '../utils/errors';
+import { NotFoundError } from '../utils/errors';
 
 export class NoticiaService {
   async create(data: CreateNoticiaDTO) {

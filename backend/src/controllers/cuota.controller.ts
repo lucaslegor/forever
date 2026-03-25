@@ -5,7 +5,7 @@ import { auditoriaService, ACCIONES } from '../services/auditoria.service';
 import { sendSuccess, sendCreated, sendForbidden } from '../utils/response';
 import { getClientIp, getUserAgent } from '../utils/request';
 import { AuthenticatedRequest } from '../types';
-import { AsignarCuotaInput, UpdateCuotaInput, CuotasQuery, ListCuotasQuery, GenerarCuotasInput } from '../validators/cuota.validator';
+import { AsignarCuotaInput, UpdateCuotaInput, CancelarCuotaInput, CuotasQuery, ListCuotasQuery, GenerarCuotasInput } from '../validators/cuota.validator';
 import { Rol } from '@prisma/client';
 
 export class CuotaController {
@@ -169,6 +169,26 @@ export class CuotaController {
         userAgent: getUserAgent(req),
       });
       sendSuccess(res, result, 'Cuota marcada como pagada en efectivo');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async cancelarDeuda(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = parseInt(req.params.id as string, 10);
+      const data = req.body as CancelarCuotaInput;
+      const result = await cuotaService.cancelarDeuda(id, data.motivo, req.user!.id);
+      await auditoriaService.registrar({
+        cuentaId: req.user?.id ?? null,
+        accion: ACCIONES.CUOTA_CANCELAR_DEUDA,
+        entidad: 'cuota',
+        entidadId: id,
+        detalles: JSON.stringify({ cuotaId: id, motivo: data.motivo }),
+        ip: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
+      sendSuccess(res, result, 'Deuda cancelada');
     } catch (error) {
       next(error);
     }

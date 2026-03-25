@@ -27,6 +27,12 @@ describe('Tests de Integración - Base de Datos Real', () => {
   let categoriaId: number;
   let deportistaToken: string;
   let deportistaId: number;
+  let _adminCuentaId = 0;
+  let _adminToken = '';
+  let _deportistaCuentaId = 0;
+  void _adminCuentaId;
+  void _adminToken;
+  void _deportistaCuentaId;
 
   // Conectar y limpiar antes de todos los tests
   beforeAll(async () => {
@@ -199,7 +205,6 @@ describe('Tests de Integración - Base de Datos Real', () => {
           nombre: testData.deportista.nombre,
           apellido: testData.deportista.apellido,
           dni: testData.deportista.dni,
-          fechaNac: '2000-01-15',
           email: testData.deportista.email,
           password: testData.deportista.password,
           disciplinaId: disciplinaId,
@@ -360,7 +365,6 @@ describe('Tests de Integración - Base de Datos Real', () => {
           nombre: 'Maria',
           apellido: 'Perez',
           dni: '66666666',
-          fechaNac: '2005-05-20',
           email: 'maria.test@forever.com',
           password: 'Maria123!',
           disciplinaId: disciplinaId,
