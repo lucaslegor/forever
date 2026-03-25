@@ -4,7 +4,7 @@ import type { Disciplina } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { AlertModal } from '../../components/AlertModal';
-import { clasificacionService } from '../../services/clasificacion.service';
+import { clasificacionService, getSubcategoriaId } from '../../services/clasificacion.service';
 import { disciplinaService } from '../../services/disciplina.service';
 import styles from './AdminDisciplinas.module.css';
 
@@ -159,7 +159,7 @@ export const AdminDisciplinas = () => {
             const res = await clasificacionService.getSubcategorias(disciplinaId, categoriaId, generoId);
             const arr = res.success && Array.isArray(res.data) ? res.data : [];
             const found = arr.find((s: any) => s?.nombre === nombre);
-            const id = found ? (found as any).id_subcategoria : undefined;
+            const id = getSubcategoriaId(found);
 
             if (typeof id !== 'number') {
                 setAdvertenciaModal({ message: 'No se encontró el ID de la subcategoría a eliminar.' });

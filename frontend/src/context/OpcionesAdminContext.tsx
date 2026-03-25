@@ -63,7 +63,15 @@ export const OpcionesAdminProvider = ({ children }: { children: ReactNode }) => 
         setCategorias(data.categorias);
         setDisciplinas(disciplinasMap);
         setCategoriasExcepcion(data.categoriasExcepcion);
-        setSubcategoriasPorKey(data.subcategoriasPorKey);
+        // Backend envía subcategorías como { id, nombre }; el frontend trabaja con string[] (nombres)
+        const subcatsSoloNombres: SubcategoriasPorKey = {};
+        Object.entries(data.subcategoriasPorKey || {}).forEach(([key, arr]) => {
+          const list = Array.isArray(arr)
+            ? arr.map((s: any) => (typeof s === 'string' ? s : s.nombre))
+            : [];
+          subcatsSoloNombres[key] = list;
+        });
+        setSubcategoriasPorKey(subcatsSoloNombres);
       }
     } catch (error) {
       // Valores por defecto en caso de error

@@ -8,7 +8,7 @@
 .imageHeader {
     position: relative;
     height: 200px;
-    background-image: url('/club-background.png');
+    background-image: url('/club-background.PNG');
     background-size: cover;
     background-position: center 38%;
     display: flex;

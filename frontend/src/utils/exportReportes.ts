@@ -1,45 +1,59 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { DashboardStats, DeudorRow } from '../services/dashboard.service';
+
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function saveWorkbook(workbook: ExcelJS.Workbook, filename: string): Promise<void> {
+  const buffer = await workbook.xlsx.writeBuffer();
+  downloadBlob(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename);
+}
 
 function formatMoney(n: number): string {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(n);
 }
 
-export function exportReportesExcel(stats: DashboardStats, anio?: number, mes?: number): void {
-  const wb = XLSX.utils.book_new();
+export async function exportReportesExcel(stats: DashboardStats, anio?: number, mes?: number): Promise<void> {
+  const wb = new ExcelJS.Workbook();
   const mesLabel = mes != null ? `${mes}/${anio ?? ''}` : 'Todo';
 
-  const recaudacionData: (string | number)[][] = [
-    ['Disciplina', 'Género', 'Categoría', 'Subcategoría', 'Total recaudado', 'Cantidad pagos'],
-    ...stats.recaudacionPorClasificacion.map((r) => [
+  const ws1 = wb.addWorksheet(`Recaudación ${mesLabel}`);
+  ws1.addRow(['Disciplina', 'Género', 'Categoría', 'Subcategoría', 'Total recaudado', 'Cantidad pagos']);
+  stats.recaudacionPorClasificacion.forEach((r) => {
+    ws1.addRow([
       r.disciplinaNombre,
       r.generoNombre,
       r.categoriaNombre,
       r.subcategoriaNombre ?? '',
       r.totalRecaudado,
       r.cantidadPagos,
-    ]),
-  ];
-  const ws1 = XLSX.utils.aoa_to_sheet(recaudacionData);
-  XLSX.utils.book_append_sheet(wb, ws1, `Recaudación ${mesLabel}`);
+    ]);
+  });
 
-  const deportistasData: (string | number)[][] = [
-    ['Disciplina', 'Cantidad deportistas'],
-    ...stats.deportistasPorDisciplina.map((d) => [d.disciplinaNombre, d.cantidad]),
-  ];
-  const ws2 = XLSX.utils.aoa_to_sheet(deportistasData);
-  XLSX.utils.book_append_sheet(wb, ws2, 'Deportistas por disciplina');
+  const ws2 = wb.addWorksheet('Deportistas por disciplina');
+  ws2.addRow(['Disciplina', 'Cantidad deportistas']);
+  stats.deportistasPorDisciplina.forEach((d) => {
+    ws2.addRow([d.disciplinaNombre, d.cantidad]);
+  });
 
-  const pagosData: (string | number)[][] = [
-    ['Medio de pago', 'Cantidad', 'Monto total'],
-    ...stats.pagosPorMedio.map((p) => [p.medio, p.cantidad, p.montoTotal]),
-  ];
-  const ws3 = XLSX.utils.aoa_to_sheet(pagosData);
-  XLSX.utils.book_append_sheet(wb, ws3, 'Pagos por medio');
+  const ws3 = wb.addWorksheet('Pagos por medio');
+  ws3.addRow(['Medio de pago', 'Cantidad', 'Monto total']);
+  stats.pagosPorMedio.forEach((p) => {
+    ws3.addRow([p.medio, p.cantidad, p.montoTotal]);
+  });
 
-  XLSX.writeFile(wb, `reportes_${mesLabel.replace(/\//g, '-')}.xlsx`);
+  await saveWorkbook(wb, `reportes_${mesLabel.replace(/\//g, '-')}.xlsx`);
 }
 
 export function exportReportesPDF(stats: DashboardStats, anio?: number, mes?: number): void {
@@ -111,11 +125,24 @@ export function exportReportesPDF(stats: DashboardStats, anio?: number, mes?: nu
   doc.save(`reportes_${mesLabel.replace(/\//g, '-')}.pdf`);
 }
 
-export function exportDeudoresExcel(deudores: DeudorRow[]): void {
-  const wb = XLSX.utils.book_new();
-  const data: (string | number)[][] = [
-    ['Apellido', 'Nombre', 'DNI', 'Email', 'Disciplina', 'Categoría', 'Subcategoría', 'Cuotas impagas', 'Monto total adeudado'],
-    ...deudores.map((d) => [
+export async function exportDeudoresExcel(deudores: DeudorRow[]): Promise<void> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Deudores');
+
+  ws.addRow([
+    'Apellido',
+    'Nombre',
+    'DNI',
+    'Email',
+    'Disciplina',
+    'Categoría',
+    'Subcategoría',
+    'Cuotas impagas',
+    'Monto total adeudado',
+  ]);
+
+  deudores.forEach((d) => {
+    ws.addRow([
       d.apellido,
       d.nombre,
       d.dni,
@@ -125,11 +152,10 @@ export function exportDeudoresExcel(deudores: DeudorRow[]): void {
       d.subcategoriaNombre ?? '',
       d.cuotasImpagas.map((c) => `Cuota ${c.nroCuota}/${c.anio}`).join(', '),
       d.montoTotalAdeudado,
-    ]),
-  ];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  XLSX.utils.book_append_sheet(wb, ws, 'Deudores');
-  XLSX.writeFile(wb, 'listado_deudores.xlsx');
+    ]);
+  });
+
+  await saveWorkbook(wb, 'listado_deudores.xlsx');
 }
 
 export function exportDeudoresPDF(deudores: DeudorRow[]): void {

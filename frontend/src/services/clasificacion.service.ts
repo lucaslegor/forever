@@ -12,11 +12,18 @@ export interface Categoria {
 }
 
 export interface Subcategoria {
-  id_subcategoria: number;
+  id?: number;
+  id_subcategoria?: number;
   nombre: string;
   disciplinaId: number;
   categoriaId: number;
   generoId: number | null;
+}
+
+export function getSubcategoriaId(subcategoria: Partial<Subcategoria> | null | undefined): number | undefined {
+  if (!subcategoria) return undefined;
+  const id = subcategoria.id_subcategoria ?? subcategoria.id;
+  return typeof id === 'number' ? id : undefined;
 }
 
 export interface OpcionesClasificacion {

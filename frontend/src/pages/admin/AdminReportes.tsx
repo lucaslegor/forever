@@ -4,7 +4,7 @@ import { dashboardService } from '../../services/dashboard.service';
 import type { DashboardStats, DeudorRow } from '../../services/dashboard.service';
 import { exportReportesPDF, exportDeudoresPDF } from '../../utils/exportReportes';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
-import { clasificacionService } from '../../services/clasificacion.service';
+import { clasificacionService, getSubcategoriaId } from '../../services/clasificacion.service';
 import styles from './AdminReportes.module.css';
 
 const MESES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -61,7 +61,7 @@ export const AdminReportes = () => {
         const res = await clasificacionService.getSubcategorias(filtroDisciplinaId, filtroCategoriaId, filtroGeneroId);
         const arr = res.success && Array.isArray(res.data) ? res.data : [];
         const mapped = arr
-          .map((s: any) => ({ id: s.id_subcategoria as number, nombre: s.nombre as string }))
+          .map((s: any) => ({ id: getSubcategoriaId(s) as number, nombre: s.nombre as string }))
           .filter((s) => typeof s.id === 'number' && !!s.nombre);
         if (cancelled) return;
         setSubcategoriaOpciones(mapped);

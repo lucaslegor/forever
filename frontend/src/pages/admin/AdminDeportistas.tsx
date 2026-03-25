@@ -4,7 +4,7 @@ import type { Deportista, AdultoResponsable } from '../../types/admin';
 import { useOpcionesAdmin } from '../../context/OpcionesAdminContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { deportistaService } from '../../services/deportista.service';
-import { clasificacionService } from '../../services/clasificacion.service';
+import { clasificacionService, getSubcategoriaId } from '../../services/clasificacion.service';
 import { LoadingScreen } from '../../components/LoadingScreen';
 import styles from './AdminDeportistas.module.css';
 
@@ -80,7 +80,7 @@ export const AdminDeportistas = () => {
                 const res = await clasificacionService.getSubcategorias(disciplinaIdFiltro, categoriaIdFiltro, generoIdFiltro);
                 const arr = res.success && Array.isArray(res.data) ? res.data : [];
                 const found = arr.find((s: any) => s?.nombre === filtroSubcategoria);
-                const id = found ? (found as any).id_subcategoria : undefined;
+                const id = getSubcategoriaId(found);
                 if (!cancelled) setSubcategoriaIdFiltro(typeof id === 'number' ? id : undefined);
             } catch {
                 if (!cancelled) setSubcategoriaIdFiltro(undefined);
@@ -448,7 +448,7 @@ export const AdminDeportistas = () => {
                 );
                 const arr = subRes.success && Array.isArray(subRes.data) ? subRes.data : [];
                 const sub = arr.find((s: any) => s.nombre === form.subcategoria);
-                if (sub) subcategoriaId = (sub as any).id_subcategoria ?? (sub as any).id;
+                if (sub) subcategoriaId = getSubcategoriaId(sub);
             } else if (mode === 'edit') {
                 subcategoriaId = null; // Permitir vaciar subcategoría al editar
             }
