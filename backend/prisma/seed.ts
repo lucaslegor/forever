@@ -1,5 +1,8 @@
 import { PrismaClient, Rol, EstadoDeportista, EstadoCuota, EstadoPago, Periodicidad, Vinculo } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -205,6 +208,32 @@ async function main() {
         },
     });
 
+    const deportistaTestCuenta = await prisma.cuentaUsuario.create({
+        data: {
+            email: '46415236@club.com',
+            password: await bcrypt.hash('46415236', 10),
+            rol: Rol.DEPORTISTA,
+            activo: true,
+        },
+    });
+
+    const deportistaTest = await prisma.deportista.create({
+        data: {
+            nombre: 'Deportista',
+            apellido: 'Prueba',
+            dni: '46415236',
+            fechaNac: new Date('2000-01-01'),
+            generoId: masculino.id,
+            categoriaId: mayores.id,
+            obraSocial: null,
+            estado: EstadoDeportista.AL_DIA,
+            disciplinaId: futbol.id,
+            cuentaId: deportistaTestCuenta.id,
+            telefonos: null,
+            enfermedades: null,
+        },
+    });
+
     console.log('✅ Deportistas creados');
 
     // 5. Crear Grupo Familiar
@@ -334,6 +363,31 @@ async function main() {
         },
     });
 
+    const cuotaTest = await prisma.cuota.create({
+        data: {
+            nroCuota: 1,
+            anio: 2026,
+            monto: futbol.precioMensual,
+            fechaEmision: new Date('2026-01-01'),
+            fechaVencimiento: new Date('2026-01-10'),
+            estadoCuota: EstadoCuota.PAGADA,
+            periodicidad: Periodicidad.MENSUAL,
+            disciplinaId: futbol.id,
+            deportistaId: deportistaTest.id,
+        },
+    });
+
+    await prisma.pago.create({
+        data: {
+            fechaPago: new Date('2026-01-05'),
+            monto: futbol.precioMensual,
+            estadoPago: EstadoPago.APROBADO,
+            medioPago: 'Efectivo',
+            cuotaId: cuotaTest.id,
+            deportistaId: deportistaTest.id,
+        },
+    });
+
     console.log('✅ Pagos creados');
 
     console.log('🎉 Seed completado exitosamente!');
@@ -353,6 +407,7 @@ async function main() {
     console.log('   Email: maria.lopez@mail.com | Password: Maria1234');
     console.log('   Email: pedro.gonzalez@mail.com | Password: Pedro1234');
     console.log('   Email: ana.martinez@mail.com | Password: Ana12345');
+    console.log('   DNI: 46415236 | Password: 46415236');
 }
 
 main()

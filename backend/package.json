@@ -14,7 +14,8 @@
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "prisma:reset": "prisma migrate reset --force",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed:deportista-test": "tsx prisma/seed-deportista-46415236.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -32,7 +33,7 @@
     "express": "^5.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mercadopago": "^2.12.0",
+    "mercadopago": "^3.0.0",
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.0",
     "pg": "^8.18.0",
